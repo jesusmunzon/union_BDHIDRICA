@@ -156,44 +156,74 @@ const DATASETS = {
     sheet: "Datos_CARNF",
     download: "BD_Datos_CARNF_modificado.xlsx",
     cols: [
-      "FECHA", "FECHA DATOS", "COD POBLACIÓN", "POBLACIÓN",
-      "CONSUMOS PROPIOS", "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL", "ZONAS DEPRIMIDAS Y EVENTOS",
+      "FECHA",
+      "FECHA DATOS",
+      "COD POBLACIÓN",
+      "POBLACIÓN",
+      "CONSUMOS PROPIOS",
+      "PURGAS CON CONTADOR AQUA-WS",
+      "RIEGOS Y BALDEO MUNICIPAL",
+      "ZONAS DEPRIMIDAS Y EVENTOS",
       "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)", "PURGAS SIN CONTADOR",
+      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
+      "PURGAS SIN CONTADOR",
       "PUNTOS MEDIDA CLORO",
       "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)"
+      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
     ],
     labels: {
-      "FECHA":"Fecha", "FECHA DATOS":"Fecha datos",
-      "COD POBLACIÓN":"Código población", "POBLACIÓN":"Población",
-      "CONSUMOS PROPIOS":"Consumos propios",
-      "PURGAS CON CONTADOR AQUA-WS":"Purgas con contador AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL":"Riegos y baldeo municipal",
-      "ZONAS DEPRIMIDAS Y EVENTOS":"Zonas deprimidas y eventos",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)":"TOTAL AGUA REGISTRADA<br>NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)":"Mantenimiento<br>(intervenciones de redes)",
-      "PURGAS SIN CONTADOR":"Purgas sin contador",
-      "PUNTOS MEDIDA CLORO":"Puntos medida cloro",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)":"TOTAL AGUA NO REGISTRADA<br>NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)":"Fugas en intervenciones de redes<br>(pérdidas evitables)"
+      FECHA: "Fecha",
+      "FECHA DATOS": "Fecha datos",
+      "COD POBLACIÓN": "Código población",
+      POBLACIÓN: "Población",
+      "CONSUMOS PROPIOS": "Consumos propios",
+      "PURGAS CON CONTADOR AQUA-WS": "Purgas con contador AQUA-WS",
+      "RIEGOS Y BALDEO MUNICIPAL": "Riegos y baldeo municipal",
+      "ZONAS DEPRIMIDAS Y EVENTOS": "Zonas deprimidas y eventos",
+      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)":
+        "TOTAL AGUA REGISTRADA<br>NO FACTURADA (ARNF)",
+      "MANTENIMIENTO (INTERVENCIONES DE REDES)":
+        "Mantenimiento<br>(intervenciones de redes)",
+      "PURGAS SIN CONTADOR": "Purgas sin contador",
+      "PUNTOS MEDIDA CLORO": "Puntos medida cloro",
+      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)":
+        "TOTAL AGUA NO REGISTRADA<br>NO FACTURADA (ANRNF)",
+      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)":
+        "Fugas en intervenciones de redes<br>(pérdidas evitables)",
     },
     numeric: [
-      "CONSUMOS PROPIOS", "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL", "ZONAS DEPRIMIDAS Y EVENTOS",
+      "CONSUMOS PROPIOS",
+      "PURGAS CON CONTADOR AQUA-WS",
+      "RIEGOS Y BALDEO MUNICIPAL",
+      "ZONAS DEPRIMIDAS Y EVENTOS",
       "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)", "PURGAS SIN CONTADOR",
+      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
+      "PURGAS SIN CONTADOR",
       "PUNTOS MEDIDA CLORO",
       "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)"
+      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
     ],
     notes: null,
     dateCols: ["FECHA", "FECHA DATOS"],
     calculatedTotals: [
-      { col: "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)", sumCols: ["CONSUMOS PROPIOS", "PURGAS CON CONTADOR AQUA-WS", "RIEGOS Y BALDEO MUNICIPAL", "ZONAS DEPRIMIDAS Y EVENTOS"] },
-      { col: "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)", sumCols: ["MANTENIMIENTO (INTERVENCIONES DE REDES)", "PURGAS SIN CONTADOR", "PUNTOS MEDIDA CLORO"] }
-    ]
+      {
+        col: "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
+        sumCols: [
+          "CONSUMOS PROPIOS",
+          "PURGAS CON CONTADOR AQUA-WS",
+          "RIEGOS Y BALDEO MUNICIPAL",
+          "ZONAS DEPRIMIDAS Y EVENTOS",
+        ],
+      },
+      {
+        col: "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
+        sumCols: [
+          "MANTENIMIENTO (INTERVENCIONES DE REDES)",
+          "PURGAS SIN CONTADOR",
+          "PUNTOS MEDIDA CLORO",
+        ],
+      },
+    ],
   },
   carnf: {
     label: "Datos CARNF",
@@ -201,36 +231,84 @@ const DATASETS = {
     sheet: "Datos_CARNF",
     download: "BD_Datos_CARNF_modificado.xlsx",
     cols: [
-      "FECHA", "FECHA DATOS", "COD POBLACIÓN", "POBLACIÓN",
-      "CONSUMOS PROPIOS", "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL", "ZONAS DEPRIMIDAS Y EVENTOS",
+      "FECHA",
+      "FECHA DATOS",
+      "COD POBLACIÓN",
+      "POBLACIÓN",
+      "CONSUMOS PROPIOS",
+      "PURGAS CON CONTADOR AQUA-WS",
+      "RIEGOS Y BALDEO MUNICIPAL",
+      "ZONAS DEPRIMIDAS Y EVENTOS",
       "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)", "PURGAS SIN CONTADOR",
-      "PUNTOS MEDIDA CLORO", "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)"
+      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
+      "PURGAS SIN CONTADOR",
+      "PUNTOS MEDIDA CLORO",
+      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
+      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
     ],
     labels: {
-      "FECHA": "Fecha", "FECHA DATOS": "Fecha datos",
-      "COD POBLACIÓN": "Código<br>población", "POBLACIÓN": "Población",
+      FECHA: "Fecha",
+      "FECHA DATOS": "Fecha datos",
+      "COD POBLACIÓN": "Código<br>población",
+      POBLACIÓN: "Población",
       "CONSUMOS PROPIOS": "Consumos<br>propios",
       "PURGAS CON CONTADOR AQUA-WS": "Purgas con contador<br>AQUA-WS",
       "RIEGOS Y BALDEO MUNICIPAL": "Riegos y baldeo<br>municipal",
       "ZONAS DEPRIMIDAS Y EVENTOS": "Zonas deprimidas<br>y eventos",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)": "TOTAL AGUA REGISTRADA<br>NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)": "Mantenimiento<br>(intervenciones de redes)",
+      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)":
+        "TOTAL AGUA REGISTRADA<br>NO FACTURADA (ARNF)",
+      "MANTENIMIENTO (INTERVENCIONES DE REDES)":
+        "Mantenimiento<br>(intervenciones de redes)",
       "PURGAS SIN CONTADOR": "Purgas sin<br>contador",
       "PUNTOS MEDIDA CLORO": "Puntos medida<br>cloro",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)": "TOTAL AGUA NO REGISTRADA<br>NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)": "Fugas en intervenciones de redes<br>(pérdidas evitables)"
+      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)":
+        "TOTAL AGUA NO REGISTRADA<br>NO FACTURADA (ANRNF)",
+      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)":
+        "Fugas en intervenciones de redes<br>(pérdidas evitables)",
     },
-    numeric: ["CONSUMOS PROPIOS", "PURGAS CON CONTADOR AQUA-WS", "RIEGOS Y BALDEO MUNICIPAL", "ZONAS DEPRIMIDAS Y EVENTOS", "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)", "MANTENIMIENTO (INTERVENCIONES DE REDES)", "PURGAS SIN CONTADOR", "PUNTOS MEDIDA CLORO", "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)", "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)"],
+    numeric: [
+      "CONSUMOS PROPIOS",
+      "PURGAS CON CONTADOR AQUA-WS",
+      "RIEGOS Y BALDEO MUNICIPAL",
+      "ZONAS DEPRIMIDAS Y EVENTOS",
+      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
+      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
+      "PURGAS SIN CONTADOR",
+      "PUNTOS MEDIDA CLORO",
+      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
+      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
+    ],
     notes: null,
     dateCols: ["FECHA", "FECHA DATOS"],
     totalCols: [
-      { col: "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)", sumCols: ["CONSUMOS PROPIOS", "PURGAS CON CONTADOR AQUA-WS", "RIEGOS Y BALDEO MUNICIPAL", "ZONAS DEPRIMIDAS Y EVENTOS"] },
-      { col: "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)", sumCols: ["MANTENIMIENTO (INTERVENCIONES DE REDES)", "PURGAS SIN CONTADOR", "PUNTOS MEDIDA CLORO"] }
+      {
+        col: "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
+        sumCols: [
+          "CONSUMOS PROPIOS",
+          "PURGAS CON CONTADOR AQUA-WS",
+          "RIEGOS Y BALDEO MUNICIPAL",
+          "ZONAS DEPRIMIDAS Y EVENTOS",
+        ],
+      },
+      {
+        col: "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
+        sumCols: [
+          "MANTENIMIENTO (INTERVENCIONES DE REDES)",
+          "PURGAS SIN CONTADOR",
+          "PUNTOS MEDIDA CLORO",
+        ],
+      },
     ],
-    sumCols: ["CONSUMOS PROPIOS", "PURGAS CON CONTADOR AQUA-WS", "RIEGOS Y BALDEO MUNICIPAL", "ZONAS DEPRIMIDAS Y EVENTOS", "MANTENIMIENTO (INTERVENCIONES DE REDES)", "PURGAS SIN CONTADOR", "PUNTOS MEDIDA CLORO", "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)"]
+    sumCols: [
+      "CONSUMOS PROPIOS",
+      "PURGAS CON CONTADOR AQUA-WS",
+      "RIEGOS Y BALDEO MUNICIPAL",
+      "ZONAS DEPRIMIDAS Y EVENTOS",
+      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
+      "PURGAS SIN CONTADOR",
+      "PUNTOS MEDIDA CLORO",
+      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
+    ],
   },
   aforos: {
     label: "Datos Aforos y Pérdidas",
@@ -246,28 +324,31 @@ const DATASETS = {
       "AFOROS NO Registrado NO Facturado",
       "PÉRIDAS APARENTES (%)",
       "PÉRDIDAS APARENTES (Imprecisión)",
-      "Perdidas Tecnicas Mínimas (UARL) (Pérd. Reales)"
+      "Perdidas Tecnicas Mínimas (UARL) (Pérd. Reales)",
     ],
     labels: {
-      "FECHA": "Fecha",
+      FECHA: "Fecha",
       "FECHA DATOS": "Fecha datos",
       "CÓDIGO POBLACIÓN": "Código<br>población",
-      "POBLACIÓN": "Población",
-      "AFOROS NO Registrado Facturado (Bastones)": "Aforos no registrado<br>facturado (Bastones)",
-      "AFOROS NO Registrado NO Facturado": "Aforos no registrado<br>no facturado",
+      POBLACIÓN: "Población",
+      "AFOROS NO Registrado Facturado (Bastones)":
+        "Aforos no registrado<br>facturado (Bastones)",
+      "AFOROS NO Registrado NO Facturado":
+        "Aforos no registrado<br>no facturado",
       "PÉRIDAS APARENTES (%)": "Pérdidas aparentes<br>(%)",
       "PÉRDIDAS APARENTES (Imprecisión)": "Pérdidas aparentes<br>(Imprecisión)",
-      "Perdidas Tecnicas Mínimas (UARL) (Pérd. Reales)": "Pérdidas técnicas mínimas (UARL)<br>(Pérd. reales)"
+      "Perdidas Tecnicas Mínimas (UARL) (Pérd. Reales)":
+        "Pérdidas técnicas mínimas (UARL)<br>(Pérd. reales)",
     },
     numeric: [
       "AFOROS NO Registrado Facturado (Bastones)",
       "AFOROS NO Registrado NO Facturado",
       "PÉRIDAS APARENTES (%)",
       "PÉRDIDAS APARENTES (Imprecisión)",
-      "Perdidas Tecnicas Mínimas (UARL) (Pérd. Reales)"
+      "Perdidas Tecnicas Mínimas (UARL) (Pérd. Reales)",
     ],
     notes: null,
-    dateCols: ["FECHA", "FECHA DATOS"]
+    dateCols: ["FECHA", "FECHA DATOS"],
   },
 };
 let activeKey = "balance",
@@ -337,7 +418,10 @@ const num = (value, decimals = 2) => {
 };
 const isDateCol = (x) => x === "FECHA" || (cfg().dateCols || []).includes(x);
 function calculateTotal(row, c = cfg()) {
-  const totals = c.totalCols || c.calculatedTotals || (c.totalCol ? [{ col: c.totalCol, sumCols: c.sumCols }] : []);
+  const totals =
+    c.totalCols ||
+    c.calculatedTotals ||
+    (c.totalCol ? [{ col: c.totalCol, sumCols: c.sumCols }] : []);
   totals.forEach((total) => {
     const value = total.sumCols.reduce((sum, col) => {
       const n = Number(row[col]);
@@ -347,7 +431,10 @@ function calculateTotal(row, c = cfg()) {
   });
 }
 function isCalculatedCol(c, x) {
-  return x === c.totalCol || (c.totalCols || c.calculatedTotals || []).some((t) => t.col === x);
+  return (
+    x === c.totalCol ||
+    (c.totalCols || c.calculatedTotals || []).some((t) => t.col === x)
+  );
 }
 function normalizeHeader(v) {
   return String(v ?? "")
@@ -557,7 +644,7 @@ function render() {
     list
       .map(
         (r) =>
-          `<tr>${c.cols.map((x) => (x === c.notes ? `<td class="statusCell">${noteCell(r[x])}</td>` : isDateCol(x) ? `<td>${displayDate(r[x])}</td>` : c.numeric.includes(x) || (c.sumCols?.includes(x)) ? `<td>${num(r[x], activeKey === "red" && x === "ID" ? 0 : 2)}</td>` : `<td>${esc(r[x])}</td>`)).join("")}<td class="actions"><button class="iconAction edit" onclick="openEdit(${r._id})" title="Editar"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="iconAction delete" onclick="removeRow(${r._id})" title="Eliminar"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button></td></tr>`,
+          `<tr>${c.cols.map((x) => (x === c.notes ? `<td class="statusCell">${noteCell(r[x])}</td>` : isDateCol(x) ? `<td>${displayDate(r[x])}</td>` : c.numeric.includes(x) || c.sumCols?.includes(x) ? `<td>${num(r[x], activeKey === "red" && x === "ID" ? 0 : 2)}</td>` : `<td>${esc(r[x])}</td>`)).join("")}<td class="actions"><button class="iconAction edit" onclick="openEdit(${r._id})" title="Editar"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="iconAction delete" onclick="removeRow(${r._id})" title="Eliminar"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button></td></tr>`,
       )
       .join("") ||
     `<tr><td colspan="${c.cols.length + 1}">Sin resultados</td></tr>`;
@@ -767,7 +854,11 @@ async function switchDataset(key) {
     .forEach((b) => b.classList.toggle("active", b.dataset.dataset === key));
   page = 1;
   sortColumn =
-    key === "chg" ? "Año" : (key === "acucon" || key === "carnf") ? "FECHA DATOS" : "FECHA";
+    key === "chg"
+      ? "Año"
+      : key === "acucon" || key === "carnf"
+        ? "FECHA DATOS"
+        : "FECHA";
   sortDirection = "asc";
   $("globalFilter").value = "";
   $("rowCount").textContent = "Cargando…";
