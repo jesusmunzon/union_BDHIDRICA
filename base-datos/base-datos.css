@@ -1406,3 +1406,99 @@ main > header {
     gap: 10px;
   }
 }
+
+/* =========================================================
+   ENCABEZADO MODERNO DE BASE DE DATOS
+   Igual que Estadísticos 1 e Informe IA Ejecutivo
+   ========================================================= */
+main {
+  margin-left: 278px;
+  padding: 0;
+  min-width: 0;
+}
+
+.database-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 78px;
+  margin: 0;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid #e2e8f0;
+  backdrop-filter: blur(12px);
+}
+
+.database-heading h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.database-heading p {
+  margin: 5px 0 0;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.database-topbar .headActions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+}
+
+.database-content {
+  width: 100%;
+  padding: 22px 34px 28px;
+}
+
+.database-content > .tabs {
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  main {
+    margin-left: 0;
+    padding: 0;
+  }
+
+  .database-topbar {
+    min-height: 78px;
+    padding: 10px 14px;
+    align-items: center;
+  }
+
+  .database-heading h1 {
+    font-size: 20px;
+  }
+
+  .database-heading p {
+    max-width: 62vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .database-content {
+    padding: 18px 14px 24px;
+  }
+}
+
+@media (max-width: 620px) {
+  .database-topbar {
+    flex-wrap: wrap;
+  }
+
+  .database-topbar .headActions {
+    width: 100%;
+  }
+}
