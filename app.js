@@ -376,7 +376,6 @@ fetch("datos-red.json")
       )
       .join("");
 
-    refresh.addEventListener("click", update);
     month.addEventListener("change", update);
     year.addEventListener("change", update);
 

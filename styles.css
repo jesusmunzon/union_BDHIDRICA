@@ -649,51 +649,89 @@ main {
   }
 }
 
-/* Ajustes visuales de las tarjetas KPI */
-.kpi {
-  position: relative;
-  transition:
-    background-color 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
+/* Ajustes finales solicitados */
+.nav-item,
+a.nav-item,
+.nav-item:link,
+.nav-item:visited,
+.nav-item:hover,
+.nav-item:active,
+.nav-item span,
+.nav-item small {
+  text-decoration: none !important;
+}
+
+.filters-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 76px;
+  padding: 16px 20px;
+}
+
+.filters-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 104px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.filters-label strong {
+  font-size: 14px;
+}
+.filters-label svg {
+  width: 20px;
+  height: 20px;
+}
+
+.filters-card label {
+  display: grid;
+  grid-template-columns: 42px minmax(150px, 180px);
+  align-items: center;
+  column-gap: 12px;
+}
+
+.filters-card label span {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.filters-card select {
+  width: 100%;
+  min-width: 150px;
+  height: 44px;
+  padding: 0 40px 0 15px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .kpi footer {
-  grid-column: 1 / -1;
-  display: flex;
   justify-content: flex-start;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
   text-align: left;
 }
 
 .kpi footer small {
-  margin: 0;
-  max-width: none;
+  margin-left: 0;
   text-align: left;
 }
 
+.kpi {
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
 .kpi:hover {
-  background-color: #f8faff;
-  border-color: #c7d2fe;
-  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.14);
   transform: translateY(-2px);
+  border-color: #c7d2fe;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.13);
 }
 
-.dark .kpi:hover {
-  background-color: #131d31;
+body.dark .kpi:hover {
   border-color: #4f46e5;
-  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.45);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kpi {
-    transition: none;
-  }
-
-  .kpi:hover {
-    transform: none;
-  }
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
 }
