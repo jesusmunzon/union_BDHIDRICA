@@ -224,7 +224,7 @@ function initializeInterface() {
 }
 
 initializeInterface();
-fetch("../datos-red.json")
+fetch("datos-red.json")
   .then((response) => {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return response.json();
