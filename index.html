@@ -20,11 +20,11 @@
     </header>
     <nav class="nav">
       <p class="nav-title">Menú principal</p>
-      <button class="nav-item active"><i data-lucide="layout-dashboard"></i><span>Estadísticos 1</span></button>
-      <button class="nav-item"><i data-lucide="bar-chart-3"></i><span>Estadísticos 2</span></button>
-      <button class="nav-item"><i data-lucide="activity"></i><span>Estadísticos 3</span></button>
-      <button class="nav-item"><i data-lucide="trending-up"></i><span>Estadísticos 4</span></button>
-      <button class="nav-item"><i class="ai-icon" data-lucide="sparkles"></i><span>Informe IA Ejecutivo</span><small>Copilot</small></button>
+      <button class="nav-item active" data-tab="dashboard"><i data-lucide="layout-dashboard"></i><span>Estadísticos 1</span></button>
+      <button class="nav-item" data-tab="estadisticos2"><i data-lucide="bar-chart-3"></i><span>Estadísticos 2</span></button>
+      <button class="nav-item" data-tab="estadisticos3"><i data-lucide="activity"></i><span>Estadísticos 3</span></button>
+      <button class="nav-item" data-tab="estadisticos4"><i data-lucide="trending-up"></i><span>Estadísticos 4</span></button>
+      <button class="nav-item" data-tab="informe-ia"><i class="ai-icon" data-lucide="sparkles"></i><span>Informe IA Ejecutivo</span><small>Copilot</small></button>
       <p class="nav-title second">Ajustes y sistema</p>
       <button class="nav-item"><i data-lucide="database"></i><span>Base de datos</span></button>
       <button class="nav-item"><i data-lucide="table-2"></i><span>Tablas auxiliares</span></button>
@@ -41,12 +41,13 @@
     <header class="topbar">
       <button id="openMenu" class="icon-button mobile-only" aria-label="Abrir menú"><i data-lucide="menu"></i></button>
       <div class="heading">
-        <h1>Estadísticos 1</h1>
-        <p>Evolución histórica de los principales indicadores de captación, distribución e intercambios de agua</p>
+        <h1 id="pageTitle">Estadísticos 1</h1>
+        <p id="pageDescription">Evolución histórica de los principales indicadores de captación, distribución e intercambios de agua</p>
       </div>
     </header>
 
     <main>
+      <section id="panel-dashboard" class="tab-panel active">
       <section class="filters-card">
         <div class="filters-label"><i data-lucide="filter"></i><strong>Filtros:</strong></div>
         <label><span>Mes</span><select id="monthSelect"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option>Junio</option><option>Julio</option><option selected>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select></label>
