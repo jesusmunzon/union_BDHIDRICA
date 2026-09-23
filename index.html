@@ -1,78 +1,85 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full">
+
+<html class="h-full" lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <title>Control de Red</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="light dark" name="color-scheme"/>
+<title>Control de Red</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="styles.css" rel="stylesheet"/>
 </head>
 <body>
-  <aside id="sidebar" class="sidebar">
-    <header class="brand">
-      <div class="brand-icon"><i data-lucide="waves"></i></div>
-      <div><strong>Control de Red</strong><span>Analítica hidráulica</span></div>
-      <button id="closeMenu" class="icon-button mobile-only" aria-label="Cerrar menú"><i data-lucide="x"></i></button>
-    </header>
-    <nav class="nav">
-      <p class="nav-title">Menú principal</p>
-      <button class="nav-item active" data-tab="dashboard"><i data-lucide="layout-dashboard"></i><span>Estadísticos 1</span></button>
-      <button class="nav-item" data-tab="estadisticos2"><i data-lucide="bar-chart-3"></i><span>Estadísticos 2</span></button>
-      <button class="nav-item" data-tab="estadisticos3"><i data-lucide="activity"></i><span>Estadísticos 3</span></button>
-      <button class="nav-item" data-tab="estadisticos4"><i data-lucide="trending-up"></i><span>Estadísticos 4</span></button>
-      <button class="nav-item" data-tab="informe-ia"><i class="ai-icon" data-lucide="sparkles"></i><span>Informe IA Ejecutivo</span><small>Copilot</small></button>
-      <p class="nav-title second">Ajustes y sistema</p>
-      <button class="nav-item"><i data-lucide="database"></i><span>Base de datos</span></button>
-      <button class="nav-item"><i data-lucide="table-2"></i><span>Tablas auxiliares</span></button>
-    </nav>
-    <footer class="sidebar-footer">
-      <div class="status-icon"><i data-lucide="activity"></i><b></b></div>
-      <div><strong>Sistema operativo</strong><span>Datos cargados</span></div>
-      <button id="themeToggle" class="theme-button" title="Cambiar tema"><i id="themeIcon" data-lucide="moon"></i></button>
-    </footer>
-  </aside>
-  <div id="overlay" class="overlay"></div>
-
-  <div class="app-shell">
-    <header class="topbar">
-      <button id="openMenu" class="icon-button mobile-only" aria-label="Abrir menú"><i data-lucide="menu"></i></button>
-      <div class="heading">
-        <h1 id="pageTitle">Estadísticos 1</h1>
-        <p id="pageDescription">Evolución histórica de los principales indicadores de captación, distribución e intercambios de agua</p>
-      </div>
-    </header>
-
-    <main>
-      <section id="panel-dashboard" class="tab-panel active">
-      <section class="filters-card">
-        <div class="filters-label"><i data-lucide="filter"></i><strong>Filtros:</strong></div>
-        <label><span>Mes</span><select id="monthSelect"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option>Junio</option><option>Julio</option><option selected>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select></label>
-        <label><span>Año</span><select id="yearSelect"><option>2020</option><option>2021</option><option>2022</option><option selected>2023</option><option>2024</option><option>2025</option><option>2026</option></select></label>
-      </section>
-
-      <section class="kpi-grid">
-        <article class="kpi"><div><span>Captada acumulada</span><strong>482,9 hm³</strong></div><i class="indigo" data-lucide="droplets"></i><footer><b>↗ +14,2%</b><small>Hasta el mes seleccionado</small></footer></article>
-        <article class="kpi"><div><span>Distribuida estimada</span><strong>371,2 hm³</strong></div><i class="green" data-lucide="waves"></i><footer><b>↗ +8,7%</b><small>Sevilla + resto</small></footer></article>
-        <article class="kpi"><div><span>Balance de intercambios</span><strong>12,8 hm³</strong></div><i class="cyan" data-lucide="gauge"></i><footer><b>↗ +2,1%</b><small>Importada menos exportada</small></footer></article>
-        <article class="kpi"><div><span>Variación interanual</span><strong>+5,4%</strong></div><i class="amber" data-lucide="trending-up"></i><footer><b class="negative">↘ -1,2%</b><small>Agua distribuida</small></footer></article>
-      </section>
-
-      <section class="chart-card main-chart">
-        <div class="chart-head"><div><h2>Agua Captada Diaria</h2><p id="chartSubtitle">Acumulado enero-agosto · últimos 10 años</p></div><div class="legend"><span><b class="dot indigo-dot"></b>Melonares</span><span><b class="dot cyan-dot"></b>Gergal</span><span><b class="dot gray-dot"></b>Minilla</span></div></div>
-        <div id="mainBars" class="bars"></div>
-      </section>
-
-      <section class="mini-grid">
-        <article class="chart-card"><h3>Agua bruta exportada</h3><p>Comparativa mensual</p><div class="mini-bars amber-bars"></div></article>
-        <article class="chart-card"><h3>Agua tratada importada</h3><p>Comparativa mensual</p><div class="mini-bars green-bars"></div></article>
-        <article class="chart-card"><h3>Agua tratada exportada</h3><p>Comparativa mensual</p><div class="mini-bars indigo-bars"></div></article>
-      </section>
-    </main>
-  </div>
-  <script src="app.js"></script>
+<aside class="sidebar" id="sidebar">
+<header class="brand">
+<div class="brand-icon"><i data-lucide="waves"></i></div>
+<div><strong>Control de Red</strong><span>Analítica hidráulica</span></div>
+<button aria-label="Cerrar menú" class="icon-button mobile-only" id="closeMenu"><i data-lucide="x"></i></button>
+</header>
+<nav class="nav">
+<p class="nav-title">Menú principal</p>
+<button class="nav-item active" data-tab="dashboard"><i data-lucide="layout-dashboard"></i><span>Estadísticos 1</span></button>
+<button class="nav-item" data-tab="estadisticos2"><i data-lucide="bar-chart-3"></i><span>Estadísticos 2</span></button>
+<button class="nav-item" data-tab="estadisticos3"><i data-lucide="activity"></i><span>Estadísticos 3</span></button>
+<button class="nav-item" data-tab="estadisticos4"><i data-lucide="trending-up"></i><span>Estadísticos 4</span></button>
+<button class="nav-item" data-tab="informe-ia"><i class="ai-icon" data-lucide="sparkles"></i><span>Informe IA Ejecutivo</span><small>Copilot</small></button>
+<p class="nav-title second">Ajustes y sistema</p>
+<button class="nav-item" data-tab="base-datos"><i data-lucide="database"></i><span>Base de datos</span></button>
+<button class="nav-item" data-tab="tablas-auxiliares"><i data-lucide="table-2"></i><span>Tablas auxiliares</span></button>
+</nav>
+<footer class="sidebar-footer">
+<div class="status-icon"><i data-lucide="activity"></i><b></b></div>
+<div><strong>Sistema operativo</strong><span>Datos cargados</span></div>
+<button class="theme-button" id="themeToggle" title="Cambiar tema"><i data-lucide="moon" id="themeIcon"></i></button>
+</footer>
+</aside>
+<div class="overlay" id="overlay"></div>
+<div class="app-shell">
+<header class="topbar">
+<button aria-label="Abrir menú" class="icon-button mobile-only" id="openMenu"><i data-lucide="menu"></i></button>
+<div class="heading">
+<h1 id="pageTitle">Estadísticos 1</h1>
+<p id="pageDescription">Evolución histórica de los principales indicadores de captación, distribución e intercambios de agua</p>
+</div>
+</header>
+<main>
+<section class="tab-panel active" id="panel-dashboard">
+<section class="filters-card">
+<div class="filters-label"><i data-lucide="filter"></i><strong>Filtros:</strong></div>
+<label><span>Mes</span><select id="month"></select></label>
+<label><span>Año</span><select id="year"></select></label>
+<button class="filter-refresh" id="refresh"><i data-lucide="refresh-cw"></i> Actualizar</button>
+</section>
+<p class="period-text" id="periodText">Cargando datos...</p>
+<section class="kpi-grid">
+<article class="kpi"><div><span>Captada acumulada</span><strong id="k1">—</strong></div><i class="indigo" data-lucide="droplets"></i><footer><small>Hasta el mes seleccionado</small></footer></article>
+<article class="kpi"><div><span>Distribuida estimada</span><strong id="k2">—</strong></div><i class="green" data-lucide="waves"></i><footer><small>Sevilla + resto</small></footer></article>
+<article class="kpi"><div><span>Balance de intercambios</span><strong id="k3">—</strong></div><i class="cyan" data-lucide="gauge"></i><footer><small>Importada menos exportada</small></footer></article>
+<article class="kpi"><div><span>Variación interanual</span><strong id="k4">—</strong></div><i class="amber" data-lucide="trending-up"></i><footer><small>Agua distribuida</small></footer></article>
+</section>
+<section class="dashboard-grid">
+<article class="chart-card wide"><div class="chart-head"><div><h2>Agua captada acumulada</h2><p id="capSub"></p></div><span class="unit-pill">hm³</span></div><div class="chart chart-tall"><canvas id="captada"></canvas></div></article>
+<div class="mini-chart-grid wide">
+<article class="chart-card"><div class="chart-head"><div><h3>Agua bruta exportada</h3><p>Comparativa mensual</p></div></div><div class="chart"><canvas id="bruta"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>Agua tratada importada</h3><p>Comparativa mensual</p></div></div><div class="chart"><canvas id="importada"></canvas></div></article>
+<article class="chart-card"><div class="chart-head"><div><h3>Agua tratada exportada</h3><p>Comparativa mensual</p></div></div><div class="chart"><canvas id="exportada"></canvas></div></article>
+</div>
+<article class="chart-card two"><div class="chart-head"><div><h2>Agua distribuida</h2><p id="distSub"></p></div><span class="unit-pill">hm³</span></div><div class="chart chart-tall"><canvas id="distribuida"></canvas></div></article>
+<article class="chart-card one"><div class="chart-head"><div><h2>Distribución por poblaciones</h2><p id="popSub"></p></div><span class="unit-pill">hm³</span></div><div class="chart chart-tall"><canvas id="poblaciones"></canvas></div></article>
+</section>
+</section>
+<section class="tab-panel" id="panel-informe-ia">
+<article class="ai-hero"><div class="ai-hero-title"><span class="ai-badge"><i data-lucide="sparkles"></i> Copilot ejecutivo</span><span id="aiDataStatus">Cargando datos...</span></div><h2>Informe IA Ejecutivo</h2><p>Genera una síntesis directiva utilizando todos los registros de datos-red.json y el período seleccionado.</p><label class="prompt-box"><i data-lucide="message-square"></i><textarea id="aiPrompt" placeholder="Ejemplo: analiza tendencias, riesgos y acciones prioritarias." rows="3"></textarea></label><div class="ai-actions"><button class="primary-button" id="generateReport"><i data-lucide="sparkles"></i> Generar informe</button><button class="secondary-button" id="printReport"><i data-lucide="printer"></i> Imprimir / PDF</button></div></article>
+<div class="ai-loading" hidden="" id="aiLoading"><span></span><strong>Analizando datos...</strong></div>
+<article class="report-card" id="executiveReport"><header class="report-header"><div><span>Control de Red</span><h2>Informe ejecutivo hidráulico</h2><p id="reportPeriod">Período analizado</p></div><div><b id="reportDate"></b><small>Documento dinámico</small></div></header><section class="report-summary"><h3>Resumen ejecutivo</h3><p id="reportSummary">Pulsa “Generar informe”.</p></section><section class="report-kpis" id="reportKpis"></section><section class="report-columns"><div><h3><i data-lucide="check-circle-2"></i> Fortalezas</h3><ul id="reportStrengths"></ul></div><div><h3><i data-lucide="alert-triangle"></i> Riesgos y atención</h3><ul id="reportRisks"></ul></div></section><section class="report-roadmap"><h3>Recomendaciones prioritarias</h3><div id="reportActions"></div></section><footer class="report-footer">Informe analítico sujeto a validación técnica.</footer></article>
+</section>
+<section class="tab-panel" id="panel-placeholder"><article class="empty-panel"><i data-lucide="construction"></i><h2 id="placeholderTitle">Sección en preparación</h2><p>Esta pantalla conservará el mismo menú y cabecera.</p></article></section>
+<div id="loading">Preparando visualización...</div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script><script src="app.js"></script>
 </body>
 </html>

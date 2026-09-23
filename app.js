@@ -1,109 +1,30 @@
+const C={blue:'#1677ff',cyan:'#19b6c9',green:'#2eb67d',orange:'#f59e0b',navy:'#254b6d',gray:'#c7d2de'};const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];let D=[],charts={};
+const norm=s=>(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+const hm=v=>v/1e6;const fmt=v=>new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,minimumFractionDigits:1}).format(v)+' hm³';
+const sum=(pred,y,m=12)=>D.filter(r=>+r.d.slice(0,4)===y && +r.d.slice(5,7)<=m && pred(r)).reduce((a,r)=>a+r.v,0);
+const capPred=name=>r=>r.tipo==='AGUA CAPTADA'&&r.sub==='AGUA BRUTA'&&(name==='Melonares'?norm(r.p2)==='MELONARES':name==='Gergal'?norm(r.p1)==='GERGAL':norm(r.p1)==='MINILLA');
+const interPred=sub=>r=>norm(r.sub)===norm(sub);
+function distributed(y,m,sevillaOnly=false){const produced=sum(r=>norm(r.sub)==='AGUA PRODUCIDA ETAP',y,m)+sum(interPred('AGUA TRATADA IMPORTADA'),y,m);const exports=sum(interPred('AGUA TRATADA EXPORTADA'),y,m);const total=produced-exports;if(!sevillaOnly)return total;return Math.max(0,produced-sum(r=>norm(r.sub)==='AGUA TRATADA IMPORTADA'||norm(r.sub)==='AGUA TRATADA EXPORTADA'||(norm(r.sub)==='AGUA PRODUCIDA ETAP'&&norm(r.p1)!=='ETAP CARAMBOLO'),y,m));}
+function chart(id,type,data,options={}){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),{type,data,options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{boxWidth:9,usePointStyle:true,font:{size:10}}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmt(c.raw)}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#738394'}},y:{beginAtZero:true,grid:{color:'#edf1f5'},ticks:{font:{size:9},color:'#738394',callback:v=>v.toLocaleString('es-ES')}},...(options.scales||{})},...options}})}
+function monthly(sub,y){return months.map((_,i)=>hm(sum(interPred(sub),y,i+1)-sum(interPred(sub),y,i)));}
+function update(){const y=+year.value,m=+month.value,prev=y-1;periodText.textContent=`Datos hasta ${months[m-1].toLowerCase()} de ${y} · comparación histórica`;capSub.textContent=`Acumulado enero–${months[m-1].toLowerCase()} · últimos 10 años`;distSub.textContent=`Acumulado enero–${months[m-1].toLowerCase()} por año`;popSub.textContent=`${y} frente a ${prev} · enero–${months[m-1].toLowerCase()}`;
+const availableYears=[...new Set(D.map(r=>+r.d.slice(0,4)))].filter(Number.isFinite).sort((a,b)=>a-b);const ys=availableYears.filter(yy=>yy>=y-10&&yy<=y);const captured=ys.map(yy=>['Melonares','Gergal','Minilla'].reduce((a,n)=>a+sum(capPred(n),yy,m),0));const dist=ys.map(yy=>distributed(yy,m));k1.textContent=fmt(captured.at(-1));k2.textContent=fmt(hm(dist.at(-1)));const bal=sum(interPred('AGUA TRATADA IMPORTADA'),y,m)-sum(interPred('AGUA TRATADA EXPORTADA'),y,m);k3.textContent=fmt(hm(bal));const dp=distributed(prev,m),pct=dp?(distributed(y,m)/dp-1)*100:0;k4.textContent=(pct>=0?'+':'')+pct.toLocaleString('es-ES',{maximumFractionDigits:1})+' %';k4.style.color=pct>=0?C.green:'#d64545';
+chart('captada','bar',{labels:ys,datasets:[{label:'Melonares',data:ys.map(z=>hm(sum(capPred('Melonares'),z,m))),backgroundColor:C.blue,borderRadius:3},{label:'Gergal',data:ys.map(z=>hm(sum(capPred('Gergal'),z,m))),backgroundColor:C.cyan,borderRadius:3},{label:'Minilla',data:ys.map(z=>hm(sum(capPred('Minilla'),z,m))),backgroundColor:C.navy,borderRadius:3}]},{scales:{x:{stacked:true},y:{stacked:true}}});
+[['bruta','AGUA ADUCIDA BRUTA EXPORTADA',C.orange],['importada','AGUA TRATADA IMPORTADA',C.green],['exportada','AGUA TRATADA EXPORTADA',C.blue]].forEach(([id,sub,col])=>chart(id,'bar',{labels:months,datasets:[{label:String(prev),data:monthly(sub,prev),backgroundColor:C.gray,borderRadius:3},{label:String(y),data:monthly(sub,y).map((v,i)=>i<m?v:null),backgroundColor:col,borderRadius:3}]}));
+chart('distribuida','line',{labels:ys,datasets:[{label:'Sevilla',data:ys.map(z=>hm(distributed(z,m,true))),borderColor:C.blue,backgroundColor:C.blue,tension:.3,pointRadius:3},{label:'Resto de poblaciones',data:ys.map(z=>hm(distributed(z,m)-distributed(z,m,true))),borderColor:C.green,backgroundColor:C.green,tension:.3,pointRadius:3}]});
+const popNames=['Aljarafesa','Huesna','Burguillos','El Garrobo','El Ronquillo','Adufe','Mairena del Alcor','La Galbana'];const popVal=(n,yy)=>{if(['Aljarafesa','Huesna','Burguillos'].includes(n))return hm(sum(r=>norm(r.sub)==='AGUA TRATADA EXPORTADA'&&norm(r.p1).includes(norm(n)),yy,m));return hm(sum(r=>(norm(r.sub)==='AGUA PRODUCIDA ETAP'||norm(r.sub)==='AGUA TRATADA IMPORTADA')&&(norm(r.p1).includes(norm(n))||norm(r.p2).includes(norm(n))),yy,m));};chart('poblaciones','bar',{labels:popNames,datasets:[{label:String(prev),data:popNames.map(n=>popVal(n,prev)),backgroundColor:C.gray,borderRadius:3},{label:String(y),data:popNames.map(n=>popVal(n,y)),backgroundColor:C.blue,borderRadius:3}]},{indexAxis:'y'});}
+
 const AI_CONFIG={endpoint:""};
-let RED_DATA=[];
-document.addEventListener("DOMContentLoaded",()=>{
-  lucide.createIcons();
-  const body=document.body,sidebar=document.getElementById("sidebar"),overlay=document.getElementById("overlay");
-  const close=()=>{sidebar.classList.remove("open");overlay.classList.remove("open")};
-  document.getElementById("openMenu").onclick=()=>{sidebar.classList.add("open");overlay.classList.add("open")};
-  document.getElementById("closeMenu").onclick=close;overlay.onclick=close;
-  const savedTheme=localStorage.getItem("control-red-theme");if(savedTheme==="dark")body.classList.add("dark");
-  const updateThemeIcon=()=>{document.getElementById("themeIcon").setAttribute("data-lucide",body.classList.contains("dark")?"sun":"moon");lucide.createIcons()};updateThemeIcon();
-  document.getElementById("themeToggle").onclick=()=>{body.classList.toggle("dark");localStorage.setItem("control-red-theme",body.classList.contains("dark")?"dark":"light");updateThemeIcon()};
-  const years=[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023],values=[44,57,51,69,62,76,70,85,79,94],bars=document.getElementById("mainBars");
-  years.forEach((year,i)=>{const g=document.createElement("div");g.className="bar-group";g.innerHTML=`<i class="bar a" style="height:${values[i]}%"></i><i class="bar b" style="height:${values[i]*.62}%"></i><i class="bar c" style="height:${values[i]*.35}%"></i><span class="bar-year">${year}</span>`;bars.appendChild(g)});
-  const vals=[38,55,48,75,62,81,69,98,78,88,67,92];document.querySelectorAll(".mini-bars").forEach((box,n)=>vals.forEach(v=>{const p=document.createElement("div");p.className="mini-pair";const scale=n===1?1.12:n===2?.95:1;p.innerHTML=`<i style="height:${Math.max(15,(v-13)*scale)}px"></i><i class="current" style="height:${v*scale}px"></i>`;box.appendChild(p)}));
-  const refreshSubtitle=()=>{const m=document.getElementById("monthSelect").value.toLowerCase(),y=document.getElementById("yearSelect").value;document.getElementById("chartSubtitle").textContent=`Acumulado enero-${m} · referencia ${y}`};
-  document.getElementById("monthSelect").onchange=refreshSubtitle;document.getElementById("yearSelect").onchange=refreshSubtitle;
-  const metadata={dashboard:["Estadísticos 1","Evolución histórica de los principales indicadores de captación, distribución e intercambios de agua"],"informe-ia":["Informe IA Ejecutivo","Análisis directivo de los indicadores visibles y recomendaciones prioritarias"],estadisticos2:["Estadísticos 2","Pantalla estadística en preparación"],estadisticos3:["Estadísticos 3","Pantalla estadística en preparación"],estadisticos4:["Estadísticos 4","Pantalla estadística en preparación"]};
-  document.querySelectorAll(".nav-item[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab-panel").forEach(x=>x.classList.remove("active"));const tab=b.dataset.tab,panel=document.getElementById(`panel-${tab}`);(panel||document.getElementById("panel-placeholder")).classList.add("active");const info=metadata[tab]||["Sección","Pantalla en preparación"];document.getElementById("pageTitle").textContent=info[0];document.getElementById("pageDescription").textContent=info[1];if(!panel)document.getElementById("placeholderTitle").textContent=info[0];close();lucide.createIcons()});
-  document.getElementById("printReport").onclick=()=>window.print();
-  document.getElementById("generateReport").onclick=generateExecutiveReport;
-  loadRedData();
-});
-async function loadRedData(){
-  const status=document.getElementById("aiDataStatus");
-  try{
-    const response=await fetch("datos-red.json",{cache:"no-store"});
-    if(!response.ok)throw new Error(`HTTP ${response.status}`);
-    RED_DATA=await response.json();
-    if(!Array.isArray(RED_DATA))throw new Error("Formato de datos no válido");
-    status.textContent=`${RED_DATA.length.toLocaleString("es-ES")} registros disponibles`;
-  }catch(error){
-    console.error("No se pudo cargar datos-red.json",error);
-    status.textContent="No se pudo cargar datos-red.json";
-  }
+const month=document.getElementById('month'),year=document.getElementById('year'),refresh=document.getElementById('refresh'),periodText=document.getElementById('periodText'),capSub=document.getElementById('capSub'),distSub=document.getElementById('distSub'),popSub=document.getElementById('popSub'),k1=document.getElementById('k1'),k2=document.getElementById('k2'),k3=document.getElementById('k3'),k4=document.getElementById('k4'),loading=document.getElementById('loading');
+function initShell(){
+ lucide.createIcons();const body=document.body,sidebar=document.getElementById('sidebar'),overlay=document.getElementById('overlay');const close=()=>{sidebar.classList.remove('open');overlay.classList.remove('open')};
+ document.getElementById('openMenu').onclick=()=>{sidebar.classList.add('open');overlay.classList.add('open')};document.getElementById('closeMenu').onclick=close;overlay.onclick=close;
+ if(localStorage.getItem('control-red-theme')==='dark')body.classList.add('dark');const theme=()=>{document.getElementById('themeIcon').setAttribute('data-lucide',body.classList.contains('dark')?'sun':'moon');lucide.createIcons()};theme();document.getElementById('themeToggle').onclick=()=>{body.classList.toggle('dark');localStorage.setItem('control-red-theme',body.classList.contains('dark')?'dark':'light');theme()};
+ const meta={dashboard:['Estadísticos 1','Evolución histórica de captación, distribución e intercambios de agua'],'informe-ia':['Informe IA Ejecutivo','Análisis directivo basado en datos-red.json'],estadisticos2:['Estadísticos 2','Pantalla estadística en preparación'],estadisticos3:['Estadísticos 3','Pantalla estadística en preparación'],estadisticos4:['Estadísticos 4','Pantalla estadística en preparación'],'base-datos':['Base de datos','Gestión de datos hidráulicos'],'tablas-auxiliares':['Tablas auxiliares','Configuración de tablas auxiliares']};
+ document.querySelectorAll('.nav-item[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));const tab=b.dataset.tab,p=document.getElementById('panel-'+tab);(p||document.getElementById('panel-placeholder')).classList.add('active');const info=meta[tab];document.getElementById('pageTitle').textContent=info[0];document.getElementById('pageDescription').textContent=info[1];if(!p)document.getElementById('placeholderTitle').textContent=info[0];close();if(tab==='dashboard')setTimeout(()=>Object.values(charts).forEach(c=>c.resize()),50);lucide.createIcons()});
+ document.getElementById('generateReport').onclick=generateExecutiveReport;document.getElementById('printReport').onclick=()=>window.print();
 }
-const norm=s=>(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase();
-const sumRows=rows=>rows.reduce((a,r)=>a+(Number(r.v)||0),0);
-const hm3=v=>v/1e6;
-const formatHm3=v=>`${new Intl.NumberFormat("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)} hm³`;
-function getPeriodRows(year,month){return RED_DATA.filter(r=>{const d=new Date(`${r.d}T00:00:00`);return d.getFullYear()===year && d.getMonth()+1<=month})}
-function calculateYear(year,month){
-  const rows=getPeriodRows(year,month);
-  const captured=sumRows(rows.filter(r=>norm(r.tipo)==="AGUA CAPTADA"&&norm(r.sub)==="AGUA BRUTA"));
-  const produced=sumRows(rows.filter(r=>norm(r.sub)==="AGUA PRODUCIDA ETAP"));
-  const imported=sumRows(rows.filter(r=>norm(r.sub)==="AGUA TRATADA IMPORTADA"));
-  const exported=sumRows(rows.filter(r=>norm(r.sub)==="AGUA TRATADA EXPORTADA"));
-  const rawExported=sumRows(rows.filter(r=>norm(r.sub)==="AGUA ADUCIDA BRUTA EXPORTADA"));
-  const distributed=produced+imported-exported;
-  const sources={};
-  rows.filter(r=>norm(r.tipo)==="AGUA CAPTADA"&&norm(r.sub)==="AGUA BRUTA").forEach(r=>{const key=r.p1||r.p2||"Sin clasificar";sources[key]=(sources[key]||0)+(Number(r.v)||0)});
-  const topSources=Object.entries(sources).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,value])=>({name,value:hm3(value)}));
-  return {year,month,rows:rows.length,captured:hm3(captured),produced:hm3(produced),imported:hm3(imported),exported:hm3(exported),rawExported:hm3(rawExported),distributed:hm3(distributed),balance:hm3(imported-exported),topSources};
-}
-function pct(current,previous){return previous?((current/previous)-1)*100:null}
-function getDashboardData(){
-  const monthName=document.getElementById("monthSelect").value;
-  const month=document.getElementById("monthSelect").selectedIndex+1;
-  const year=Number(document.getElementById("yearSelect").value);
-  const current=calculateYear(year,month),previous=calculateYear(year-1,month);
-  const capturedChange=pct(current.captured,previous.captured),distributedChange=pct(current.distributed,previous.distributed);
-  const availableYears=[...new Set(RED_DATA.map(r=>Number(String(r.d).slice(0,4))).filter(Number.isFinite))].sort((a,b)=>a-b);
-  const history=availableYears.filter(y=>y<=year&&y>=year-9).map(y=>calculateYear(y,month));
-  return {monthName,month,year,current,previous,history,capturedChange,distributedChange,recordCount:RED_DATA.length};
-}
-function localExecutiveAnalysis(data,prompt){
-  const c=data.current,p=data.previous;
-  const capTrend=data.capturedChange===null?"sin comparación":`${data.capturedChange>=0?"+":""}${data.capturedChange.toFixed(1)}%`;
-  const distTrend=data.distributedChange===null?"sin comparación":`${data.distributedChange>=0?"+":""}${data.distributedChange.toFixed(1)}%`;
-  const source=c.topSources[0];
-  const balanceState=c.balance>=0?"importador neto":"exportador neto";
-  const historicalAvg=data.history.length?data.history.reduce((a,x)=>a+x.distributed,0)/data.history.length:0;
-  const vsAvg=historicalAvg?pct(c.distributed,historicalAvg):null;
-  return {
-    summary:`Hasta ${data.monthName.toLowerCase()} de ${data.year}, la red acumula ${formatHm3(c.captured)} de agua captada y una distribución estimada de ${formatHm3(c.distributed)}. Frente al mismo período de ${data.year-1}, la captación varía ${capTrend} y la distribución ${distTrend}. Las importaciones tratadas suman ${formatHm3(c.imported)} y las exportaciones ${formatHm3(c.exported)}, con un balance de ${formatHm3(c.balance)} que sitúa al sistema como ${balanceState}. ${source?`La principal procedencia de captación es ${source.name}, con ${formatHm3(source.value)}.`:""}${vsAvg!==null?` La distribución se sitúa ${Math.abs(vsAvg).toFixed(1)}% ${vsAvg>=0?"por encima":"por debajo"} de la media de los últimos ${data.history.length} años analizados.`:""}${prompt?` Enfoque solicitado: ${prompt}`:""}`,
-    strengths:[
-      `La red registra ${formatHm3(c.captured)} de captación acumulada, con variación interanual de ${capTrend}.`,
-      `La producción en ETAP alcanza ${formatHm3(c.produced)} y sostiene una distribución estimada de ${formatHm3(c.distributed)}.`,
-      source?`${source.name} lidera las aportaciones con ${formatHm3(source.value)}.`:"Existe información desagregada por origen para profundizar en la captación."
-    ],
-    risks:[
-      `El balance tratado es ${formatHm3(c.balance)}; una variación brusca puede elevar la dependencia de intercambios externos.`,
-      `La distribución presenta una variación interanual de ${distTrend}, que debe contrastarse con demanda, reservas y estacionalidad.`,
-      `El análisis utiliza ${c.rows.toLocaleString("es-ES")} registros del período y depende de su integridad y actualización.`
-    ],
-    actions:[
-      `Revisar los orígenes que concentran la captación y definir umbrales de dependencia por sistema.`,
-      `Comparar semanalmente producción, importación, exportación y distribución para detectar desviaciones de balance.`,
-      `Incorporar alertas cuando la variación interanual o frente a la media histórica supere los límites operativos establecidos.`
-    ]
-  };
-}
-async function generateExecutiveReport(){const loading=document.getElementById("aiLoading"),button=document.getElementById("generateReport"),data=getDashboardData(),prompt=document.getElementById("aiPrompt").value.trim();loading.hidden=false;button.disabled=true;let result;try{if(AI_CONFIG.endpoint){const r=await fetch(AI_CONFIG.endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data,prompt})});if(!r.ok)throw new Error(`HTTP ${r.status}`);result=await r.json()}else{await new Promise(r=>setTimeout(r,650));result=localExecutiveAnalysis(data,prompt)}}catch(e){console.error(e);result=localExecutiveAnalysis(data,prompt);result.summary+=` No fue posible conectar con el servicio de IA, por lo que se ha utilizado el análisis local.`}finally{loading.hidden=true;button.disabled=false}renderReport(data,result)}
-function renderReport(data,result){
-  const c=data.current;
-  document.getElementById("reportPeriod").textContent=`Período analizado: enero-${data.monthName.toLowerCase()} de ${data.year}`;
-  document.getElementById("reportDate").textContent=new Intl.DateTimeFormat("es-ES",{dateStyle:"long"}).format(new Date());
-  document.getElementById("reportSummary").textContent=result.summary;
-  const metrics=[
-    ["Captación acumulada",formatHm3(c.captured)],
-    ["Distribución estimada",formatHm3(c.distributed)],
-    ["Importación tratada",formatHm3(c.imported)],
-    ["Balance intercambios",formatHm3(c.balance)]
-  ];
-  document.getElementById("reportKpis").innerHTML=metrics.map(x=>`<div><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("");
-  document.getElementById("reportStrengths").innerHTML=result.strengths.map(x=>`<li>${x}</li>`).join("");
-  document.getElementById("reportRisks").innerHTML=result.risks.map(x=>`<li>${x}</li>`).join("");
-  document.getElementById("reportActions").innerHTML=result.actions.map((x,i)=>`<div class="action-item"><b>${i+1}</b><div><strong>${x}</strong><p>Acción propuesta para seguimiento técnico y directivo.</p></div></div>`).join("");
-  lucide.createIcons();document.getElementById("executiveReport").scrollIntoView({behavior:"smooth",block:"start"});
-}
+function reportData(){const y=+year.value,m=+month.value,prev=y-1;const captured=['Melonares','Gergal','Minilla'].reduce((a,n)=>a+sum(capPred(n),y,m),0);const prevCaptured=['Melonares','Gergal','Minilla'].reduce((a,n)=>a+sum(capPred(n),prev,m),0);const imported=sum(interPred('AGUA TRATADA IMPORTADA'),y,m),exported=sum(interPred('AGUA TRATADA EXPORTADA'),y,m),dist=distributed(y,m),prevDist=distributed(prev,m);return{y,m,prev,captured:hm(captured),prevCaptured:hm(prevCaptured),imported:hm(imported),exported:hm(exported),balance:hm(imported-exported),distributed:hm(dist),capPct:prevCaptured?(captured/prevCaptured-1)*100:0,distPct:prevDist?(dist/prevDist-1)*100:0}}
+async function generateExecutiveReport(){const box=document.getElementById('aiLoading');box.hidden=false;await new Promise(r=>setTimeout(r,450));const d=reportData(),prompt=document.getElementById('aiPrompt').value.trim(),sign=v=>(v>=0?'+':'')+v.toFixed(1)+'%';document.getElementById('reportPeriod').textContent=`Enero-${months[d.m-1].toLowerCase()} de ${d.y}`;document.getElementById('reportDate').textContent=new Intl.DateTimeFormat('es-ES',{dateStyle:'long'}).format(new Date());document.getElementById('reportSummary').textContent=`La red acumula ${fmt(d.captured)} de captación y ${fmt(d.distributed)} de distribución estimada. La captación varía ${sign(d.capPct)} y la distribución ${sign(d.distPct)} frente al mismo período de ${d.prev}. El balance entre importación y exportación tratada es ${fmt(d.balance)}.${prompt?' Enfoque solicitado: '+prompt:''}`;const ms=[['Captación',fmt(d.captured)],['Distribución',fmt(d.distributed)],['Importación',fmt(d.imported)],['Balance',fmt(d.balance)]];document.getElementById('reportKpis').innerHTML=ms.map(x=>`<div><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('');document.getElementById('reportStrengths').innerHTML=[`Captación interanual ${sign(d.capPct)}.`,`Distribución acumulada de ${fmt(d.distributed)}.`,`Datos calculados sobre ${D.length.toLocaleString('es-ES')} registros.`].map(x=>`<li>${x}</li>`).join('');document.getElementById('reportRisks').innerHTML=[`Balance de intercambios de ${fmt(d.balance)}.`,`Variación de distribución ${sign(d.distPct)}.`,`Validar integridad y actualización de la fuente.`].map(x=>`<li>${x}</li>`).join('');document.getElementById('reportActions').innerHTML=['Controlar semanalmente captación y distribución.','Comparar con la media histórica y la demanda.','Definir alertas para desviaciones operativas.'].map((x,i)=>`<div class="action-item"><b>${i+1}</b><div><strong>${x}</strong><p>Seguimiento técnico y directivo.</p></div></div>`).join('');box.hidden=true;lucide.createIcons()}
+initShell();
+fetch('datos-red.json').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(x=>{D=x;const years=[...new Set(D.map(r=>+r.d.slice(0,4)))].filter(Number.isFinite).sort((a,b)=>a-b);month.innerHTML=months.map((n,i)=>`<option value="${i+1}" ${i===7?'selected':''}>${n}</option>`).join('');year.innerHTML=years.map(n=>`<option ${n===2023?'selected':''}>${n}</option>`).join('');refresh.onclick=update;month.onchange=update;year.onchange=update;document.getElementById('aiDataStatus').textContent=`${D.length.toLocaleString('es-ES')} registros disponibles`;update();loading.style.display='none'}).catch(e=>{loading.textContent='No se pudieron cargar los datos. Abre la aplicación mediante GitHub Pages o un servidor web.';console.error(e)});
