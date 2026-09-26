@@ -205,10 +205,8 @@ function renderTable() {
 
     tableRow.className = `${type}-row`;
 
-    /*
-     * FILA CON EL NOMBRE DE LA POBLACIÓN
-     * Combina visualmente las columnas A, B, C y D.
-     */
+    /* FILA CON EL NOMBRE DE LA POBLACIÓN
+     * Combina visualmente las columnas A, B, C y D.*/
     if (type === "section") {
       const populationCell = document.createElement("td");
 
@@ -218,9 +216,7 @@ function renderTable() {
 
       tableRow.appendChild(populationCell);
 
-      /*
-       * Añade las columnas E hasta U.
-       */
+      /* Añade las columnas E hasta U.*/
       for (let column = 4; column < 21; column += 1) {
         const cell = document.createElement("td");
 
@@ -236,10 +232,8 @@ function renderTable() {
       return;
     }
 
-    /*
-     * FILAS DE TOTAL
-     * Combina las columnas A, B, C y D.
-     */
+    /* FILAS DE TOTAL
+     * Combina las columnas A, B, C y D.*/
     if (type === "total") {
       const totalLabelCell = document.createElement("td");
 
@@ -249,9 +243,7 @@ function renderTable() {
 
       tableRow.appendChild(totalLabelCell);
 
-      /*
-       * Añade los resultados desde E hasta U.
-       */
+      /* Añade los resultados desde E hasta U.*/
       for (let column = 4; column < 21; column += 1) {
         const cell = document.createElement("td");
 
@@ -269,21 +261,31 @@ function renderTable() {
       return;
     }
 
-    /*
-     * RESTO DE FILAS
-     * Incluye encabezados, detalles y filas vacías.
-     */
+    /* RESTO DE FILAS
+     * Incluye encabezados, detalles y filas vacías.*/
     for (let column = 0; column < 21; column += 1) {
+      /* Combinar E1:G1.*/
+      if (rowIndex === 0 && column === 4) {
+        const monthlyHeaderCell = document.createElement("td");
+
+        monthlyHeaderCell.colSpan = 3;
+        monthlyHeaderCell.className = "monthly-header-cell";
+        monthlyHeaderCell.textContent = "VOLUMENES MENSUALES (m³)";
+
+        tableRow.appendChild(monthlyHeaderCell);
+
+        column = 6;
+        continue;
+      }
+
       const cell = document.createElement("td");
 
       if (column === 7 || column === 10) {
         cell.classList.add("spacer-column");
       }
 
-      /*
-       * Solo son editables COD_DISP y FACTOR
-       * en las filas de detalle.
-       */
+      /* Solo son editables COD_DISP y FACTOR
+       * en las filas de detalle.*/
       if (type === "detail" && (column === 0 || column === 3)) {
         cell.classList.add("editable-cell");
 

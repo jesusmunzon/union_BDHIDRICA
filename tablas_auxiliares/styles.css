@@ -656,3 +656,42 @@ main {
   text-align: center !important;
   text-align-last: center;
 }
+
+/* =========================================================
+   COLUMNAS E, F Y G CON EL MISMO ANCHO
+   ========================================================= */
+#auxTable td:nth-child(5),
+#auxTable td:nth-child(6),
+#auxTable td:nth-child(7) {
+  width: 165px;
+  min-width: 165px;
+  max-width: 165px;
+}
+
+
+/* Encabezado combinado E1:G1 */
+#auxTable .monthly-header-cell {
+  width: 495px;
+  min-width: 495px;
+  max-width: 495px;
+
+  height: 42px;
+  padding: 0 12px;
+
+  color: #38556d;
+  background: #eaf1f7 !important;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-align: center !important;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Fechas mensuales de la segunda fila */
+#auxTable tr.top-row:nth-child(2) td:nth-child(5),
+#auxTable tr.top-row:nth-child(2) td:nth-child(6),
+#auxTable tr.top-row:nth-child(2) td:nth-child(7) {
+  text-align: center !important;
+}
