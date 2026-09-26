@@ -196,12 +196,99 @@ function formatValue(value, column, row) {
 
 function renderTable() {
   const body = $("tableBody");
+
   body.innerHTML = "";
 
   state.matrix.forEach((row, rowIndex) => {
     const type = rowIndex < 2 ? "top" : rowType(row);
     const tableRow = document.createElement("tr");
+
     tableRow.className = `${type}-row`;
+
+    if (rowIndex === 0) {
+      const cornerCell = document.createElement("td");
+
+      cornerCell.colSpan = 4;
+      cornerCell.className = "corner-header-cell";
+      cornerCell.textContent = "";
+
+      tableRow.appendChild(cornerCell);
+
+      const monthlyHeader = document.createElement("td");
+
+      monthlyHeader.colSpan = 3;
+      monthlyHeader.className = "group-header monthly-group";
+      monthlyHeader.textContent =
+        row[4] || "VOLUMENES MENSUALES (m³)";
+
+      tableRow.appendChild(monthlyHeader);
+
+      const separatorOne = document.createElement("td");
+
+      separatorOne.className = "spacer-column header-spacer";
+      separatorOne.textContent = "";
+
+      tableRow.appendChild(separatorOne);
+
+      const accumulatedHeader = document.createElement("td");
+
+      accumulatedHeader.colSpan = 2;
+      accumulatedHeader.className =
+        "group-header accumulated-group";
+      accumulatedHeader.textContent =
+        row[8] || "VOLUMENES ACUMULADOS HASTA MES (m³)";
+
+      tableRow.appendChild(accumulatedHeader);
+
+      const separatorTwo = document.createElement("td");
+
+      separatorTwo.className = "spacer-column header-spacer";
+      separatorTwo.textContent = "";
+
+      tableRow.appendChild(separatorTwo);
+
+      const annualHeader = document.createElement("td");
+
+      annualHeader.colSpan = 10;
+      annualHeader.className = "group-header annual-group";
+      annualHeader.textContent =
+        row[11] || "VOLUMENES ACUMULADOS ANUALES (m³)";
+
+      tableRow.appendChild(annualHeader);
+
+      body.appendChild(tableRow);
+      return;
+    }
+
+    if (rowIndex === 1) {
+      const cornerCell = document.createElement("td");
+
+      cornerCell.colSpan = 4;
+      cornerCell.className = "corner-period-cell";
+      cornerCell.textContent = "";
+
+      tableRow.appendChild(cornerCell);
+
+      for (let column = 4; column < 21; column += 1) {
+        const cell = document.createElement("td");
+
+        if (column === 7 || column === 10) {
+          cell.classList.add("spacer-column");
+          cell.textContent = "";
+        } else {
+          cell.textContent = formatValue(
+            row[column],
+            column,
+            rowIndex,
+          );
+        }
+
+        tableRow.appendChild(cell);
+      }
+
+      body.appendChild(tableRow);
+      return;
+    }
 
     for (let column = 0; column < 21; column += 1) {
       const cell = document.createElement("td");
@@ -214,14 +301,21 @@ function renderTable() {
         cell.classList.add("editable-cell");
 
         const input = document.createElement("input");
+
         input.type = "text";
         input.value = row[column] ?? "";
-        input.setAttribute("aria-label", "Código de dispositivo");
+        input.setAttribute(
+          "aria-label",
+          "Código de dispositivo",
+        );
 
         input.addEventListener("change", () => {
-          state.matrix[rowIndex][column] = input.value.trim();
+          state.matrix[rowIndex][column] =
+            input.value.trim();
+
           state.dirty = true;
           $("dirtyBadge").hidden = false;
+
           calculate();
         });
 
@@ -230,29 +324,43 @@ function renderTable() {
         cell.classList.add("editable-cell");
 
         const select = document.createElement("select");
+
         select.className = "factor-select";
         select.setAttribute("aria-label", "Factor");
 
         [-1, 0, 1].forEach((factor) => {
           const option = document.createElement("option");
+
           option.value = String(factor);
           option.textContent = String(factor);
-          option.selected = Number(row[column]) === factor;
+          option.selected =
+            Number(row[column]) === factor;
+
           select.appendChild(option);
         });
 
         select.addEventListener("change", () => {
-          state.matrix[rowIndex][column] = Number(select.value);
+          state.matrix[rowIndex][column] =
+            Number(select.value);
+
           state.dirty = true;
           $("dirtyBadge").hidden = false;
+
           calculate();
         });
 
         cell.appendChild(select);
       } else {
-        cell.textContent = formatValue(row[column], column, rowIndex);
+        cell.textContent = formatValue(
+          row[column],
+          column,
+          rowIndex,
+        );
 
-        if (column >= 4 && ![7, 10].includes(column)) {
+        if (
+          column >= 4 &&
+          ![7, 10].includes(column)
+        ) {
           cell.classList.add("calculated");
         }
       }

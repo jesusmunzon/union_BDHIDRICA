@@ -339,12 +339,13 @@ main {
   overflow: auto;
 }
 .table-wrap table {
+  width: 3106px;
+  min-width: 3106px;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 2350px;
-  width: max-content;
+  table-layout: fixed;
   font-size: 11px;
-  background: #fff;
+  background: #ffffff;
 }
 .table-wrap td {
   height: 38px;
@@ -568,4 +569,113 @@ main {
 #auxTable .factor-select:focus {
   background: #dbeafe;
   box-shadow: inset 0 0 0 2px #60a5fa;
+}
+#auxTable col.column-code {
+  width: 125px;
+}
+
+#auxTable col.column-name {
+  width: 270px;
+}
+
+#auxTable col.column-population {
+  width: 210px;
+}
+
+#auxTable col.column-factor {
+  width: 95px;
+}
+
+#auxTable col.column-monthly {
+  width: 180px;
+}
+
+#auxTable col.column-separator {
+  width: 28px;
+}
+
+#auxTable col.column-accumulated {
+  width: 180px;
+}
+
+#auxTable col.column-annual {
+  width: 145px;
+}
+
+#auxTable .corner-header-cell,
+#auxTable .corner-period-cell {
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
+  background: #eaf1f7;
+}
+
+#auxTable .corner-header-cell {
+  top: 0;
+  height: 42px;
+}
+
+#auxTable .corner-period-cell {
+  top: 42px;
+  height: 42px;
+  border-bottom: 1px solid #d5e0ea;
+}
+
+#auxTable .group-header {
+  position: sticky;
+  top: 0;
+  z-index: 24;
+  height: 42px;
+  padding: 0 12px;
+  color: #38556d;
+  background: #eaf1f7;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+#auxTable .monthly-group {
+  width: 540px;
+  min-width: 540px;
+  max-width: 540px;
+}
+
+#auxTable .accumulated-group {
+  width: 360px;
+  min-width: 360px;
+  max-width: 360px;
+}
+
+#auxTable .annual-group {
+  width: 1450px;
+  min-width: 1450px;
+  max-width: 1450px;
+}
+
+#auxTable .header-spacer {
+  position: sticky;
+  top: 0;
+  z-index: 24;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  background: #f8fafc;
+}
+
+#auxTable tr:nth-child(2) td {
+  position: sticky;
+  top: 42px;
+  z-index: 24;
+  height: 42px;
+  color: #38556d;
+  background: #eaf1f7;
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid #d5e0ea;
 }
