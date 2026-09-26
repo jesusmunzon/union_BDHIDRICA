@@ -656,3 +656,27 @@ main {
   text-align: center !important;
   text-align-last: center;
 }
+
+/* =========================================================
+   COLUMNAS E, F Y G
+   ========================================================= */
+
+/* Cada una de las columnas E, F y G ocupa 94 px. */
+#auxTable td.period-column {
+  width: 94px;
+  min-width: 94px;
+  max-width: 94px;
+}
+
+/* Encabezado combinado de las columnas E, F y G. */
+#auxTable td.period-group-header {
+  width: 282px;
+  min-width: 282px;
+  max-width: 282px;
+
+  padding-left: 0;
+  padding-right: 0;
+
+  text-align: center !important;
+  vertical-align: middle !important;
+}

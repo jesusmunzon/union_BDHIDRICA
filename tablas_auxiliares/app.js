@@ -224,11 +224,15 @@ function renderTable() {
       for (let column = 4; column < 21; column += 1) {
         const cell = document.createElement("td");
 
+        if (column >= 4 && column <= 6) {
+          cell.classList.add("period-column");
+        }
+
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
         }
 
-        cell.textContent = formatValue(row[column], column);
+        cell.textContent = formatValue(row[column], column, rowIndex);
         tableRow.appendChild(cell);
       }
 
@@ -255,13 +259,17 @@ function renderTable() {
       for (let column = 4; column < 21; column += 1) {
         const cell = document.createElement("td");
 
+        if (column >= 4 && column <= 6) {
+          cell.classList.add("period-column");
+        }
+
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
         } else {
           cell.classList.add("calculated");
         }
 
-        cell.textContent = formatValue(row[column], column);
+        cell.textContent = formatValue(row[column], column, rowIndex);
         tableRow.appendChild(cell);
       }
 
@@ -274,7 +282,22 @@ function renderTable() {
      * Incluye encabezados, detalles y filas vacías.
      */
     for (let column = 0; column < 21; column += 1) {
+      /*
+       * En la primera fila, las columnas E, F y G se muestran
+       * como un único encabezado combinado.
+       */
+      if (rowIndex === 0 && (column === 5 || column === 6)) {
+        continue;
+      }
+
       const cell = document.createElement("td");
+
+      if (rowIndex === 0 && column === 4) {
+        cell.colSpan = 3;
+        cell.classList.add("period-group-header");
+      } else if (column >= 4 && column <= 6) {
+        cell.classList.add("period-column");
+      }
 
       if (column === 7 || column === 10) {
         cell.classList.add("spacer-column");
@@ -339,7 +362,7 @@ function renderTable() {
         /*
          * Celdas no editables.
          */
-        cell.textContent = formatValue(row[column], column);
+        cell.textContent = formatValue(row[column], column, rowIndex);
 
         if (column >= 4 && ![7, 10].includes(column)) {
           cell.classList.add("calculated");
