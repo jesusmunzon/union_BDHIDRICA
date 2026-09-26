@@ -228,7 +228,7 @@ function renderTable() {
           cell.classList.add("spacer-column");
         }
 
-        cell.textContent = formatValue(row[column], column);
+        cell.textContent = formatValue(row[column], column, rowIndex);
         tableRow.appendChild(cell);
       }
 
