@@ -196,13 +196,83 @@ function formatValue(value, column, row) {
 
 function renderTable() {
   const body = $("tableBody");
+
   body.innerHTML = "";
 
   state.matrix.forEach((row, rowIndex) => {
     const type = rowIndex < 2 ? "top" : rowType(row);
     const tableRow = document.createElement("tr");
+
     tableRow.className = `${type}-row`;
 
+    /*
+     * FILA CON EL NOMBRE DE LA POBLACIÓN
+     * Combina visualmente las columnas A, B, C y D.
+     */
+    if (type === "section") {
+      const populationCell = document.createElement("td");
+
+      populationCell.colSpan = 4;
+      populationCell.className = "section-title-cell";
+      populationCell.textContent = row[0] ?? "";
+
+      tableRow.appendChild(populationCell);
+
+      /*
+       * Añade las columnas E hasta U.
+       */
+      for (let column = 4; column < 21; column += 1) {
+        const cell = document.createElement("td");
+
+        if (column === 7 || column === 10) {
+          cell.classList.add("spacer-column");
+        }
+
+        cell.textContent = formatValue(row[column], column);
+        tableRow.appendChild(cell);
+      }
+
+      body.appendChild(tableRow);
+      return;
+    }
+
+    /*
+     * FILAS DE TOTAL
+     * Combina las columnas A, B, C y D.
+     */
+    if (type === "total") {
+      const totalLabelCell = document.createElement("td");
+
+      totalLabelCell.colSpan = 4;
+      totalLabelCell.className = "total-label-cell";
+      totalLabelCell.textContent = row[3] ?? "";
+
+      tableRow.appendChild(totalLabelCell);
+
+      /*
+       * Añade los resultados desde E hasta U.
+       */
+      for (let column = 4; column < 21; column += 1) {
+        const cell = document.createElement("td");
+
+        if (column === 7 || column === 10) {
+          cell.classList.add("spacer-column");
+        } else {
+          cell.classList.add("calculated");
+        }
+
+        cell.textContent = formatValue(row[column], column);
+        tableRow.appendChild(cell);
+      }
+
+      body.appendChild(tableRow);
+      return;
+    }
+
+    /*
+     * RESTO DE FILAS
+     * Incluye encabezados, detalles y filas vacías.
+     */
     for (let column = 0; column < 21; column += 1) {
       const cell = document.createElement("td");
 
@@ -210,47 +280,66 @@ function renderTable() {
         cell.classList.add("spacer-column");
       }
 
-      if (type === "detail" && column === 0) {
+      /*
+       * Solo son editables COD_DISP y FACTOR
+       * en las filas de detalle.
+       */
+      if (type === "detail" && (column === 0 || column === 3)) {
         cell.classList.add("editable-cell");
 
-        const input = document.createElement("input");
-        input.type = "text";
-        input.value = row[column] ?? "";
-        input.setAttribute("aria-label", "Código de dispositivo");
+        /*
+         * Columna D: selector FACTOR.
+         */
+        if (column === 3) {
+          const select = document.createElement("select");
 
-        input.addEventListener("change", () => {
-          state.matrix[rowIndex][column] = input.value.trim();
-          state.dirty = true;
-          $("dirtyBadge").hidden = false;
-          calculate();
-        });
+          select.className = "factor-select";
+          select.setAttribute("aria-label", "Factor");
 
-        cell.appendChild(input);
-      } else if (type === "detail" && column === 3) {
-        cell.classList.add("editable-cell");
+          [-1, 0, 1].forEach((factor) => {
+            const option = document.createElement("option");
 
-        const select = document.createElement("select");
-        select.className = "factor-select";
-        select.setAttribute("aria-label", "Factor");
+            option.value = String(factor);
+            option.textContent = String(factor);
+            option.selected = Number(row[column]) === factor;
 
-        [-1, 0, 1].forEach((factor) => {
-          const option = document.createElement("option");
-          option.value = String(factor);
-          option.textContent = String(factor);
-          option.selected = Number(row[column]) === factor;
-          select.appendChild(option);
-        });
+            select.appendChild(option);
+          });
 
-        select.addEventListener("change", () => {
-          state.matrix[rowIndex][column] = Number(select.value);
-          state.dirty = true;
-          $("dirtyBadge").hidden = false;
-          calculate();
-        });
+          select.addEventListener("change", () => {
+            state.matrix[rowIndex][column] = Number(select.value);
+            state.dirty = true;
+            $("dirtyBadge").hidden = false;
 
-        cell.appendChild(select);
+            calculate();
+          });
+
+          cell.appendChild(select);
+        } else {
+          /*
+           * Columna A: COD_DISP.
+           */
+          const input = document.createElement("input");
+
+          input.type = "text";
+          input.value = row[column] ?? "";
+          input.setAttribute("aria-label", "Código de dispositivo");
+
+          input.addEventListener("change", () => {
+            state.matrix[rowIndex][column] = input.value.trim();
+            state.dirty = true;
+            $("dirtyBadge").hidden = false;
+
+            calculate();
+          });
+
+          cell.appendChild(input);
+        }
       } else {
-        cell.textContent = formatValue(row[column], column, rowIndex);
+        /*
+         * Celdas no editables.
+         */
+        cell.textContent = formatValue(row[column], column);
 
         if (column >= 4 && ![7, 10].includes(column)) {
           cell.classList.add("calculated");

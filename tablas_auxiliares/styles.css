@@ -538,8 +538,7 @@ main {
   }
 }
 
-/* Ocultar definitivamente el filtro local de Tablas auxiliares.
-   El periodo se recibe desde Estadisticos 1 mediante localStorage. */
+/* El periodo se recibe desde Estadisticos 1 mediante localStorage. */
 .control-card {
   display: none !important;
 }
@@ -568,4 +567,92 @@ main {
 #auxTable .factor-select:focus {
   background: #dbeafe;
   box-shadow: inset 0 0 0 2px #60a5fa;
+}
+
+/* =========================================================
+   TÍTULOS DE POBLACIÓN COMBINADOS DE A HASTA D
+   ========================================================= */
+
+#auxTable tr.section-row .section-title-cell {
+  position: sticky;
+  left: 0;
+  z-index: 28;
+
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
+  height: 38px;
+
+  padding: 0 14px;
+
+  color: #ffffff;
+  background: #334155 !important;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-align: left !important;
+  vertical-align: middle;
+  white-space: nowrap;
+
+  box-shadow: 7px 0 10px -10px #0f172a;
+}
+
+/* =========================================================
+   FILAS TOTAL COMBINADAS DE A HASTA D
+   ========================================================= */
+
+#auxTable tr.total-row .total-label-cell {
+  position: sticky;
+  left: 0;
+  z-index: 28;
+
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
+  height: 38px;
+
+  padding: 0 14px;
+
+  color: #312e81;
+  background: #eef2ff !important;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-align: right !important;
+  vertical-align: middle;
+  white-space: nowrap;
+
+  border-top: 2px solid #c7d2fe;
+  box-shadow: 7px 0 10px -10px #0f172a;
+}
+
+/* Las celdas numéricas de las filas de total se centran. */
+
+#auxTable tr.total-row td:not(.total-label-cell) {
+  text-align: center !important;
+}
+
+/* El resto de celdas se muestra centrado. */
+
+#auxTable tr.header-row td,
+#auxTable tr.top-row td,
+#auxTable tr.detail-row td,
+#auxTable td.calculated {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* COD_DISP se mantiene visualmente centrado. */
+
+#auxTable tr.detail-row td:first-child input {
+  text-align: center !important;
+}
+
+/* El selector FACTOR se mantiene centrado. */
+
+#auxTable .factor-select {
+  text-align: center !important;
+  text-align-last: center;
 }
