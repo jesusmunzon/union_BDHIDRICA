@@ -339,3 +339,93 @@ async function initialize() {
   }
 }
 initialize();
+
+/* =========================================================
+   AJUSTES INTEGRADOS DE TABLAS AUXILIARES
+   ========================================================= */
+(() => {
+  const tableBody = document.getElementById("tableBody");
+  if (!tableBody) return;
+
+  let applying = false;
+
+  function normalizePopulationTitle(row) {
+    const cells = row.cells;
+    if (cells.length < 4) return;
+
+    cells[0].classList.add("section-title-cell");
+    cells[0].setAttribute("aria-colspan", "4");
+
+    for (let index = 1; index <= 3; index += 1) {
+      cells[index].classList.add("section-covered-cell");
+      cells[index].setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function correctYearHeaders() {
+    const periodRow = tableBody.rows[1];
+    if (!periodRow) return;
+
+    for (let column = 11; column <= 20; column += 1) {
+      const cell = periodRow.cells[column];
+      if (!cell) continue;
+
+      const numericYear = Number(String(cell.textContent).replace(",", "."));
+      if (Number.isFinite(numericYear)) {
+        cell.textContent = String(Math.trunc(numericYear));
+      }
+    }
+  }
+
+  function convertFactorToSelect(row) {
+    const factorCell = row.cells[3];
+    if (!factorCell || factorCell.querySelector("select.factor-select")) return;
+
+    const originalInput = factorCell.querySelector("input");
+    if (!originalInput) return;
+
+    const currentValue = Number(originalInput.value);
+    const select = document.createElement("select");
+    select.className = "factor-select";
+    select.setAttribute("aria-label", "Factor");
+
+    [-1, 0, 1].forEach((factor) => {
+      const option = document.createElement("option");
+      option.value = String(factor);
+      option.textContent = String(factor);
+      option.selected = factor === currentValue;
+      select.appendChild(option);
+    });
+
+    select.addEventListener("change", () => {
+      originalInput.value = select.value;
+      originalInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    originalInput.hidden = true;
+    factorCell.appendChild(select);
+  }
+
+  function applyTableAdjustments() {
+    if (applying) return;
+    applying = true;
+
+    try {
+      Array.from(tableBody.rows).forEach((row) => {
+        if (row.classList.contains("section-row")) {
+          normalizePopulationTitle(row);
+        }
+        if (row.classList.contains("detail-row")) {
+          convertFactorToSelect(row);
+        }
+      });
+      correctYearHeaders();
+    } finally {
+      applying = false;
+    }
+  }
+
+  const observer = new MutationObserver(applyTableAdjustments);
+  observer.observe(tableBody, { childList: true, subtree: true });
+  applyTableAdjustments();
+})();
