@@ -196,96 +196,15 @@ function formatValue(value, column, row) {
 
 function renderTable() {
   const body = $("tableBody");
-
   body.innerHTML = "";
 
   state.matrix.forEach((row, rowIndex) => {
     const type = rowIndex < 2 ? "top" : rowType(row);
     const tableRow = document.createElement("tr");
-
     tableRow.className = `${type}-row`;
-
-    if (type === "section") {
-      const populationCell = document.createElement("td");
-
-      populationCell.colSpan = 4;
-      populationCell.className = "section-title-cell sticky-span";
-      populationCell.textContent = row[0] ?? "";
-
-      tableRow.appendChild(populationCell);
-
-      for (let column = 4; column < 21; column += 1) {
-        const cell = document.createElement("td");
-
-        cell.classList.add(`logical-column-${column + 1}`);
-
-        if (column === 7 || column === 10) {
-          cell.classList.add("spacer-column");
-        }
-
-        cell.textContent = formatValue(
-          row[column],
-          column,
-          rowIndex,
-        );
-
-        tableRow.appendChild(cell);
-      }
-
-      body.appendChild(tableRow);
-      return;
-    }
-
-    if (type === "total") {
-      const totalLabelCell = document.createElement("td");
-
-      totalLabelCell.colSpan = 4;
-      totalLabelCell.className = "total-label-cell sticky-span";
-      totalLabelCell.textContent = row[3] ?? "";
-
-      tableRow.appendChild(totalLabelCell);
-
-      for (let column = 4; column < 21; column += 1) {
-        const cell = document.createElement("td");
-
-        cell.classList.add(`logical-column-${column + 1}`);
-
-        if (column === 7 || column === 10) {
-          cell.classList.add("spacer-column");
-        } else {
-          cell.classList.add("calculated");
-        }
-
-        cell.textContent = formatValue(
-          row[column],
-          column,
-          rowIndex,
-        );
-
-        tableRow.appendChild(cell);
-      }
-
-      body.appendChild(tableRow);
-      return;
-    }
 
     for (let column = 0; column < 21; column += 1) {
       const cell = document.createElement("td");
-
-      cell.classList.add(`logical-column-${column + 1}`);
-
-      if (rowIndex === 0) {
-        cell.classList.add("sticky-header-one");
-      }
-
-      if (rowIndex === 1) {
-        cell.classList.add("sticky-header-two");
-      }
-
-      if (column <= 3) {
-        cell.classList.add("sticky-left");
-        cell.classList.add(`sticky-left-${column + 1}`);
-      }
 
       if (column === 7 || column === 10) {
         cell.classList.add("spacer-column");
@@ -295,21 +214,14 @@ function renderTable() {
         cell.classList.add("editable-cell");
 
         const input = document.createElement("input");
-
         input.type = "text";
         input.value = row[column] ?? "";
-        input.setAttribute(
-          "aria-label",
-          "Código de dispositivo",
-        );
+        input.setAttribute("aria-label", "Código de dispositivo");
 
         input.addEventListener("change", () => {
-          state.matrix[rowIndex][column] =
-            input.value.trim();
-
+          state.matrix[rowIndex][column] = input.value.trim();
           state.dirty = true;
           $("dirtyBadge").hidden = false;
-
           calculate();
         });
 
@@ -318,38 +230,27 @@ function renderTable() {
         cell.classList.add("editable-cell");
 
         const select = document.createElement("select");
-
         select.className = "factor-select";
         select.setAttribute("aria-label", "Factor");
 
         [-1, 0, 1].forEach((factor) => {
           const option = document.createElement("option");
-
           option.value = String(factor);
           option.textContent = String(factor);
-          option.selected =
-            Number(row[column]) === factor;
-
+          option.selected = Number(row[column]) === factor;
           select.appendChild(option);
         });
 
         select.addEventListener("change", () => {
-          state.matrix[rowIndex][column] =
-            Number(select.value);
-
+          state.matrix[rowIndex][column] = Number(select.value);
           state.dirty = true;
           $("dirtyBadge").hidden = false;
-
           calculate();
         });
 
         cell.appendChild(select);
       } else {
-        cell.textContent = formatValue(
-          row[column],
-          column,
-          rowIndex,
-        );
+        cell.textContent = formatValue(row[column], column, rowIndex);
 
         if (column >= 4 && ![7, 10].includes(column)) {
           cell.classList.add("calculated");
@@ -467,21 +368,8 @@ async function initialize() {
       defval: "",
       raw: true,
     });
-
-    /*Eliminar únicamente las filas completamente vacías situadas al final del Excel.*/
-    while (
-      state.matrix.length > 0 &&
-      state.matrix[state.matrix.length - 1].every((value) => value == null || String(value).trim() === "",)
-    ) {
-      state.matrix.pop();
-    }
-
-    /*Mantener 21 columnas en las filas que sí forman parte de la plantilla.*/
-    for (const row of state.matrix) {
-      while (row.length < 21) {
-        row.push("");
-      }
-    }
+    while (state.matrix.length < 217) state.matrix.push([]);
+    for (const row of state.matrix) while (row.length < 21) row.push("");
     state.records = parseBalance(balance);
     buildAggregates();
     $("dataStatus").textContent =
