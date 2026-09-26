@@ -335,14 +335,17 @@ main {
 }
 .table-wrap {
   position: relative;
-  max-height: calc(100vh - 275px);
+  isolation: isolate;
+  width: 100%;
+  max-height: calc(100vh - 190px);
   overflow: auto;
 }
-.table-wrap table {
+#auxTable {
+  position: relative;
+  width: 3106px;
+  min-width: 3106px;
   border-collapse: separate;
   border-spacing: 0;
-  width: 3106px; /*Suma de todas las columnas desde A:U*/
-  min-width: 3106px;
   table-layout: fixed;
   font-size: 11px;
   background: #ffffff;
@@ -355,44 +358,6 @@ main {
   white-space: nowrap;
   text-align: right;
   background: #fff;
-}
-
-/* =========================================================
-   COLUMNAS A:D FIJADAS
-   ========================================================= */
-/* A: COD_DISP */
-#auxTable td:nth-child(1) {
-  left: 0;
-  width: 125px;
-  min-width: 125px;
-  max-width: 125px;
-  text-align: center;
-}
-/* B: NOM_DISP */
-#auxTable td:nth-child(2) {
-  left: 125px;
-  width: 270px;
-  min-width: 270px;
-  max-width: 270px;
-  text-align: center;
-}
-/* C: POBLACIÓN */
-#auxTable td:nth-child(3) {
-  left: 395px;
-  width: 210px;
-  min-width: 210px;
-  max-width: 210px;
-
-  text-align: center;
-}
-/* D: FACTOR */
-#auxTable td:nth-child(4) {
-  left: 605px;
-  width: 95px;
-  min-width: 95px;
-  max-width: 95px;
-  text-align: center;
-  box-shadow: 8px 0 12px -11px #0f172a;
 }
 .table-wrap tr.section-row td {
   position: sticky;
@@ -520,17 +485,14 @@ main {
     max-height: calc(100vh - 390px);
   }
 }
-
 /* El periodo se recibe desde Estadisticos 1 mediante localStorage. */
 .control-card {
   display: none !important;
 }
-
 /* Aprovechar el espacio liberado para mostrar mas filas. */
 .table-wrap {
   max-height: calc(100vh - 190px) !important;
 }
-
 /* Factor limitado a -1, 0 y 1 */
 #auxTable .factor-select {
   width: 100%;
@@ -546,41 +508,31 @@ main {
   text-align: center;
   cursor: pointer;
 }
-
 #auxTable .factor-select:focus {
   background: #dbeafe;
   box-shadow: inset 0 0 0 2px #60a5fa;
 }
-
 /* =========================================================
    TÍTULOS DE POBLACIÓN COMBINADOS DE A HASTA D
    ========================================================= */
-
 #auxTable tr.section-row .section-title-cell {
   position: sticky;
   left: 0;
   z-index: 28;
-
   width: 700px;
   min-width: 700px;
   max-width: 700px;
   height: 38px;
-
   padding: 0 14px;
-
   color: #ffffff;
   background: #334155 !important;
-
   font-size: 11px;
   font-weight: 800;
-
   text-align: left !important;
   vertical-align: middle;
   white-space: nowrap;
-
   box-shadow: 7px 0 10px -10px #0f172a;
 }
-
 /* =========================================================
    FILAS TOTAL COMBINADAS DE A HASTA D
    ========================================================= */
@@ -600,19 +552,14 @@ main {
   text-align: right !important;
   vertical-align: middle;
   white-space: nowrap;
-
   border-top: 2px solid #c7d2fe;
   box-shadow: 7px 0 10px -10px #0f172a;
 }
-
 /* Las celdas numéricas de las filas de total se centran. */
-
 #auxTable tr.total-row td:not(.total-label-cell) {
   text-align: center !important;
 }
-
 /* El resto de celdas se muestra centrado. */
-
 #auxTable tr.header-row td,
 #auxTable tr.top-row td,
 #auxTable tr.detail-row td,
@@ -620,59 +567,33 @@ main {
   text-align: center !important;
   vertical-align: middle !important;
 }
-
 /* COD_DISP se mantiene visualmente centrado. */
-
 #auxTable tr.detail-row td:first-child input {
   text-align: center !important;
 }
-
 /* El selector FACTOR se mantiene centrado. */
-
 #auxTable .factor-select {
   text-align: center !important;
   text-align-last: center;
 }
-
-/* =========================================================
-   COLUMNAS E, F Y G CON EL MISMO ANCHO
-   ========================================================= */
-#auxTable td:nth-child(5),
-#auxTable td:nth-child(6),
-#auxTable td:nth-child(7) {
-  width: 165px;
-  min-width: 165px;
-  max-width: 165px;
-}
-
-
 /* Encabezado combinado E1:G1 */
 #auxTable .monthly-header-cell {
-  width: 495px;
-  min-width: 495px;
-  max-width: 495px;
-
   height: 42px;
   padding: 0 12px;
-
   color: #38556d;
   background: #eaf1f7 !important;
-
   font-size: 12px;
   font-weight: 800;
-
   text-align: center !important;
   vertical-align: middle;
   white-space: nowrap;
 }
-
 /* Fechas mensuales de la segunda fila */
 #auxTable tr.top-row:nth-child(2) td:nth-child(5),
 #auxTable tr.top-row:nth-child(2) td:nth-child(6),
 #auxTable tr.top-row:nth-child(2) td:nth-child(7) {
   text-align: center !important;
 }
-
 /* =========================================================
    ANCHOS DEFINITIVOS DE COLUMNAS
    ========================================================= */
@@ -707,4 +628,328 @@ main {
 /* L:U: volúmenes anuales */
 #auxTable col.column-annual {
   width: 145px;
+}
+/* =========================================================
+   FIJACIÓN DEFINITIVA DE CABECERAS Y COLUMNAS A:D
+   Debe permanecer al final de styles.css
+   ========================================================= */
+
+/* Celdas generales */
+
+#auxTable td {
+  position: relative;
+  z-index: 1;
+
+  height: 38px;
+  padding: 7px 9px;
+
+  overflow: hidden;
+
+  color: var(--text);
+  background: #ffffff;
+
+  border-right: 1px solid #edf1f5;
+  border-bottom: 1px solid #edf1f5;
+
+  text-align: center;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   DOS PRIMERAS FILAS FIJADAS ARRIBA
+   ========================================================= */
+
+/* Primera fila */
+
+#auxTable tr:nth-child(1) > td {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+
+  height: 42px;
+
+  color: #38556d;
+  background: #eaf1f7 !important;
+
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Segunda fila */
+
+#auxTable tr:nth-child(2) > td {
+  position: sticky !important;
+  top: 42px !important;
+  z-index: 50 !important;
+
+  height: 42px;
+
+  color: #38556d;
+  background: #eaf1f7 !important;
+
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
+
+  border-bottom: 1px solid #d5e0ea;
+}
+
+/* =========================================================
+   CUATRO PRIMERAS COLUMNAS FIJADAS A LA IZQUIERDA
+   ========================================================= */
+
+/* Configuración común de A:D */
+
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(1),
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(2),
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(3),
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(4) {
+  position: sticky !important;
+  z-index: 30 !important;
+
+  background: #ffffff !important;
+}
+
+/* A: COD_DISP */
+
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(1) {
+  left: 0 !important;
+
+  width: 125px;
+  min-width: 125px;
+  max-width: 125px;
+}
+
+/* B: NOM_DISP */
+
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(2) {
+  left: 125px !important;
+
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
+}
+
+/* C: POBLACIÓN */
+
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(3) {
+  left: 395px !important;
+
+  width: 210px;
+  min-width: 210px;
+  max-width: 210px;
+}
+
+/* D: FACTOR */
+
+#auxTable tr:not(.section-row):not(.total-row) > td:nth-child(4) {
+  left: 605px !important;
+
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
+
+  box-shadow: 9px 0 12px -11px rgba(15, 23, 42, 0.9);
+}
+
+/* =========================================================
+   INTERSECCIÓN: DOS PRIMERAS FILAS + COLUMNAS A:D
+   Estas celdas deben estar por encima de todo.
+   ========================================================= */
+
+#auxTable tr:nth-child(1) > td:nth-child(1),
+#auxTable tr:nth-child(1) > td:nth-child(2),
+#auxTable tr:nth-child(1) > td:nth-child(3),
+#auxTable tr:nth-child(1) > td:nth-child(4),
+#auxTable tr:nth-child(2) > td:nth-child(1),
+#auxTable tr:nth-child(2) > td:nth-child(2),
+#auxTable tr:nth-child(2) > td:nth-child(3),
+#auxTable tr:nth-child(2) > td:nth-child(4) {
+  z-index: 80 !important;
+
+  background: #eaf1f7 !important;
+  background-color: #eaf1f7 !important;
+}
+
+/* Posición horizontal de A en las dos primeras filas */
+
+#auxTable tr:nth-child(1) > td:nth-child(1),
+#auxTable tr:nth-child(2) > td:nth-child(1) {
+  left: 0 !important;
+}
+
+/* Posición horizontal de B en las dos primeras filas */
+
+#auxTable tr:nth-child(1) > td:nth-child(2),
+#auxTable tr:nth-child(2) > td:nth-child(2) {
+  left: 125px !important;
+}
+
+/* Posición horizontal de C en las dos primeras filas */
+
+#auxTable tr:nth-child(1) > td:nth-child(3),
+#auxTable tr:nth-child(2) > td:nth-child(3) {
+  left: 395px !important;
+}
+
+/* Posición horizontal de D en las dos primeras filas */
+
+#auxTable tr:nth-child(1) > td:nth-child(4),
+#auxTable tr:nth-child(2) > td:nth-child(4) {
+  left: 605px !important;
+
+  box-shadow: 9px 0 12px -11px rgba(15, 23, 42, 0.9);
+}
+
+/* =========================================================
+   ENCABEZADOS INTERNOS COD_DISP, NOM_DISP, POBLACIÓN, FACTOR
+   ========================================================= */
+
+#auxTable tr.header-row > td:nth-child(1),
+#auxTable tr.header-row > td:nth-child(2),
+#auxTable tr.header-row > td:nth-child(3),
+#auxTable tr.header-row > td:nth-child(4) {
+  z-index: 40 !important;
+
+  color: #38556d;
+  background: #eaf1f7 !important;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   FILAS DE POBLACIÓN COMBINADAS A:D
+   ========================================================= */
+
+#auxTable tr.section-row > .section-title-cell {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 40 !important;
+
+  width: 700px !important;
+  min-width: 700px !important;
+  max-width: 700px !important;
+  height: 38px;
+
+  padding: 0 14px;
+
+  overflow: hidden;
+
+  color: #ffffff !important;
+  background: #334155 !important;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-align: left !important;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  box-shadow: 9px 0 12px -11px rgba(15, 23, 42, 0.9);
+}
+
+/* Resto de la fila de población */
+
+#auxTable tr.section-row > td {
+  color: #ffffff !important;
+  background: #334155 !important;
+}
+
+/* =========================================================
+   FILAS TOTAL COMBINADAS A:D
+   ========================================================= */
+
+#auxTable tr.total-row > .total-label-cell {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 40 !important;
+
+  width: 700px !important;
+  min-width: 700px !important;
+  max-width: 700px !important;
+  height: 38px;
+
+  padding: 0 14px;
+
+  overflow: hidden;
+
+  color: #312e81 !important;
+  background: #eef2ff !important;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-align: right !important;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  border-top: 2px solid #c7d2fe;
+  box-shadow: 9px 0 12px -11px rgba(49, 46, 129, 0.55);
+}
+
+/* Resultados de las filas TOTAL */
+
+#auxTable tr.total-row > td:not(.total-label-cell) {
+  color: #312e81 !important;
+  background: #eef2ff !important;
+
+  font-weight: 800;
+  text-align: center !important;
+
+  border-top: 2px solid #c7d2fe;
+}
+
+/* =========================================================
+   FONDOS OPACOS PARA LAS COLUMNAS FIJADAS
+   ========================================================= */
+
+/* Detalle normal */
+
+#auxTable tr.detail-row > td:nth-child(-n + 4) {
+  background: #ffffff !important;
+}
+
+/* Celdas editables A y D */
+
+#auxTable tr.detail-row > td.editable-cell {
+  background: #eff6ff !important;
+}
+
+/* Hover de detalle */
+
+#auxTable tr.detail-row:hover > td:nth-child(-n + 4) {
+  background: #f8fafc !important;
+}
+
+#auxTable tr.detail-row:hover > td.editable-cell {
+  background: #eaf2ff !important;
+}
+/* =========================================================
+   CAMPOS EDITABLES
+   ========================================================= */
+#auxTable .editable-cell input,
+#auxTable .factor-select {
+  width: 100%;
+  height: 37px;
+  border: 0;
+  outline: none;
+  color: #1d4ed8;
+  background: transparent;
+  font: 700 12px Inter, sans-serif;
+  text-align: center !important;
+  text-align-last: center;
+}
+/* =========================================================
+   COLUMNAS DE SEPARACIÓN
+   ========================================================= */
+#auxTable .spacer-column {
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  background: #f8fafc !important;
 }
