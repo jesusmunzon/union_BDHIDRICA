@@ -341,10 +341,11 @@ main {
 .table-wrap table {
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 2350px;
-  width: max-content;
+  width: 3106px; /*Suma de todas las columnas desde A:U*/
+  min-width: 3106px;
+  table-layout: fixed;
   font-size: 11px;
-  background: #fff;
+  background: #ffffff;
 }
 .table-wrap td {
   height: 38px;
@@ -372,40 +373,55 @@ main {
   top: 42px;
   height: 42px;
 }
-.table-wrap td:nth-child(1),
-.table-wrap td:nth-child(2),
-.table-wrap td:nth-child(3),
-.table-wrap td:nth-child(4) {
+
+/* =========================================================
+   COLUMNAS A:D FIJADAS
+   ========================================================= */
+/* Configuración común de las cuatro columnas fijadas. */
+#auxTable td:nth-child(1),
+#auxTable td:nth-child(2),
+#auxTable td:nth-child(3),
+#auxTable td:nth-child(4) {
   position: sticky;
   z-index: 18;
-  text-align: left;
-  background: #fff;
+  background: #ffffff;
+  vertical-align: middle;
 }
-.table-wrap td:nth-child(1) {
+/* A: COD_DISP */
+#auxTable td:nth-child(1) {
   left: 0;
   width: 125px;
   min-width: 125px;
   max-width: 125px;
+  text-align: center;
 }
-.table-wrap td:nth-child(2) {
+/* B: NOM_DISP */
+#auxTable td:nth-child(2) {
   left: 125px;
   width: 270px;
   min-width: 270px;
   max-width: 270px;
+  text-align: center;
 }
-.table-wrap td:nth-child(3) {
+/* C: POBLACIÓN */
+#auxTable td:nth-child(3) {
   left: 395px;
   width: 210px;
   min-width: 210px;
   max-width: 210px;
+
+  text-align: center;
 }
-.table-wrap td:nth-child(4) {
+/* D: FACTOR */
+#auxTable td:nth-child(4) {
   left: 605px;
   width: 95px;
   min-width: 95px;
   max-width: 95px;
-  box-shadow: 7px 0 10px -10px #0f172a;
+  text-align: center;
+  box-shadow: 8px 0 12px -11px #0f172a;
 }
+
 .table-wrap tr:nth-child(1) td:nth-child(-n + 4),
 .table-wrap tr:nth-child(2) td:nth-child(-n + 4) {
   z-index: 30;
@@ -601,25 +617,19 @@ main {
 /* =========================================================
    FILAS TOTAL COMBINADAS DE A HASTA D
    ========================================================= */
-
 #auxTable tr.total-row .total-label-cell {
   position: sticky;
   left: 0;
   z-index: 28;
-
   width: 700px;
   min-width: 700px;
   max-width: 700px;
   height: 38px;
-
   padding: 0 14px;
-
   color: #312e81;
   background: #eef2ff !important;
-
   font-size: 11px;
   font-weight: 800;
-
   text-align: right !important;
   vertical-align: middle;
   white-space: nowrap;
@@ -694,4 +704,40 @@ main {
 #auxTable tr.top-row:nth-child(2) td:nth-child(6),
 #auxTable tr.top-row:nth-child(2) td:nth-child(7) {
   text-align: center !important;
+}
+
+/* =========================================================
+   ANCHOS DEFINITIVOS DE COLUMNAS
+   ========================================================= */
+/* A: COD_DISP */
+#auxTable col.column-code {
+  width: 125px;
+}
+/* B: NOM_DISP */
+#auxTable col.column-name {
+  width: 270px;
+}
+/* C: POBLACIÓN */
+#auxTable col.column-population {
+  width: 210px;
+}
+/* D: FACTOR */
+#auxTable col.column-factor {
+  width: 95px;
+}
+/* E:G: volúmenes mensuales */
+#auxTable col.column-monthly {
+  width: 180px;
+}
+/* H y K: separación visual */
+#auxTable col.column-separator {
+  width: 28px;
+}
+/* I:J: acumulados hasta mes */
+#auxTable col.column-accumulated {
+  width: 180px;
+}
+/* L:U: volúmenes anuales */
+#auxTable col.column-annual {
+  width: 145px;
 }
