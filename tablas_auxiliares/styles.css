@@ -356,37 +356,10 @@ main {
   text-align: right;
   background: #fff;
 }
-.table-wrap tr:nth-child(1) td,
-.table-wrap tr:nth-child(2) td {
-  position: sticky;
-  z-index: 24;
-  background: #eaf1f7;
-  color: #38556d;
-  font-weight: 800;
-  text-align: center;
-}
-.table-wrap tr:nth-child(1) td {
-  top: 0;
-  height: 42px;
-}
-.table-wrap tr:nth-child(2) td {
-  top: 42px;
-  height: 42px;
-}
 
 /* =========================================================
    COLUMNAS A:D FIJADAS
    ========================================================= */
-/* Configuración común de las cuatro columnas fijadas. */
-#auxTable td:nth-child(1),
-#auxTable td:nth-child(2),
-#auxTable td:nth-child(3),
-#auxTable td:nth-child(4) {
-  position: sticky;
-  z-index: 18;
-  background: #ffffff;
-  vertical-align: middle;
-}
 /* A: COD_DISP */
 #auxTable td:nth-child(1) {
   left: 0;
@@ -420,12 +393,6 @@ main {
   max-width: 95px;
   text-align: center;
   box-shadow: 8px 0 12px -11px #0f172a;
-}
-
-.table-wrap tr:nth-child(1) td:nth-child(-n + 4),
-.table-wrap tr:nth-child(2) td:nth-child(-n + 4) {
-  z-index: 30;
-  background: #eaf1f7;
 }
 .table-wrap tr.section-row td {
   position: sticky;
