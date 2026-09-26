@@ -680,3 +680,26 @@ main {
   text-align: center !important;
   vertical-align: middle !important;
 }
+/* =========================================================
+   COLUMNAS I Y J
+   ========================================================= */
+
+/* Cada una de las columnas I y J ocupa 94 px. */
+#auxTable td.accumulated-column {
+  width: 94px;
+  min-width: 94px;
+  max-width: 94px;
+}
+
+/* Encabezado combinado de las columnas I y J. */
+#auxTable td.accumulated-group-header {
+  width: 188px;
+  min-width: 188px;
+  max-width: 188px;
+
+  padding-left: 0;
+  padding-right: 0;
+
+  text-align: center !important;
+  vertical-align: middle !important;
+}

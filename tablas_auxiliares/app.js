@@ -227,6 +227,9 @@ function renderTable() {
         if (column >= 4 && column <= 6) {
           cell.classList.add("period-column");
         }
+        if (column === 8 || column === 9) {
+          cell.classList.add("accumulated-column");
+        }
 
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
@@ -262,6 +265,9 @@ function renderTable() {
         if (column >= 4 && column <= 6) {
           cell.classList.add("period-column");
         }
+        if (column === 8 || column === 9) {
+          cell.classList.add("accumulated-column");
+        }
 
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
@@ -286,17 +292,27 @@ function renderTable() {
        * En la primera fila, las columnas E, F y G se muestran
        * como un único encabezado combinado.
        */
-      if (rowIndex === 0 && (column === 5 || column === 6)) {
+      if (rowIndex === 0 && (column === 5 || column === 6 || column === 9)) {
         continue;
       }
 
       const cell = document.createElement("td");
 
       if (rowIndex === 0 && column === 4) {
+        /* Encabezado combinado de E, F y G.*/
         cell.colSpan = 3;
         cell.classList.add("period-group-header");
-      } else if (column >= 4 && column <= 6) {
-        cell.classList.add("period-column");
+      } else if (rowIndex === 0 && column === 8) {
+        /* Encabezado combinado de I y J.*/
+        cell.colSpan = 2;
+        cell.classList.add("accumulated-group-header");
+      } else {
+        if (column >= 4 && column <= 6) {
+          cell.classList.add("period-column");
+        }
+        if (column === 8 || column === 9) {
+          cell.classList.add("accumulated-column");
+        }
       }
 
       if (column === 7 || column === 10) {
