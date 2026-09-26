@@ -211,7 +211,7 @@ function renderTable() {
       const populationCell = document.createElement("td");
 
       populationCell.colSpan = 4;
-      populationCell.className = "section-title-cell";
+      populationCell.className = "section-title-cell excel-column-0";
       populationCell.textContent = row[0] ?? "";
 
       tableRow.appendChild(populationCell);
@@ -238,7 +238,7 @@ function renderTable() {
       const totalLabelCell = document.createElement("td");
 
       totalLabelCell.colSpan = 4;
-      totalLabelCell.className = "total-label-cell";
+      totalLabelCell.className = "total-label-cell excel-column-0";
       totalLabelCell.textContent = row[3] ?? "";
 
       tableRow.appendChild(totalLabelCell);
@@ -269,7 +269,7 @@ function renderTable() {
         const monthlyHeaderCell = document.createElement("td");
 
         monthlyHeaderCell.colSpan = 3;
-        monthlyHeaderCell.className = "monthly-header-cell";
+        monthlyHeaderCell.className = "monthly-header-cell excel-column-4";
         monthlyHeaderCell.textContent = "VOLUMENES MENSUALES (m³)";
 
         tableRow.appendChild(monthlyHeaderCell);
@@ -279,6 +279,7 @@ function renderTable() {
       }
 
       const cell = document.createElement("td");
+      cell.classList.add(`excel-column-${column}`);
 
       if (column === 7 || column === 10) {
         cell.classList.add("spacer-column");
@@ -318,9 +319,7 @@ function renderTable() {
 
           cell.appendChild(select);
         } else {
-          /*
-           * Columna A: COD_DISP.
-           */
+          /* Columna A: COD_DISP.*/
           const input = document.createElement("input");
 
           input.type = "text";
@@ -338,9 +337,7 @@ function renderTable() {
           cell.appendChild(input);
         }
       } else {
-        /*
-         * Celdas no editables.
-         */
+        /* Celdas no editables.*/
         cell.textContent = formatValue(row[column], column, rowIndex);
 
         if (column >= 4 && ![7, 10].includes(column)) {
