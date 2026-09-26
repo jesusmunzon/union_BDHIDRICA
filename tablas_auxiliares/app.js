@@ -177,47 +177,58 @@ function calculate() {
   }
   renderTable();
 }
-function formatValue(v, c, r) {
-  if (v == null || v === "") return "";
+function formatValue(value, column, row) {
+  if (value == null || value === "") return "";
 
-  // L2:U2 son años de cabecera y se muestran sin decimales.
-  if (r === 1 && c >= 11 && c <= 20) {
-    return String(Math.trunc(Number(v)));
+  if (row === 1 && column >= 11 && column <= 20) {
+    return String(Math.trunc(Number(value)));
   }
 
-  if (c >= 4 && typeof v === "number") {
-    return v.toLocaleString("es-ES", {
+  if (column >= 4 && typeof value === "number") {
+    return value.toLocaleString("es-ES", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   }
 
-  return String(v);
+  return String(value);
 }
+
 function renderTable() {
   const body = $("tableBody");
   body.innerHTML = "";
-  state.matrix.forEach((row, r) => {
-    const type = r < 2 ? "top" : rowType(row);
-    const tr = document.createElement("tr");
-    tr.className = `${type}-row`;
-    for (let c = 0; c < 21; c++) {
-      const td = document.createElement("td");
-      if (c === 7 || c === 10) td.classList.add("spacer-column");
-      if (type === "detail" && c === 0) {
-        td.classList.add("editable-cell");
+
+  state.matrix.forEach((row, rowIndex) => {
+    const type = rowIndex < 2 ? "top" : rowType(row);
+    const tableRow = document.createElement("tr");
+    tableRow.className = `${type}-row`;
+
+    for (let column = 0; column < 21; column += 1) {
+      const cell = document.createElement("td");
+
+      if (column === 7 || column === 10) {
+        cell.classList.add("spacer-column");
+      }
+
+      if (type === "detail" && column === 0) {
+        cell.classList.add("editable-cell");
+
         const input = document.createElement("input");
-        input.value = row[c] ?? "";
         input.type = "text";
+        input.value = row[column] ?? "";
+        input.setAttribute("aria-label", "Código de dispositivo");
+
         input.addEventListener("change", () => {
-          state.matrix[r][c] = input.value.trim();
+          state.matrix[rowIndex][column] = input.value.trim();
           state.dirty = true;
           $("dirtyBadge").hidden = false;
           calculate();
         });
-        td.appendChild(input);
-      } else if (type === "detail" && c === 3) {
-        td.classList.add("editable-cell");
+
+        cell.appendChild(input);
+      } else if (type === "detail" && column === 3) {
+        cell.classList.add("editable-cell");
+
         const select = document.createElement("select");
         select.className = "factor-select";
         select.setAttribute("aria-label", "Factor");
@@ -226,27 +237,33 @@ function renderTable() {
           const option = document.createElement("option");
           option.value = String(factor);
           option.textContent = String(factor);
-          option.selected = Number(row[c]) === factor;
+          option.selected = Number(row[column]) === factor;
           select.appendChild(option);
         });
 
         select.addEventListener("change", () => {
-          state.matrix[r][c] = Number(select.value);
+          state.matrix[rowIndex][column] = Number(select.value);
           state.dirty = true;
           $("dirtyBadge").hidden = false;
           calculate();
         });
 
-        td.appendChild(select);
+        cell.appendChild(select);
       } else {
-        td.textContent = formatValue(row[c], c, r);
-        if (c >= 4 && ![7, 10].includes(c)) td.classList.add("calculated");
+        cell.textContent = formatValue(row[column], column, rowIndex);
+
+        if (column >= 4 && ![7, 10].includes(column)) {
+          cell.classList.add("calculated");
+        }
       }
-      tr.appendChild(td);
+
+      tableRow.appendChild(cell);
     }
-    body.appendChild(tr);
+
+    body.appendChild(tableRow);
   });
 }
+
 function saveExcel() {
   const ws = state.templateSheet;
   for (let r = 0; r < state.matrix.length; r++) {
