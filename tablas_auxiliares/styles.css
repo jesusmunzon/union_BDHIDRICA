@@ -538,21 +538,13 @@ main {
   }
 }
 
-/* Factor limitado a -1, 0 y 1 */
-#auxTable .factor-select {
-  width: 100%;
-  height: 37px;
-  padding: 0 28px 0 10px;
-  border: 0;
-  outline: none;
-  color: #1d4ed8;
-  background: #eff6ff;
-  font: 700 12px Inter, sans-serif;
-  text-align: center;
-  cursor: pointer;
+/* Ocultar definitivamente el filtro local de Tablas auxiliares.
+   El periodo se recibe desde Estadisticos 1 mediante localStorage. */
+.control-card {
+  display: none !important;
 }
 
-#auxTable .factor-select:focus {
-  background: #dbeafe;
-  box-shadow: inset 0 0 0 2px #60a5fa;
+/* Aprovechar el espacio liberado para mostrar mas filas. */
+.table-wrap {
+  max-height: calc(100vh - 190px) !important;
 }
