@@ -1,6 +1,6 @@
 const CONFIG = {
   template: "tablas_excel/Distribuido_Poblaciones.xlsx",
-  source: "base-datos/tablas-excel/BD_Balance_Poblaciones.xlsx",
+  source: "../base-datos/tablas-excel/BD_Balance_Poblaciones.xlsx",
   sheet: "Distribuido_Poblaciones",
 };
 const MONTHS = [
@@ -177,13 +177,21 @@ function calculate() {
   }
   renderTable();
 }
-function formatValue(v, c) {
+function formatValue(v, c, r) {
   if (v == null || v === "") return "";
-  if (c >= 4 && typeof v === "number")
+
+  // L2:U2 son años de cabecera y se muestran sin decimales.
+  if (r === 1 && c >= 11 && c <= 20) {
+    return String(Math.trunc(Number(v)));
+  }
+
+  if (c >= 4 && typeof v === "number") {
     return v.toLocaleString("es-ES", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+  }
+
   return String(v);
 }
 function renderTable() {
@@ -196,22 +204,42 @@ function renderTable() {
     for (let c = 0; c < 21; c++) {
       const td = document.createElement("td");
       if (c === 7 || c === 10) td.classList.add("spacer-column");
-      if (type === "detail" && (c === 0 || c === 3)) {
+      if (type === "detail" && c === 0) {
         td.classList.add("editable-cell");
         const input = document.createElement("input");
         input.value = row[c] ?? "";
-        input.type = c === 3 ? "number" : "text";
-        if (c === 3) input.step = "any";
+        input.type = "text";
         input.addEventListener("change", () => {
-          state.matrix[r][c] =
-            c === 3 ? Number(input.value) || 0 : input.value.trim();
+          state.matrix[r][c] = input.value.trim();
           state.dirty = true;
           $("dirtyBadge").hidden = false;
           calculate();
         });
         td.appendChild(input);
+      } else if (type === "detail" && c === 3) {
+        td.classList.add("editable-cell");
+        const select = document.createElement("select");
+        select.className = "factor-select";
+        select.setAttribute("aria-label", "Factor");
+
+        [-1, 0, 1].forEach((factor) => {
+          const option = document.createElement("option");
+          option.value = String(factor);
+          option.textContent = String(factor);
+          option.selected = Number(row[c]) === factor;
+          select.appendChild(option);
+        });
+
+        select.addEventListener("change", () => {
+          state.matrix[r][c] = Number(select.value);
+          state.dirty = true;
+          $("dirtyBadge").hidden = false;
+          calculate();
+        });
+
+        td.appendChild(select);
       } else {
-        td.textContent = formatValue(row[c], c);
+        td.textContent = formatValue(row[c], c, r);
         if (c >= 4 && ![7, 10].includes(c)) td.classList.add("calculated");
       }
       tr.appendChild(td);
@@ -230,7 +258,9 @@ function saveExcel() {
         continue;
       }
       ws[addr] = { t: typeof value === "number" ? "n" : "s", v: value };
-      if (typeof value === "number" && c >= 4) ws[addr].z = "#,##0.00";
+      if (typeof value === "number" && c >= 4) {
+        ws[addr].z = r === 1 && c >= 11 && c <= 20 ? "0" : "#,##0.00";
+      }
     }
   }
   let blockStart = null;
