@@ -261,7 +261,7 @@ function renderTable() {
           cell.classList.add("calculated");
         }
 
-        cell.textContent = formatValue(row[column], column);
+        cell.textContent = formatValue(row[column], column, rowIndex);
         tableRow.appendChild(cell);
       }
 
@@ -339,7 +339,7 @@ function renderTable() {
         /*
          * Celdas no editables.
          */
-        cell.textContent = formatValue(row[column], column);
+        cell.textContent = formatValue(row[column], column, rowIndex);
 
         if (column >= 4 && ![7, 10].includes(column)) {
           cell.classList.add("calculated");
