@@ -523,31 +523,6 @@ main {
   white-space: nowrap;
 }
 
-#auxTable tr:nth-child(1) > td {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 50 !important;
-  height: 42px;
-  color: #38556d;
-  background: #eaf1f7 !important;
-  font-weight: 800;
-  text-align: center !important;
-  vertical-align: middle;
-}
-
-#auxTable tr:nth-child(2) > td {
-  position: sticky !important;
-  top: 42px !important;
-  z-index: 50 !important;
-  height: 42px;
-  color: #38556d;
-  background: #eaf1f7 !important;
-  font-weight: 800;
-  text-align: center !important;
-  vertical-align: middle;
-  border-bottom: 1px solid #d5e0ea;
-}
-
 #auxTable tr:not(.section-row):not(.total-row) > td:nth-child(1),
 #auxTable tr:not(.section-row):not(.total-row) > td:nth-child(2),
 #auxTable tr:not(.section-row):not(.total-row) > td:nth-child(3),
@@ -583,39 +558,6 @@ main {
   width: 95px;
   min-width: 95px;
   max-width: 95px;
-  box-shadow: 9px 0 12px -11px rgba(15, 23, 42, 0.9);
-}
-
-#auxTable tr:nth-child(1) > td:nth-child(1),
-#auxTable tr:nth-child(1) > td:nth-child(2),
-#auxTable tr:nth-child(1) > td:nth-child(3),
-#auxTable tr:nth-child(1) > td:nth-child(4),
-#auxTable tr:nth-child(2) > td:nth-child(1),
-#auxTable tr:nth-child(2) > td:nth-child(2),
-#auxTable tr:nth-child(2) > td:nth-child(3),
-#auxTable tr:nth-child(2) > td:nth-child(4) {
-  z-index: 80 !important;
-  background: #eaf1f7 !important;
-}
-
-#auxTable tr:nth-child(1) > td:nth-child(1),
-#auxTable tr:nth-child(2) > td:nth-child(1) {
-  left: 0 !important;
-}
-
-#auxTable tr:nth-child(1) > td:nth-child(2),
-#auxTable tr:nth-child(2) > td:nth-child(2) {
-  left: 125px !important;
-}
-
-#auxTable tr:nth-child(1) > td:nth-child(3),
-#auxTable tr:nth-child(2) > td:nth-child(3) {
-  left: 395px !important;
-}
-
-#auxTable tr:nth-child(1) > td:nth-child(4),
-#auxTable tr:nth-child(2) > td:nth-child(4) {
-  left: 605px !important;
   box-shadow: 9px 0 12px -11px rgba(15, 23, 42, 0.9);
 }
 
@@ -701,7 +643,6 @@ main {
 #auxTable tr.detail-row:hover > td.editable-cell {
   background: #eaf2ff !important;
 }
-
 #auxTable .editable-cell input,
 #auxTable .factor-select {
   width: 100%;
@@ -714,48 +655,216 @@ main {
   text-align: center !important;
   text-align-last: center;
 }
-
 #auxTable .editable-cell input:focus,
 #auxTable .factor-select:focus {
   background: #dbeafe;
   box-shadow: inset 0 0 0 2px #60a5fa;
 }
-
 #auxTable .spacer-column {
   width: 28px;
   min-width: 28px;
   max-width: 28px;
   background: #f8fafc !important;
 }
-
 #auxTable col.column-code {
   width: 125px;
 }
-
 #auxTable col.column-name {
   width: 270px;
 }
-
 #auxTable col.column-population {
   width: 210px;
 }
-
 #auxTable col.column-factor {
   width: 95px;
 }
-
 #auxTable col.column-monthly {
   width: 180px;
 }
-
 #auxTable col.column-separator {
   width: 28px;
 }
-
 #auxTable col.column-accumulated {
   width: 180px;
 }
-
+#auxTable col.column-annual {
+  width: 145px;
+}
+.table-wrap {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-height: calc(100vh - 190px);
+  overflow: auto;
+}
+#auxTable {
+  position: relative;
+  width: 3106px;
+  min-width: 3106px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  background: #ffffff;
+}
+#auxTable td {
+  height: 38px;
+  padding: 7px 9px;
+  overflow: hidden;
+  background: #ffffff;
+  border-right: 1px solid #edf1f5;
+  border-bottom: 1px solid #edf1f5;
+  text-align: center;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#auxTable .sticky-header-one {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 42px;
+  color: #38556d;
+  background: #eaf1f7;
+  font-weight: 800;
+}
+#auxTable .sticky-header-two {
+  position: sticky;
+  top: 42px;
+  z-index: 50;
+  height: 42px;
+  color: #38556d;
+  background: #eaf1f7;
+  font-weight: 800;
+}
+#auxTable .sticky-left {
+  position: sticky;
+  z-index: 30;
+  background: #ffffff;
+}
+#auxTable .sticky-left-1 {
+  left: 0;
+  width: 125px;
+  min-width: 125px;
+  max-width: 125px;
+}
+#auxTable .sticky-left-2 {
+  left: 125px;
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
+}
+#auxTable .sticky-left-3 {
+  left: 395px;
+  width: 210px;
+  min-width: 210px;
+  max-width: 210px;
+}
+#auxTable .sticky-left-4 {
+  left: 605px;
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
+  box-shadow: 9px 0 12px -11px rgba(15, 23, 42, 0.9);
+}
+#auxTable .sticky-header-one.sticky-left,
+#auxTable .sticky-header-two.sticky-left {
+  z-index: 80;
+  background: #eaf1f7;
+}
+#auxTable tr.header-row .sticky-left {
+  z-index: 40;
+  color: #38556d;
+  background: #eaf1f7;
+  font-weight: 800;
+}
+#auxTable tr.detail-row .sticky-left {
+  background: #ffffff;
+}
+#auxTable tr.detail-row .editable-cell {
+  background: #eff6ff;
+}
+#auxTable tr.detail-row:hover .sticky-left {
+  background: #f8fafc;
+}
+#auxTable tr.detail-row:hover .editable-cell {
+  background: #eaf2ff;
+}
+#auxTable .sticky-span {
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
+  box-shadow: 9px 0 12px -11px rgba(15, 23, 42, 0.9);
+}
+#auxTable tr.section-row td {
+  color: #ffffff;
+  background: #334155;
+}
+#auxTable tr.section-row .section-title-cell {
+  padding: 0 14px;
+  color: #ffffff;
+  background: #334155;
+  font-weight: 800;
+  text-align: left;
+}
+#auxTable tr.total-row td {
+  color: #312e81;
+  background: #eef2ff;
+  font-weight: 800;
+  border-top: 2px solid #c7d2fe;
+}
+#auxTable tr.total-row .total-label-cell {
+  padding: 0 14px;
+  color: #312e81;
+  background: #eef2ff;
+  text-align: right;
+}
+#auxTable .editable-cell input,
+#auxTable .factor-select {
+  width: 100%;
+  height: 37px;
+  border: 0;
+  outline: none;
+  color: #1d4ed8;
+  background: transparent;
+  font: 700 12px Inter, sans-serif;
+  text-align: center;
+  text-align-last: center;
+}
+#auxTable .editable-cell input:focus,
+#auxTable .factor-select:focus {
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 2px #60a5fa;
+}
+#auxTable .spacer-column {
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  background: #f8fafc;
+}
+#auxTable col.column-code {
+  width: 125px;
+}
+#auxTable col.column-name {
+  width: 270px;
+}
+#auxTable col.column-population {
+  width: 210px;
+}
+#auxTable col.column-factor {
+  width: 95px;
+}
+#auxTable col.column-monthly {
+  width: 180px;
+}
+#auxTable col.column-separator {
+  width: 28px;
+}
+#auxTable col.column-accumulated {
+  width: 180px;
+}
 #auxTable col.column-annual {
   width: 145px;
 }
