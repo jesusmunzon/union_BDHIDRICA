@@ -231,6 +231,10 @@ function renderTable() {
           cell.classList.add("accumulated-column");
         }
 
+        if (column >= 11 && column <= 20) {
+          cell.classList.add("annual-column");
+        }
+
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
         }
@@ -269,6 +273,10 @@ function renderTable() {
           cell.classList.add("accumulated-column");
         }
 
+        if (column >= 11 && column <= 20) {
+          cell.classList.add("annual-column");
+        }
+
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
         } else {
@@ -283,16 +291,12 @@ function renderTable() {
       return;
     }
 
-    /*
-     * RESTO DE FILAS
-     * Incluye encabezados, detalles y filas vacías.
-     */
+    /* RESTO DE FILAS
+     * Incluye encabezados, detalles y filas vacías.*/
     for (let column = 0; column < 21; column += 1) {
-      /*
-       * En la primera fila, las columnas E, F y G se muestran
-       * como un único encabezado combinado.
-       */
-      if (rowIndex === 0 && (column === 5 || column === 6 || column === 9)) {
+      /* En la primera fila, las columnas E, F y G se muestran
+       * como un único encabezado combinado.*/
+      if (rowIndex === 0 && (column === 5 || column === 6 || column === 9) || (column >= 12 && column <= 20)) {
         continue;
       }
 
@@ -306,6 +310,10 @@ function renderTable() {
         /* Encabezado combinado de I y J.*/
         cell.colSpan = 2;
         cell.classList.add("accumulated-group-header");
+      } else if (rowIndex === 0 && column === 11) {
+        /* Encabezado combinado desde L hasta U.*/
+        cell.colSpan = 10;
+        cell.classList.add("annual-group-header");
       } else {
         if (column >= 4 && column <= 6) {
           cell.classList.add("period-column");
@@ -313,7 +321,11 @@ function renderTable() {
         if (column === 8 || column === 9) {
           cell.classList.add("accumulated-column");
         }
+        if (column >= 11 && column <= 20) {
+          cell.classList.add("annual-column");
+        }
       }
+
 
       if (column === 7 || column === 10) {
         cell.classList.add("spacer-column");
