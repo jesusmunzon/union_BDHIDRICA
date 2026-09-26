@@ -457,8 +457,21 @@ async function initialize() {
       defval: "",
       raw: true,
     });
-    while (state.matrix.length < 217) state.matrix.push([]);
-    for (const row of state.matrix) while (row.length < 21) row.push("");
+
+    /*Eliminar únicamente las filas completamente vacías situadas al final del Excel.*/
+    while (
+      state.matrix.length > 0 &&
+      state.matrix[state.matrix.length - 1].every((value) => value == null || String(value).trim() === "",)
+    ) {
+      state.matrix.pop();
+    }
+
+    /*Mantener 21 columnas en las filas que sí forman parte de la plantilla.*/
+    for (const row of state.matrix) {
+      while (row.length < 21) {
+        row.push("");
+      }
+    }
     state.records = parseBalance(balance);
     buildAggregates();
     $("dataStatus").textContent =
