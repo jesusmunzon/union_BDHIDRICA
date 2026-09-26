@@ -296,9 +296,17 @@ function renderTable() {
     for (let column = 0; column < 21; column += 1) {
       /* En la primera fila, las columnas E, F y G se muestran
        * como un único encabezado combinado.*/
-      if (rowIndex === 0 && (column === 5 || column === 6 || column === 9) || (column >= 12 && column <= 20)) {
-        continue;
-      }
+      if (
+          rowIndex === 0 &&
+          (
+            column === 5 ||
+            column === 6 ||
+            column === 9 ||
+            (column >= 12 && column <= 20)
+          )
+        ) {
+          continue;
+        }
 
       const cell = document.createElement("td");
 
