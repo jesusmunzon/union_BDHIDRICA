@@ -1,6 +1,6 @@
 const CONFIG = {
   template: "tablas_excel/Distribuido_Poblaciones.xlsx",
-  source: "../../base-datos/tablas-excel/BD_Balance_Poblaciones.xlsx",
+  source: "../base-datos/tablas-excel/BD_Balance_Poblaciones.xlsx",
   sheet: "Distribuido_Poblaciones",
 };
 const MONTHS = [
