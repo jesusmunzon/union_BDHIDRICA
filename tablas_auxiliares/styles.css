@@ -373,184 +373,15 @@ main {
   top: 42px;
   height: 42px;
 }
-.table-wrap td:nth-child(1),
-.table-wrap td:nth-child(2),
-.table-wrap td:nth-child(3),
-.table-wrap td:nth-child(4) {
-  position: sticky;
-  z-index: 18;
-  text-align: left;
-  background: #fff;
-}
-.table-wrap td:nth-child(1) {
-  left: 0;
-  width: 125px;
-  min-width: 125px;
-  max-width: 125px;
-}
-.table-wrap td:nth-child(2) {
-  left: 125px;
-  width: 270px;
-  min-width: 270px;
-  max-width: 270px;
-}
-.table-wrap td:nth-child(3) {
-  left: 395px;
-  width: 210px;
-  min-width: 210px;
-  max-width: 210px;
-}
-.table-wrap td:nth-child(4) {
-  left: 605px;
-  width: 95px;
-  min-width: 95px;
-  max-width: 95px;
-  box-shadow: 7px 0 10px -10px #0f172a;
-}
-.table-wrap tr:nth-child(1) td:nth-child(-n + 4),
-.table-wrap tr:nth-child(2) td:nth-child(-n + 4) {
-  z-index: 30;
-  background: #eaf1f7;
-}
-.table-wrap tr.section-row td {
-  position: sticky;
-  left: 0;
-  z-index: 19;
-  color: #fff;
-  background: #334155 !important;
-  font-weight: 800;
-  text-align: left;
-}
-.table-wrap tr.header-row td {
-  color: #38556d;
-  background: #eaf1f7 !important;
-  font-weight: 800;
-  text-align: center;
-}
-.table-wrap tr.total-row td {
-  background: #eef2ff !important;
-  color: #312e81;
-  font-weight: 800;
-  border-top: 2px solid #c7d2fe;
-}
-.table-wrap tr.detail-row:hover td {
-  background: #f8fafc;
-}
-.table-wrap tr.detail-row:hover td:nth-child(-n + 4) {
-  background: #f8fafc;
-}
-.editable-cell {
-  padding: 0 !important;
-  background: #eff6ff !important;
-}
-.editable-cell input {
-  width: 100%;
-  height: 37px;
-  padding: 6px 8px;
-  border: 0;
-  background: transparent;
-  color: #1d4ed8;
-  font: 700 11px Inter;
-  outline: none;
-}
-.editable-cell input:focus {
-  background: #dbeafe;
-  box-shadow: inset 0 0 0 2px #60a5fa;
-}
-.calculated {
-  color: #166534;
-}
-.spacer-column {
-  width: 28px;
-  min-width: 28px;
-  background: #f8fafc !important;
-}
-#toast {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  z-index: 100;
-  padding: 12px 16px;
-  color: #fff;
-  background: #0f172a;
-  border-radius: 10px;
-  font-size: 12px;
-  opacity: 0;
-  transform: translateY(8px);
-  transition: 0.2s;
-  pointer-events: none;
-}
-#toast.show {
-  opacity: 1;
-  transform: none;
-}
-.overlay {
-  display: none;
-}
-@media (max-width: 900px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: 0.25s;
-  }
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  .app-shell {
-    margin-left: 0;
-  }
-  .mobile-only {
-    display: grid;
-  }
-  .overlay.open {
-    position: fixed;
-    inset: 0;
-    z-index: 35;
-    display: block;
-    background: #02061766;
-  }
-  .topbar {
-    padding: 10px 14px;
-  }
-  .heading h1 {
-    font-size: 20px;
-  }
-  .heading p {
-    max-width: 52vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  main {
-    padding: 14px;
-  }
-  .control-card {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .control-card label {
-    justify-content: space-between;
-  }
-  .source-info {
-    margin-left: 0;
-  }
-  .table-wrap {
-    max-height: calc(100vh - 390px);
-  }
-}
 
-/* Ocultar definitivamente el filtro local de Tablas auxiliares.
-   El periodo se recibe desde Estadisticos 1 mediante localStorage. */
 .control-card {
   display: none !important;
 }
 
-/* Aprovechar el espacio liberado para mostrar mas filas. */
 .table-wrap {
   max-height: calc(100vh - 190px) !important;
 }
 
-/* Factor limitado a -1, 0 y 1 */
 #auxTable .factor-select {
   width: 100%;
   height: 37px;
@@ -559,10 +390,9 @@ main {
   outline: none;
   color: #1d4ed8;
   background: #eff6ff;
-  font:
-    700 12px Inter,
-    sans-serif;
+  font: 700 12px Inter, sans-serif;
   text-align: center;
+  text-align-last: center;
   cursor: pointer;
 }
 
@@ -570,6 +400,7 @@ main {
   background: #dbeafe;
   box-shadow: inset 0 0 0 2px #60a5fa;
 }
+
 #auxTable col.column-code {
   width: 125px;
 }
@@ -606,11 +437,12 @@ main {
 #auxTable .corner-period-cell {
   position: sticky;
   left: 0;
-  z-index: 40;
+  z-index: 60;
   width: 700px;
   min-width: 700px;
   max-width: 700px;
   background: #eaf1f7;
+  box-shadow: 8px 0 12px -11px rgba(15, 23, 42, 0.9);
 }
 
 #auxTable .corner-header-cell {
@@ -639,24 +471,6 @@ main {
   white-space: nowrap;
 }
 
-#auxTable .monthly-group {
-  width: 540px;
-  min-width: 540px;
-  max-width: 540px;
-}
-
-#auxTable .accumulated-group {
-  width: 360px;
-  min-width: 360px;
-  max-width: 360px;
-}
-
-#auxTable .annual-group {
-  width: 1450px;
-  min-width: 1450px;
-  max-width: 1450px;
-}
-
 #auxTable .header-spacer {
   position: sticky;
   top: 0;
@@ -667,15 +481,25 @@ main {
   background: #f8fafc;
 }
 
-#auxTable tr:nth-child(2) td {
-  position: sticky;
-  top: 42px;
-  z-index: 24;
-  height: 42px;
+#auxTable tr.header-row > td:nth-child(-n + 4) {
+  z-index: 30;
   color: #38556d;
-  background: #eaf1f7;
+  background: #eaf1f7 !important;
   font-weight: 800;
-  text-align: center;
-  vertical-align: middle;
-  border-bottom: 1px solid #d5e0ea;
+}
+
+#auxTable tr.detail-row > td:nth-child(-n + 4) {
+  background: #ffffff !important;
+}
+
+#auxTable tr.detail-row > td.editable-cell {
+  background: #eff6ff !important;
+}
+
+#auxTable tr.detail-row:hover > td:nth-child(-n + 4) {
+  background: #f8fafc !important;
+}
+
+#auxTable tr.detail-row:hover > td.editable-cell {
+  background: #eaf2ff !important;
 }
