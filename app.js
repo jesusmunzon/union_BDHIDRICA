@@ -113,9 +113,9 @@ function monthly(sub, y) {
   );
 }
 function update() {
-  const y = +year.value,
-    m = +month.value,
-    prev = y - 1;
+  const y = +year.value, m = +month.value, prev = y - 1;
+  localStorage.setItem("control-red-month", m);
+  localStorage.setItem("control-red-year", y);
   periodText.textContent = `Datos hasta ${months[m - 1].toLowerCase()} de ${y} · comparación histórica`;
   capSub.textContent = `Acumulado enero–${months[m - 1].toLowerCase()} · últimos 10 años`;
   distSub.textContent = `Acumulado enero–${months[m - 1].toLowerCase()} por año`;
