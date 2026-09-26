@@ -339,13 +339,12 @@ main {
   overflow: auto;
 }
 .table-wrap table {
-  width: max-content;
-  min-width: 3156px;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
+  min-width: 2350px;
+  width: max-content;
   font-size: 11px;
-  background: #ffffff;
+  background: #fff;
 }
 .table-wrap td {
   height: 38px;
@@ -656,11 +655,4 @@ main {
 #auxTable .factor-select {
   text-align: center !important;
   text-align-last: center;
-}
-
-/* E, F, G, I, J y L:U con el mismo ancho */
-#auxTable col.column-volume {
-  width: 160px;
-  min-width: 160px;
-  max-width: 160px;
 }
