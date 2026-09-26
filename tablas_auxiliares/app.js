@@ -195,168 +195,114 @@ function formatValue(value, column, row) {
 }
 
 function renderTable() {
-  const header = $("tableHeader");
   const body = $("tableBody");
 
-  header.innerHTML = "";
   body.innerHTML = "";
 
-  if (!state.matrix || state.matrix.length < 2) return;
-
-  // =========================================================
-  // 1. CONSTRUCCIÓN DEL ENCABEZADO CON COLSPAN Y ROWSPAN (thead)
-  // =========================================================
-  const topHeaderRow = document.createElement("tr");
-  topHeaderRow.className = "top-group-row";
-
-  // Columnas A a D: Ocupan 2 filas de alto
-  const colTitles = [
-    { text: state.matrix[0][0] || "COD_DISP", cls: "col-a" },
-    { text: state.matrix[0][1] || "CONCEPTO", cls: "col-b" },
-    { text: state.matrix[0][2] || "OBSERVACIÓN", cls: "col-c" },
-    { text: state.matrix[0][3] || "FACTOR", cls: "col-d" }
-  ];
-
-  colTitles.forEach(({ text, cls }) => {
-    const th = document.createElement("th");
-    th.rowSpan = 2;
-    th.className = `col-fixed-header ${cls}`;
-    th.textContent = text;
-    topHeaderRow.appendChild(th);
-  });
-
-  // Grupo 1: Columnas E a G (Índices 4, 5, 6) -> DISTRIBUIDO EN EL MES (colspan=3)
-  const groupMes = document.createElement("th");
-  groupMes.colSpan = 3;
-  groupMes.className = "group-header group-mes";
-  groupMes.textContent = state.matrix[0][4] || "DISTRIBUIDO EN EL MES";
-  topHeaderRow.appendChild(groupMes);
-
-  // Separador H (Índice 7)
-  const sp1 = document.createElement("th");
-  sp1.rowSpan = 2;
-  sp1.className = "spacer-column-header";
-  topHeaderRow.appendChild(sp1);
-
-  // Grupo 2: Columnas I y J (Índices 8, 9) -> ACUMULADO AL MES (colspan=2)
-  const groupAcum = document.createElement("th");
-  groupAcum.colSpan = 2;
-  groupAcum.className = "group-header group-acum";
-  groupAcum.textContent = state.matrix[0][8] || "ACUMULADO AL MES";
-  topHeaderRow.appendChild(groupAcum);
-
-  // Separador K (Índice 10)
-  const sp2 = document.createElement("th");
-  sp2.rowSpan = 2;
-  sp2.className = "spacer-column-header";
-  topHeaderRow.appendChild(sp2);
-
-  // Grupo 3: Columnas L a U (Índices 11 a 20) -> HISTÓRICO ANUAL (colspan=10)
-  const groupHist = document.createElement("th");
-  groupHist.colSpan = 10;
-  groupHist.className = "group-header group-hist";
-  groupHist.textContent = state.matrix[0][11] || "HISTÓRICO ANUAL (10 AÑOS)";
-  topHeaderRow.appendChild(groupHist);
-
-  header.appendChild(topHeaderRow);
-
-  // Segunda Fila de Encabezado: Fechas y Años de state.matrix[1]
-  const subHeaderRow = document.createElement("tr");
-  subHeaderRow.className = "sub-group-row";
-
-  // E, F, G
-  for (let c = 4; c <= 6; c++) {
-    const th = document.createElement("th");
-    th.className = "sub-header group-mes-sub";
-    th.textContent = formatValue(state.matrix[1][c], c, 1);
-    subHeaderRow.appendChild(th);
-  }
-
-  // I, J
-  for (let c = 8; c <= 9; c++) {
-    const th = document.createElement("th");
-    th.className = "sub-header group-acum-sub";
-    th.textContent = formatValue(state.matrix[1][c], c, 1);
-    subHeaderRow.appendChild(th);
-  }
-
-  // L a U
-  for (let c = 11; c <= 20; c++) {
-    const th = document.createElement("th");
-    th.className = "sub-header group-hist-sub";
-    th.textContent = formatValue(state.matrix[1][c], c, 1);
-    subHeaderRow.appendChild(th);
-  }
-
-  header.appendChild(subHeaderRow);
-
-  // =========================================================
-  // 2. RENDERIZADO DE FILAS DE DATOS EN TBODY (Desde rowIndex = 2)
-  // =========================================================
-  for (let rowIndex = 2; rowIndex < state.matrix.length; rowIndex++) {
-    const row = state.matrix[rowIndex];
-    const type = rowType(row);
+  state.matrix.forEach((row, rowIndex) => {
+    const type = rowIndex < 2 ? "top" : rowType(row);
     const tableRow = document.createElement("tr");
+
     tableRow.className = `${type}-row`;
 
+    /*
+     * FILA CON EL NOMBRE DE LA POBLACIÓN
+     * Combina visualmente las columnas A, B, C y D.
+     */
     if (type === "section") {
       const populationCell = document.createElement("td");
+
       populationCell.colSpan = 4;
       populationCell.className = "section-title-cell";
       populationCell.textContent = row[0] ?? "";
+
       tableRow.appendChild(populationCell);
 
-      for (let column = 4; column < 21; column++) {
+      /*
+       * Añade las columnas E hasta U.
+       */
+      for (let column = 4; column < 21; column += 1) {
         const cell = document.createElement("td");
-        if (column === 7 || column === 10) cell.classList.add("spacer-column");
-        cell.textContent = formatValue(row[column], column, rowIndex);
+
+        if (column === 7 || column === 10) {
+          cell.classList.add("spacer-column");
+        }
+
+        cell.textContent = formatValue(row[column], column);
         tableRow.appendChild(cell);
       }
+
       body.appendChild(tableRow);
-      continue;
+      return;
     }
 
+    /*
+     * FILAS DE TOTAL
+     * Combina las columnas A, B, C y D.
+     */
     if (type === "total") {
       const totalLabelCell = document.createElement("td");
+
       totalLabelCell.colSpan = 4;
       totalLabelCell.className = "total-label-cell";
       totalLabelCell.textContent = row[3] ?? "";
+
       tableRow.appendChild(totalLabelCell);
 
-      for (let column = 4; column < 21; column++) {
+      /*
+       * Añade los resultados desde E hasta U.
+       */
+      for (let column = 4; column < 21; column += 1) {
         const cell = document.createElement("td");
+
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
         } else {
           cell.classList.add("calculated");
         }
-        cell.textContent = formatValue(row[column], column, rowIndex);
+
+        cell.textContent = formatValue(row[column], column);
         tableRow.appendChild(cell);
       }
+
       body.appendChild(tableRow);
-      continue;
+      return;
     }
 
-    for (let column = 0; column < 21; column++) {
+    /*
+     * RESTO DE FILAS
+     * Incluye encabezados, detalles y filas vacías.
+     */
+    for (let column = 0; column < 21; column += 1) {
       const cell = document.createElement("td");
 
       if (column === 7 || column === 10) {
         cell.classList.add("spacer-column");
       }
 
+      /*
+       * Solo son editables COD_DISP y FACTOR
+       * en las filas de detalle.
+       */
       if (type === "detail" && (column === 0 || column === 3)) {
         cell.classList.add("editable-cell");
 
+        /*
+         * Columna D: selector FACTOR.
+         */
         if (column === 3) {
           const select = document.createElement("select");
+
           select.className = "factor-select";
           select.setAttribute("aria-label", "Factor");
 
           [-1, 0, 1].forEach((factor) => {
             const option = document.createElement("option");
+
             option.value = String(factor);
             option.textContent = String(factor);
             option.selected = Number(row[column]) === factor;
+
             select.appendChild(option);
           });
 
@@ -364,12 +310,17 @@ function renderTable() {
             state.matrix[rowIndex][column] = Number(select.value);
             state.dirty = true;
             $("dirtyBadge").hidden = false;
+
             calculate();
           });
 
           cell.appendChild(select);
         } else {
+          /*
+           * Columna A: COD_DISP.
+           */
           const input = document.createElement("input");
+
           input.type = "text";
           input.value = row[column] ?? "";
           input.setAttribute("aria-label", "Código de dispositivo");
@@ -378,13 +329,18 @@ function renderTable() {
             state.matrix[rowIndex][column] = input.value.trim();
             state.dirty = true;
             $("dirtyBadge").hidden = false;
+
             calculate();
           });
 
           cell.appendChild(input);
         }
       } else {
-        cell.textContent = formatValue(row[column], column, rowIndex);
+        /*
+         * Celdas no editables.
+         */
+        cell.textContent = formatValue(row[column], column);
+
         if (column >= 4 && ![7, 10].includes(column)) {
           cell.classList.add("calculated");
         }
@@ -394,7 +350,7 @@ function renderTable() {
     }
 
     body.appendChild(tableRow);
-  }
+  });
 }
 
 function saveExcel() {
