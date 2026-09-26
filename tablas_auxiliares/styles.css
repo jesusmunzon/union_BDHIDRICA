@@ -339,13 +339,12 @@ main {
   overflow: auto;
 }
 .table-wrap table {
-  width: 3106px;
-  min-width: 3106px;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
+  min-width: 2350px;
+  width: max-content;
   font-size: 11px;
-  background: #ffffff;
+  background: #fff;
 }
 .table-wrap td {
   height: 38px;
@@ -373,15 +372,183 @@ main {
   top: 42px;
   height: 42px;
 }
+.table-wrap td:nth-child(1),
+.table-wrap td:nth-child(2),
+.table-wrap td:nth-child(3),
+.table-wrap td:nth-child(4) {
+  position: sticky;
+  z-index: 18;
+  text-align: left;
+  background: #fff;
+}
+.table-wrap td:nth-child(1) {
+  left: 0;
+  width: 125px;
+  min-width: 125px;
+  max-width: 125px;
+}
+.table-wrap td:nth-child(2) {
+  left: 125px;
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
+}
+.table-wrap td:nth-child(3) {
+  left: 395px;
+  width: 210px;
+  min-width: 210px;
+  max-width: 210px;
+}
+.table-wrap td:nth-child(4) {
+  left: 605px;
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
+  box-shadow: 7px 0 10px -10px #0f172a;
+}
+.table-wrap tr:nth-child(1) td:nth-child(-n + 4),
+.table-wrap tr:nth-child(2) td:nth-child(-n + 4) {
+  z-index: 30;
+  background: #eaf1f7;
+}
+.table-wrap tr.section-row td {
+  position: sticky;
+  left: 0;
+  z-index: 19;
+  color: #fff;
+  background: #334155 !important;
+  font-weight: 800;
+  text-align: left;
+}
+.table-wrap tr.header-row td {
+  color: #38556d;
+  background: #eaf1f7 !important;
+  font-weight: 800;
+  text-align: center;
+}
+.table-wrap tr.total-row td {
+  background: #eef2ff !important;
+  color: #312e81;
+  font-weight: 800;
+  border-top: 2px solid #c7d2fe;
+}
+.table-wrap tr.detail-row:hover td {
+  background: #f8fafc;
+}
+.table-wrap tr.detail-row:hover td:nth-child(-n + 4) {
+  background: #f8fafc;
+}
+.editable-cell {
+  padding: 0 !important;
+  background: #eff6ff !important;
+}
+.editable-cell input {
+  width: 100%;
+  height: 37px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font: 700 11px Inter;
+  outline: none;
+}
+.editable-cell input:focus {
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 2px #60a5fa;
+}
+.calculated {
+  color: #166534;
+}
+.spacer-column {
+  width: 28px;
+  min-width: 28px;
+  background: #f8fafc !important;
+}
+#toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  padding: 12px 16px;
+  color: #fff;
+  background: #0f172a;
+  border-radius: 10px;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: 0.2s;
+  pointer-events: none;
+}
+#toast.show {
+  opacity: 1;
+  transform: none;
+}
+.overlay {
+  display: none;
+}
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: 0.25s;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .app-shell {
+    margin-left: 0;
+  }
+  .mobile-only {
+    display: grid;
+  }
+  .overlay.open {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    display: block;
+    background: #02061766;
+  }
+  .topbar {
+    padding: 10px 14px;
+  }
+  .heading h1 {
+    font-size: 20px;
+  }
+  .heading p {
+    max-width: 52vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  main {
+    padding: 14px;
+  }
+  .control-card {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .control-card label {
+    justify-content: space-between;
+  }
+  .source-info {
+    margin-left: 0;
+  }
+  .table-wrap {
+    max-height: calc(100vh - 390px);
+  }
+}
 
+/* El periodo se recibe desde Estadisticos 1 mediante localStorage. */
 .control-card {
   display: none !important;
 }
 
+/* Aprovechar el espacio liberado para mostrar mas filas. */
 .table-wrap {
   max-height: calc(100vh - 190px) !important;
 }
 
+/* Factor limitado a -1, 0 y 1 */
 #auxTable .factor-select {
   width: 100%;
   height: 37px;
@@ -390,9 +557,10 @@ main {
   outline: none;
   color: #1d4ed8;
   background: #eff6ff;
-  font: 700 12px Inter, sans-serif;
+  font:
+    700 12px Inter,
+    sans-serif;
   text-align: center;
-  text-align-last: center;
   cursor: pointer;
 }
 
@@ -401,105 +569,90 @@ main {
   box-shadow: inset 0 0 0 2px #60a5fa;
 }
 
-#auxTable col.column-code {
-  width: 125px;
-}
+/* =========================================================
+   TÍTULOS DE POBLACIÓN COMBINADOS DE A HASTA D
+   ========================================================= */
 
-#auxTable col.column-name {
-  width: 270px;
-}
-
-#auxTable col.column-population {
-  width: 210px;
-}
-
-#auxTable col.column-factor {
-  width: 95px;
-}
-
-#auxTable col.column-monthly {
-  width: 180px;
-}
-
-#auxTable col.column-separator {
-  width: 28px;
-}
-
-#auxTable col.column-accumulated {
-  width: 180px;
-}
-
-#auxTable col.column-annual {
-  width: 145px;
-}
-
-#auxTable .corner-header-cell,
-#auxTable .corner-period-cell {
+#auxTable tr.section-row .section-title-cell {
   position: sticky;
   left: 0;
-  z-index: 60;
+  z-index: 28;
+
   width: 700px;
   min-width: 700px;
   max-width: 700px;
-  background: #eaf1f7;
-  box-shadow: 8px 0 12px -11px rgba(15, 23, 42, 0.9);
-}
+  height: 38px;
 
-#auxTable .corner-header-cell {
-  top: 0;
-  height: 42px;
-}
+  padding: 0 14px;
 
-#auxTable .corner-period-cell {
-  top: 42px;
-  height: 42px;
-  border-bottom: 1px solid #d5e0ea;
-}
+  color: #ffffff;
+  background: #334155 !important;
 
-#auxTable .group-header {
-  position: sticky;
-  top: 0;
-  z-index: 24;
-  height: 42px;
-  padding: 0 12px;
-  color: #38556d;
-  background: #eaf1f7;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  text-align: center;
+
+  text-align: left !important;
   vertical-align: middle;
   white-space: nowrap;
+
+  box-shadow: 7px 0 10px -10px #0f172a;
 }
 
-#auxTable .header-spacer {
+/* =========================================================
+   FILAS TOTAL COMBINADAS DE A HASTA D
+   ========================================================= */
+
+#auxTable tr.total-row .total-label-cell {
   position: sticky;
-  top: 0;
-  z-index: 24;
-  width: 28px;
-  min-width: 28px;
-  max-width: 28px;
-  background: #f8fafc;
-}
+  left: 0;
+  z-index: 28;
 
-#auxTable tr.header-row > td:nth-child(-n + 4) {
-  z-index: 30;
-  color: #38556d;
-  background: #eaf1f7 !important;
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
+  height: 38px;
+
+  padding: 0 14px;
+
+  color: #312e81;
+  background: #eef2ff !important;
+
+  font-size: 11px;
   font-weight: 800;
+
+  text-align: right !important;
+  vertical-align: middle;
+  white-space: nowrap;
+
+  border-top: 2px solid #c7d2fe;
+  box-shadow: 7px 0 10px -10px #0f172a;
 }
 
-#auxTable tr.detail-row > td:nth-child(-n + 4) {
-  background: #ffffff !important;
+/* Las celdas numéricas de las filas de total se centran. */
+
+#auxTable tr.total-row td:not(.total-label-cell) {
+  text-align: center !important;
 }
 
-#auxTable tr.detail-row > td.editable-cell {
-  background: #eff6ff !important;
+/* El resto de celdas se muestra centrado. */
+
+#auxTable tr.header-row td,
+#auxTable tr.top-row td,
+#auxTable tr.detail-row td,
+#auxTable td.calculated {
+  text-align: center !important;
+  vertical-align: middle !important;
 }
 
-#auxTable tr.detail-row:hover > td:nth-child(-n + 4) {
-  background: #f8fafc !important;
+/* COD_DISP se mantiene visualmente centrado. */
+
+#auxTable tr.detail-row td:first-child input {
+  text-align: center !important;
 }
 
-#auxTable tr.detail-row:hover > td.editable-cell {
-  background: #eaf2ff !important;
+/* El selector FACTOR se mantiene centrado. */
+
+#auxTable .factor-select {
+  text-align: center !important;
+  text-align-last: center;
 }

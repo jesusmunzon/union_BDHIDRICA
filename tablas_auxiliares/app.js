@@ -205,84 +205,30 @@ function renderTable() {
 
     tableRow.className = `${type}-row`;
 
-    if (rowIndex === 0) {
-      const cornerCell = document.createElement("td");
+    /*
+     * FILA CON EL NOMBRE DE LA POBLACIÓN
+     * Combina visualmente las columnas A, B, C y D.
+     */
+    if (type === "section") {
+      const populationCell = document.createElement("td");
 
-      cornerCell.colSpan = 4;
-      cornerCell.className = "corner-header-cell";
-      cornerCell.textContent = "";
+      populationCell.colSpan = 4;
+      populationCell.className = "section-title-cell";
+      populationCell.textContent = row[0] ?? "";
 
-      tableRow.appendChild(cornerCell);
+      tableRow.appendChild(populationCell);
 
-      const monthlyHeader = document.createElement("td");
-
-      monthlyHeader.colSpan = 3;
-      monthlyHeader.className = "group-header monthly-group";
-      monthlyHeader.textContent =
-        row[4] || "VOLUMENES MENSUALES (m³)";
-
-      tableRow.appendChild(monthlyHeader);
-
-      const separatorOne = document.createElement("td");
-
-      separatorOne.className = "spacer-column header-spacer";
-      separatorOne.textContent = "";
-
-      tableRow.appendChild(separatorOne);
-
-      const accumulatedHeader = document.createElement("td");
-
-      accumulatedHeader.colSpan = 2;
-      accumulatedHeader.className =
-        "group-header accumulated-group";
-      accumulatedHeader.textContent =
-        row[8] || "VOLUMENES ACUMULADOS HASTA MES (m³)";
-
-      tableRow.appendChild(accumulatedHeader);
-
-      const separatorTwo = document.createElement("td");
-
-      separatorTwo.className = "spacer-column header-spacer";
-      separatorTwo.textContent = "";
-
-      tableRow.appendChild(separatorTwo);
-
-      const annualHeader = document.createElement("td");
-
-      annualHeader.colSpan = 10;
-      annualHeader.className = "group-header annual-group";
-      annualHeader.textContent =
-        row[11] || "VOLUMENES ACUMULADOS ANUALES (m³)";
-
-      tableRow.appendChild(annualHeader);
-
-      body.appendChild(tableRow);
-      return;
-    }
-
-    if (rowIndex === 1) {
-      const cornerCell = document.createElement("td");
-
-      cornerCell.colSpan = 4;
-      cornerCell.className = "corner-period-cell";
-      cornerCell.textContent = "";
-
-      tableRow.appendChild(cornerCell);
-
+      /*
+       * Añade las columnas E hasta U.
+       */
       for (let column = 4; column < 21; column += 1) {
         const cell = document.createElement("td");
 
         if (column === 7 || column === 10) {
           cell.classList.add("spacer-column");
-          cell.textContent = "";
-        } else {
-          cell.textContent = formatValue(
-            row[column],
-            column,
-            rowIndex,
-          );
         }
 
+        cell.textContent = formatValue(row[column], column);
         tableRow.appendChild(cell);
       }
 
@@ -290,6 +236,43 @@ function renderTable() {
       return;
     }
 
+    /*
+     * FILAS DE TOTAL
+     * Combina las columnas A, B, C y D.
+     */
+    if (type === "total") {
+      const totalLabelCell = document.createElement("td");
+
+      totalLabelCell.colSpan = 4;
+      totalLabelCell.className = "total-label-cell";
+      totalLabelCell.textContent = row[3] ?? "";
+
+      tableRow.appendChild(totalLabelCell);
+
+      /*
+       * Añade los resultados desde E hasta U.
+       */
+      for (let column = 4; column < 21; column += 1) {
+        const cell = document.createElement("td");
+
+        if (column === 7 || column === 10) {
+          cell.classList.add("spacer-column");
+        } else {
+          cell.classList.add("calculated");
+        }
+
+        cell.textContent = formatValue(row[column], column);
+        tableRow.appendChild(cell);
+      }
+
+      body.appendChild(tableRow);
+      return;
+    }
+
+    /*
+     * RESTO DE FILAS
+     * Incluye encabezados, detalles y filas vacías.
+     */
     for (let column = 0; column < 21; column += 1) {
       const cell = document.createElement("td");
 
@@ -297,70 +280,68 @@ function renderTable() {
         cell.classList.add("spacer-column");
       }
 
-      if (type === "detail" && column === 0) {
+      /*
+       * Solo son editables COD_DISP y FACTOR
+       * en las filas de detalle.
+       */
+      if (type === "detail" && (column === 0 || column === 3)) {
         cell.classList.add("editable-cell");
 
-        const input = document.createElement("input");
+        /*
+         * Columna D: selector FACTOR.
+         */
+        if (column === 3) {
+          const select = document.createElement("select");
 
-        input.type = "text";
-        input.value = row[column] ?? "";
-        input.setAttribute(
-          "aria-label",
-          "Código de dispositivo",
-        );
+          select.className = "factor-select";
+          select.setAttribute("aria-label", "Factor");
 
-        input.addEventListener("change", () => {
-          state.matrix[rowIndex][column] =
-            input.value.trim();
+          [-1, 0, 1].forEach((factor) => {
+            const option = document.createElement("option");
 
-          state.dirty = true;
-          $("dirtyBadge").hidden = false;
+            option.value = String(factor);
+            option.textContent = String(factor);
+            option.selected = Number(row[column]) === factor;
 
-          calculate();
-        });
+            select.appendChild(option);
+          });
 
-        cell.appendChild(input);
-      } else if (type === "detail" && column === 3) {
-        cell.classList.add("editable-cell");
+          select.addEventListener("change", () => {
+            state.matrix[rowIndex][column] = Number(select.value);
+            state.dirty = true;
+            $("dirtyBadge").hidden = false;
 
-        const select = document.createElement("select");
+            calculate();
+          });
 
-        select.className = "factor-select";
-        select.setAttribute("aria-label", "Factor");
+          cell.appendChild(select);
+        } else {
+          /*
+           * Columna A: COD_DISP.
+           */
+          const input = document.createElement("input");
 
-        [-1, 0, 1].forEach((factor) => {
-          const option = document.createElement("option");
+          input.type = "text";
+          input.value = row[column] ?? "";
+          input.setAttribute("aria-label", "Código de dispositivo");
 
-          option.value = String(factor);
-          option.textContent = String(factor);
-          option.selected =
-            Number(row[column]) === factor;
+          input.addEventListener("change", () => {
+            state.matrix[rowIndex][column] = input.value.trim();
+            state.dirty = true;
+            $("dirtyBadge").hidden = false;
 
-          select.appendChild(option);
-        });
+            calculate();
+          });
 
-        select.addEventListener("change", () => {
-          state.matrix[rowIndex][column] =
-            Number(select.value);
-
-          state.dirty = true;
-          $("dirtyBadge").hidden = false;
-
-          calculate();
-        });
-
-        cell.appendChild(select);
+          cell.appendChild(input);
+        }
       } else {
-        cell.textContent = formatValue(
-          row[column],
-          column,
-          rowIndex,
-        );
+        /*
+         * Celdas no editables.
+         */
+        cell.textContent = formatValue(row[column], column);
 
-        if (
-          column >= 4 &&
-          ![7, 10].includes(column)
-        ) {
+        if (column >= 4 && ![7, 10].includes(column)) {
           cell.classList.add("calculated");
         }
       }
