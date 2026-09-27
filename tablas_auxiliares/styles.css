@@ -669,14 +669,16 @@ main {
 }
 
 /* Encabezado combinado de las columnas E, F y G. */
-#auxTable td.period-group-header {
+#auxTable tr.top-row td.period-group-header {
   width: 282px;
   min-width: 282px;
   max-width: 282px;
 
   padding-left: 0;
   padding-right: 0;
-  font-size: 11px;
+
+  font-size: 11px !important;
+  font-weight: 800;
 
   text-align: center !important;
   vertical-align: middle !important;
