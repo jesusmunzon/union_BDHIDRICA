@@ -604,24 +604,18 @@ main {
   position: sticky;
   left: 0;
   z-index: 28;
-
   width: 700px;
   min-width: 700px;
   max-width: 700px;
   height: 38px;
-
   padding: 0 14px;
-
   color: #312e81;
   background: #eef2ff !important;
-
   font-size: 11px;
   font-weight: 800;
-
   text-align: right !important;
   vertical-align: middle;
   white-space: nowrap;
-
   border-top: 2px solid #c7d2fe;
   box-shadow: 7px 0 10px -10px #0f172a;
 }
@@ -721,12 +715,9 @@ main {
   width: 940px;
   min-width: 940px;
   max-width: 940px;
-
   padding: 4px 8px;
-
   text-align: center !important;
   vertical-align: middle !important;
-
   white-space: normal !important;
   overflow-wrap: normal;
   line-height: 1.15;
@@ -856,19 +847,15 @@ main {
 /* =========================================================
    ENCABEZADOS COMBINADOS
    ========================================================= */
-
 #auxTable td.period-group-header,
 #auxTable td.accumulated-group-header,
 #auxTable td.annual-group-header {
   padding: 4px 6px;
   overflow: hidden;
-
   white-space: normal !important;
   overflow-wrap: normal;
-
   text-align: center !important;
   vertical-align: middle !important;
-
   line-height: 1.15;
   font-size: 10px;
 }
