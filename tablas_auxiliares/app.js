@@ -111,14 +111,7 @@ function parseDatosRed(workbook) {
     headers.find((header) => names.includes(norm(header)));
 
   const dateKey = find("FECHA", "FECHA DATOS");
-
-  const originKey = find(
-    "PROCEDENCIA_1",
-    "PROCEDENCIA 1",
-    "PROCEDENCIA1",
-    "PROCEDENCIA",
-  );
-
+  const originKey = find("PROCEDENCIA_1");
   const adjustmentKey = find("AJUSTE");
 
   if (!dateKey || !originKey || !adjustmentKey) {
@@ -187,6 +180,20 @@ function monthlyRedAdjustment(origin, year, month) {
   const key = `${norm(origin)}|${year}|${month}`;
 
   return state.redAggregates.get(key) || 0;
+}
+/* Devuelve el Ajuste acumulado desde enero hasta endMonth
+ * para una procedencia y un año determinados.*/
+function cumulativeRedAdjustment(origin, year, endMonth) {
+  let total = 0;
+  for (let month = 1; month <= endMonth; month += 1) {
+    total += monthlyRedAdjustment(origin, year, month);
+  }
+  return total;
+}
+/* Devuelve el Ajuste acumulado de los doce meses
+ * para una procedencia y un año determinados.*/
+function annualRedAdjustment(origin, year) {
+  return cumulativeRedAdjustment(origin, year, 12);
 }
 /* Determina si una fila es la excepción ATE Burguillos.
  *
@@ -320,13 +327,22 @@ function calculate() {
       * en Procedencia 1 de BD_Datos_Red.xlsx.
       * El resultado procede de la columna Ajuste.*/
       if (isAteBurguillos(currentRow)) {
-        state.matrix[r][4] =
-          monthlyRedAdjustment(population, py, pm) * factor;
-        state.matrix[r][5] =
-          monthlyRedAdjustment(population, state.year, state.month,) * factor;
-        state.matrix[r][6] =
-          monthlyRedAdjustment(population, state.year - 1, state.month,) * factor;
-        /* Por ahora no se modifican I, J ni L-U para esta excepción.*/
+        /* E: mes anterior.*/
+        state.matrix[r][4] = monthlyRedAdjustment(population, py, pm) * factor;
+        /* F: mes seleccionado del año actual.*/
+        state.matrix[r][5] = monthlyRedAdjustment(population, state.year, state.month,) * factor;
+        /* G: mismo mes del año anterior.*/
+        state.matrix[r][6] = monthlyRedAdjustment(population, state.year - 1, state.month,) * factor;
+        /*I: acumulado de enero al mes seleccionadodel año actual.*/
+        state.matrix[r][8] = cumulativeRedAdjustment(population, state.year, state.month,) * factor;
+        /* J: acumulado de enero al mismo mes del año anterior.*/
+        state.matrix[r][9] = cumulativeRedAdjustment(population, state.year - 1, state.month,) * factor;
+        /* L-U: acumulados anuales de los diez años.*/
+        for (let c = 11; c <= 20; c += 1) {
+          const annualYear = state.year - 10 + (c - 11);
+          state.matrix[r][c] =
+            annualRedAdjustment(population, annualYear,) * factor;
+        }
         continue;
       }
       /* Comportamiento normal del resto de dispositivos.*/
