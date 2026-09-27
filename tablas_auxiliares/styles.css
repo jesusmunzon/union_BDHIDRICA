@@ -372,34 +372,48 @@ main {
   top: 42px;
   height: 42px;
 }
-.table-wrap td:nth-child(1),
-.table-wrap td:nth-child(2),
-.table-wrap td:nth-child(3),
-.table-wrap td:nth-child(4) {
+/* Columnas fijas A, B, C y D.
+ * Se excluyen las filas section y total porque en esas filas
+ * las columnas A-D están combinadas mediante colspan.*/
+.table-wrap
+  tr:not(.section-row):not(.total-row)
+  td:nth-child(-n + 4) {
   position: sticky;
   z-index: 18;
   text-align: left;
   background: #fff;
 }
-.table-wrap td:nth-child(1) {
+/* Columna A */
+.table-wrap
+  tr:not(.section-row):not(.total-row)
+  td:nth-child(1) {
   left: 0;
   width: 125px;
   min-width: 125px;
   max-width: 125px;
 }
-.table-wrap td:nth-child(2) {
+/* Columna B */
+.table-wrap
+  tr:not(.section-row):not(.total-row)
+  td:nth-child(2) {
   left: 125px;
   width: 270px;
   min-width: 270px;
   max-width: 270px;
 }
-.table-wrap td:nth-child(3) {
+/* Columna C */
+.table-wrap
+  tr:not(.section-row):not(.total-row)
+  td:nth-child(3) {
   left: 395px;
   width: 210px;
   min-width: 210px;
   max-width: 210px;
 }
-.table-wrap td:nth-child(4) {
+/* Columna D */
+.table-wrap
+  tr:not(.section-row):not(.total-row)
+  td:nth-child(4) {
   left: 605px;
   width: 95px;
   min-width: 95px;
