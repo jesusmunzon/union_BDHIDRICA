@@ -341,8 +341,6 @@ main {
 .table-wrap table {
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 2350px;
-  width: max-content;
   font-size: 11px;
   background: #fff;
 }
@@ -733,4 +731,144 @@ main {
   overflow-wrap: normal;
   line-height: 1.15;
   font-size: 11px;
+}
+/* =========================================================
+   ESTRUCTURA FIJA DE LAS 21 COLUMNAS
+   ========================================================= */
+
+#auxTable {
+  /*
+   * 700 px de A-D
+   * 282 px de E-G
+   * 28 px de H
+   * 188 px de I-J
+   * 28 px de K
+   * 940 px de L-U
+   *
+   * Total: 2166 px
+   */
+  width: 2166px;
+  min-width: 2166px;
+  max-width: 2166px;
+
+  table-layout: fixed;
+}
+
+/* Columnas A-D: se conservan las medidas originales. */
+
+#auxTable col.col-a {
+  width: 125px;
+}
+
+#auxTable col.col-b {
+  width: 270px;
+}
+
+#auxTable col.col-c {
+  width: 210px;
+}
+
+#auxTable col.col-d {
+  width: 95px;
+}
+
+/* Columnas E-G, I-J y L-U. */
+
+#auxTable col.col-94 {
+  width: 94px;
+}
+
+/* Columnas separadoras H y K. */
+
+#auxTable col.col-spacer {
+  width: 28px;
+}
+
+/* Evita que el contenido modifique los anchos del colgroup. */
+
+#auxTable td {
+  overflow: hidden;
+}
+
+/* =========================================================
+   ENCABEZADOS SUPERIORES FIJOS
+   ========================================================= */
+
+/*
+ * Las dos primeras filas deben estar siempre por encima
+ * de todas las celdas del cuerpo.
+ */
+
+#auxTable tr:nth-child(1) > td {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #eaf1f7 !important;
+}
+
+#auxTable tr:nth-child(2) > td {
+  position: sticky;
+  top: 42px;
+  z-index: 50;
+  background: #eaf1f7 !important;
+}
+
+/*
+ * Las cuatro primeras celdas de las filas superiores
+ * deben quedar por encima tanto del desplazamiento
+ * horizontal como del desplazamiento vertical.
+ */
+
+#auxTable tr:nth-child(1) > td:nth-child(-n + 4),
+#auxTable tr:nth-child(2) > td:nth-child(-n + 4) {
+  z-index: 70;
+  background: #eaf1f7 !important;
+}
+
+/* =========================================================
+   COLUMNAS FIJAS A-D DEL CUERPO
+   ========================================================= */
+
+#auxTable tr:not(:nth-child(1)):not(:nth-child(2)) > td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+}
+
+#auxTable tr:not(:nth-child(1)):not(:nth-child(2)) > td:nth-child(2) {
+  position: sticky;
+  left: 125px;
+  z-index: 20;
+}
+
+#auxTable tr:not(:nth-child(1)):not(:nth-child(2)) > td:nth-child(3) {
+  position: sticky;
+  left: 395px;
+  z-index: 20;
+}
+
+#auxTable tr:not(:nth-child(1)):not(:nth-child(2)) > td:nth-child(4) {
+  position: sticky;
+  left: 605px;
+  z-index: 20;
+}
+
+/* =========================================================
+   ENCABEZADOS COMBINADOS
+   ========================================================= */
+
+#auxTable td.period-group-header,
+#auxTable td.accumulated-group-header,
+#auxTable td.annual-group-header {
+  padding: 4px 6px;
+  overflow: hidden;
+
+  white-space: normal !important;
+  overflow-wrap: normal;
+
+  text-align: center !important;
+  vertical-align: middle !important;
+
+  line-height: 1.15;
+  font-size: 10px;
 }
