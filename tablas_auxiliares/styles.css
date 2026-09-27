@@ -857,7 +857,18 @@ main {
   text-align: center !important;
   vertical-align: middle !important;
   line-height: 1.15;
+}
+/* Primer encabezado: VOLUMENES MENSUALES */
+#auxTable td.period-group-header {
+  font-size: 11px;
+}
+/* Segundo encabezado: VOLUMENES ACUMULADOS HASTA MES */
+#auxTable td.accumulated-group-header {
   font-size: 10px;
+}
+/* Tercer encabezado */
+#auxTable td.annual-group-header {
+  font-size: 11px;
 }
 /* =========================================================
    FILAS DE POBLACIÓN Y TOTAL CON A-D COMBINADAS
