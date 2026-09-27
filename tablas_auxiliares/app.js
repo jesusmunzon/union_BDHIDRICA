@@ -113,6 +113,7 @@ function parseDatosRed(workbook) {
   const dateKey = find("FECHA", "FECHA DATOS");
 
   const originKey = find(
+    "PROCEDENCIA_1",
     "PROCEDENCIA 1",
     "PROCEDENCIA1",
     "PROCEDENCIA",
