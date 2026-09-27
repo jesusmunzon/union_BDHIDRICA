@@ -180,17 +180,27 @@ function calculate() {
 function formatValue(value, column, row) {
   if (value == null || value === "") return "";
 
+  /* Los años de la segunda fila se muestran sin decimales.*/
   if (row === 1 && column >= 11 && column <= 20) {
     return String(Math.trunc(Number(value)));
   }
-
+  /* Formato de los resultados numéricos.*/
   if (column >= 4 && typeof value === "number") {
-    return value.toLocaleString("es-ES", {
+    /* Cualquier valor cuya representación con dos decimales
+     * sea cero se normaliza como cero positivo.
+     * Ejemplos:
+     * -0,0049 -> 0,00
+     * -0,0001 -> 0,00
+     * -0       -> 0,00
+     * -0,005   -> -0,01
+     */
+    const displayValue = Math.abs(value) < 0.005 ? 0 : value;
+
+    return displayValue.toLocaleString("es-ES", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   }
-
   return String(value);
 }
 
@@ -199,7 +209,21 @@ function renderTable() {
 
   body.innerHTML = "";
 
-  state.matrix.forEach((row, rowIndex) => {
+  /* Localiza la última fila que contiene algún valor.
+  * Las filas vacías intermedias se conservan, pero las filas
+  * vacías situadas al final de la tabla no se muestran.*/
+  let lastContentRow = state.matrix.length - 1;
+
+  while (
+    lastContentRow >= 0 &&
+    state.matrix[lastContentRow].every(
+      (value) => value == null || String(value).trim() === "",
+    )
+  ) {
+    lastContentRow -= 1;
+  }
+
+  state.matrix.slice(0, lastContentRow + 1).forEach((row, rowIndex) => {
     const type = rowIndex < 2 ? "top" : rowType(row);
     const tableRow = document.createElement("tr");
 
@@ -417,7 +441,8 @@ function saveExcel() {
   for (let r = 0; r < state.matrix.length; r++) {
     for (let c = 0; c < 21; c++) {
       const addr = XLSX.utils.encode_cell({ r, c });
-      const value = state.matrix[r][c];
+      const originalValue = state.matrix[r][c];
+      const value = typeof originalValue === "number" && c >= 4 && Math.abs(originalValue) < 0.005 ? 0 : originalValue;
       if (value == null || value === "") {
         if (ws[addr]) delete ws[addr];
         continue;
