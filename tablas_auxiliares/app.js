@@ -670,7 +670,7 @@ async function initialize() {
   initializeShell();
   initializeFilters();
   try {
-    const [template, balance] = await Promise.all([
+    const [template, balance, datosRed] = await Promise.all([
       loadWorkbook(CONFIG.template),
       loadWorkbook(CONFIG.source),
       loadWorkbook(CONFIG.sourceRed),
