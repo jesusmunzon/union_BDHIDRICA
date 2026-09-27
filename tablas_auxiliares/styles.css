@@ -673,13 +673,10 @@ main {
   width: 282px;
   min-width: 282px;
   max-width: 282px;
-
   padding-left: 0;
   padding-right: 0;
-
   font-size: 11px !important;
   font-weight: 800;
-
   text-align: center !important;
   vertical-align: middle !important;
 }
