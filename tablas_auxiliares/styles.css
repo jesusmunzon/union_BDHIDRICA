@@ -872,3 +872,60 @@ main {
   line-height: 1.15;
   font-size: 10px;
 }
+/* =========================================================
+   FILAS DE POBLACIÓN Y TOTAL CON A-D COMBINADAS
+   ========================================================= */
+/*
+ * En estas filas, la primera celda ya representa A-D.
+ * Las celdas posteriores no deben adoptar las posiciones
+ * sticky correspondientes a B, C y D.
+ */
+#auxTable tr.section-row > td:not(.section-title-cell),
+#auxTable tr.total-row > td:not(.total-label-cell) {
+  position: static !important;
+  left: auto !important;
+  z-index: auto !important;
+  box-shadow: none !important;
+}
+/*
+ * Mantiene fija únicamente la celda combinada A-D
+ * del título de población.
+ */
+#auxTable tr.section-row > .section-title-cell {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 28 !important;
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
+  border-right: 0 !important;
+  box-shadow: none !important;
+}
+/*
+ * Mantiene fija únicamente la celda combinada A-D
+ * de la fila TOTAL.
+ */
+#auxTable tr.total-row > .total-label-cell {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 28 !important;
+  width: 700px;
+  min-width: 700px;
+  max-width: 700px;
+  box-shadow: none !important;
+}
+/*
+ * La fila del título de población debe mostrarse
+ * como una franja continua, sin divisiones verticales.
+ */
+#auxTable tr.section-row > td {
+  border-right: 0 !important;
+}
+/*
+ * En las filas TOTAL se conservan las divisiones normales
+ * entre los resultados numéricos, pero no se permite que
+ * aparezcan dentro del área combinada A-D.
+ */
+#auxTable tr.total-row > .total-label-cell {
+  border-right: 1px solid #c7d2fe !important;
+}
