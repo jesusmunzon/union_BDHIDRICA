@@ -1,6 +1,7 @@
 const CONFIG = {
   template: "tablas_excel/Distribuido_Poblaciones.xlsx",
   source: "../base-datos/tablas-excel/BD_Balance_Poblaciones.xlsx",
+  sourceRed: "../base-datos/tablas-excel/BD_Datos_Red.xlsx",
   sheet: "Distribuido_Poblaciones",
 };
 const MONTHS = [
@@ -23,6 +24,8 @@ const state = {
   matrix: [],
   records: [],
   aggregates: new Map(),
+  redRecords: [],
+  redAggregates: new Map(),
   dirty: false,
   month: 8,
   year: 2023,
@@ -86,6 +89,116 @@ function parseBalance(workbook) {
     }))
     .filter((r) => r.date && r.code);
 }
+/*
+ * Lee los ajustes mensuales de BD_Datos_Red.xlsx.
+ *
+ * Para la excepción ATE Burguillos se utilizan:
+ * - FECHA
+ * - Procedencia 1
+ * - Ajuste
+ */
+function parseDatosRed(workbook) {
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    defval: "",
+    raw: true,
+  });
+
+  const headers = rows.length ? Object.keys(rows[0]) : [];
+
+  const find = (...names) =>
+    headers.find((header) => names.includes(norm(header)));
+
+  const dateKey = find("FECHA", "FECHA DATOS");
+
+  const originKey = find(
+    "PROCEDENCIA 1",
+    "PROCEDENCIA1",
+    "PROCEDENCIA",
+  );
+
+  const adjustmentKey = find("AJUSTE");
+
+  if (!dateKey || !originKey || !adjustmentKey) {
+    throw new Error(
+      "BD_Datos_Red.xlsx debe contener FECHA, Procedencia 1 y Ajuste.",
+    );
+  }
+
+  return rows
+    .map((row) => ({
+      date: excelDate(row[dateKey]),
+      origin: String(row[originKey] ?? "").trim(),
+      adjustment: parseSpanishNumber(row[adjustmentKey]),
+    }))
+    .filter((record) => record.date && record.origin);
+}
+
+/*
+ * Convierte correctamente números procedentes de Excel,
+ * incluidos valores escritos como texto con formato español.
+ */
+function parseSpanishNumber(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  let text = String(value ?? "").trim();
+
+  if (!text) return 0;
+
+  text = text.replace(/\s/g, "");
+
+  /*
+   * Formato español:
+   * 1.234,56 -> 1234.56
+   */
+  if (text.includes(",")) {
+    text = text.replace(/\./g, "").replace(",", ".");
+  }
+
+  const number = Number(text);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+/*
+ * Crea un acumulado mensual por:
+ *
+ * Procedencia 1 + año + mes
+ */
+function buildRedAggregates() {
+  state.redAggregates.clear();
+  for (const record of state.redRecords) {
+    const year = Number(record.date.slice(0, 4));
+    const month = Number(record.date.slice(5, 7));
+    const key = `${norm(record.origin)}|${year}|${month}`;
+    state.redAggregates.set(
+      key,
+      (state.redAggregates.get(key) || 0) + record.adjustment,
+    );
+  }
+}
+/* Devuelve la suma de Ajuste para una procedencia,
+ * año y mes determinados.*/
+function monthlyRedAdjustment(origin, year, month) {
+  const key = `${norm(origin)}|${year}|${month}`;
+
+  return state.redAggregates.get(key) || 0;
+}
+/* Determina si una fila es la excepción ATE Burguillos.
+ *
+ * Columna B: NOM_DISP
+ * Columna C: POBLACIÓN*/
+function isAteBurguillos(row) {
+  const deviceName = norm(row[1]);
+  const population = norm(row[2]);
+  return (
+    deviceName === "ATE BURGUILLOS" &&
+    population === "BURGUILLOS"
+  );
+}
 function buildAggregates() {
   state.aggregates.clear();
   for (const r of state.records) {
@@ -124,7 +237,15 @@ function updatePeriodHeaders() {
 function rowType(row) {
   const a = String(row[0] ?? "").trim(),
     d = row[3];
-  if (a && row.slice(1).every((v) => v === "" || v == null)) return "section";
+  /* Una fila es un título de población cuando:
+  * - La columna A contiene el nombre.
+  * - Las columnas B, C y D están vacías.
+  *
+  * Se ignoran posibles valores residuales desde E hasta U.
+  */
+  if (a && [row[1], row[2], row[3]].every((value) => value == null || String(value).trim() === "",)) {
+    return "section";
+  }
   if (norm(a) === "COD_DISP") return "header";
   if (
     String(d ?? "")
@@ -151,17 +272,41 @@ function calculate() {
       blockStart = r + 1;
       continue;
     }
+    
     if (type === "detail") {
-      const code = state.matrix[r][0],
-        factor = Number(state.matrix[r][3]) || 0;
+      const currentRow = state.matrix[r];
+      const code = currentRow[0];
+      const population = currentRow[2];
+      const factor = Number(currentRow[3]) || 0;
+      /* EXCEPCIÓN: ATE Burguillos
+      * Solamente afecta a las columnas E, F y G.
+      * El valor de la columna C, Burguillos, se busca
+      * en Procedencia 1 de BD_Datos_Red.xlsx.
+      * El resultado procede de la columna Ajuste.*/
+      if (isAteBurguillos(currentRow)) {
+        state.matrix[r][4] =
+          monthlyRedAdjustment(population, py, pm) * factor;
+        state.matrix[r][5] =
+          monthlyRedAdjustment(population, state.year, state.month,) * factor;
+        state.matrix[r][6] =
+          monthlyRedAdjustment(population, state.year - 1, state.month,) * factor;
+        /* Por ahora no se modifican I, J ni L-U para esta excepción.*/
+        continue;
+      }
+      /* Comportamiento normal del resto de dispositivos.*/
       state.matrix[r][4] = monthly(code, py, pm) * factor;
-      state.matrix[r][5] = monthly(code, state.year, state.month) * factor;
-      state.matrix[r][6] = monthly(code, state.year - 1, state.month) * factor;
-      state.matrix[r][8] = cumulative(code, state.year, state.month) * factor;
+      state.matrix[r][5] =
+        monthly(code, state.year, state.month) * factor;
+      state.matrix[r][6] =
+        monthly(code, state.year - 1, state.month) * factor;
+      state.matrix[r][8] =
+        cumulative(code, state.year, state.month) * factor;
       state.matrix[r][9] =
         cumulative(code, state.year - 1, state.month) * factor;
-      for (let c = 11; c <= 20; c++)
-        state.matrix[r][c] = annual(code, state.year - 10 + (c - 11)) * factor;
+      for (let c = 11; c <= 20; c++) {
+        state.matrix[r][c] =
+          annual(code, state.year - 10 + (c - 11)) * factor;
+      }
       continue;
     }
     if (type === "total" && blockStart !== null) {
@@ -528,6 +673,7 @@ async function initialize() {
     const [template, balance] = await Promise.all([
       loadWorkbook(CONFIG.template),
       loadWorkbook(CONFIG.source),
+      loadWorkbook(CONFIG.sourceRed),
     ]);
     state.templateWorkbook = template;
     state.templateSheet =
@@ -545,10 +691,13 @@ async function initialize() {
     for (const row of state.matrix) while (row.length < 21) row.push("");
     state.records = parseBalance(balance);
     buildAggregates();
+    state.redRecords = parseDatosRed(datosRed);
+    buildRedAggregates();
     $("dataStatus").textContent =
       `${state.records.length.toLocaleString("es-ES")} registros cargados`;
     $("sourceInfo").textContent =
-      `Balance de poblaciones: ${state.records.length.toLocaleString("es-ES")} registros`;
+      `Balance de poblaciones: ${state.records.length.toLocaleString("es-ES")} registros · ` +
+      `Datos de red: ${state.redRecords.length.toLocaleString("es-ES")} registros`;
     calculate();
   } catch (error) {
     console.error(error);
