@@ -236,26 +236,61 @@ function updatePeriodHeaders() {
     state.matrix[1][c] = state.year - 10 + (c - 11);
 }
 function rowType(row) {
-  const a = String(row[0] ?? "").trim(),
-    d = row[3];
-  /* Una fila es un título de población cuando:
-  * - La columna A contiene el nombre.
-  * - Las columnas B, C y D están vacías.
-  *
-  * Se ignoran posibles valores residuales desde E hasta U.
-  */
-  if (a && [row[1], row[2], row[3]].every((value) => value == null || String(value).trim() === "",)) {
+  const code = String(row[0] ?? "").trim();
+  const deviceName = norm(row[1]);
+  const population = norm(row[2]);
+  const factor = row[3];
+
+  /*
+   * Título de población.
+   */
+  if (
+    code &&
+    row.slice(1).every((value) => value === "" || value == null)
+  ) {
     return "section";
   }
-  if (norm(a) === "COD_DISP") return "header";
+
+  /*
+   * Encabezado COD_DISP.
+   */
+  if (norm(code) === "COD_DISP") {
+    return "header";
+  }
+
+  /*
+   * Fila TOTAL.
+   */
   if (
-    String(d ?? "")
+    String(factor ?? "")
       .trim()
       .toUpperCase()
       .startsWith("TOTAL")
-  )
+  ) {
     return "total";
-  if (a && typeof d === "number") return "detail";
+  }
+
+  /*
+   * Excepción ATE Burguillos.
+   *
+   * Esta fila no tiene COD_DISP, pero debe tratarse
+   * como una fila de detalle.
+   */
+  if (
+    deviceName === "ATE BURGUILLOS" &&
+    population === "BURGUILLOS" &&
+    typeof factor === "number"
+  ) {
+    return "detail";
+  }
+
+  /*
+   * Resto de filas de detalle.
+   */
+  if (code && typeof factor === "number") {
+    return "detail";
+  }
+
   return "blank";
 }
 function calculate() {
