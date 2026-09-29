@@ -1,6 +1,7 @@
 const CONFIG = {
   template: "tablas_excel/Distribuido_Poblaciones.xlsx",
   source: "../base-datos/tablas-excel/BD_Balance_Poblaciones.xlsx",
+  sourceRed: "../base-datos/tablas-excel/BD_Datos_Red.xlsx",
   sheet: "Distribuido_Poblaciones",
 };
 const MONTHS = [
@@ -23,6 +24,8 @@ const state = {
   matrix: [],
   records: [],
   aggregates: new Map(),
+  redRecords: [],
+  redAggregates: new Map(),
   dirty: false,
   month: 8,
   year: 2023,
@@ -86,6 +89,124 @@ function parseBalance(workbook) {
     }))
     .filter((r) => r.date && r.code);
 }
+/*
+ * Lee los ajustes mensuales de BD_Datos_Red.xlsx.
+ *
+ * Para la excepción ATE Burguillos se utilizan:
+ * - FECHA
+ * - Procedencia 1
+ * - Ajuste
+ */
+function parseDatosRed(workbook) {
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    defval: "",
+    raw: true,
+  });
+
+  const headers = rows.length ? Object.keys(rows[0]) : [];
+
+  const find = (...names) =>
+    headers.find((header) => names.includes(norm(header)));
+
+  const dateKey = find("FECHA", "FECHA DATOS");
+  const originKey = find("PROCEDENCIA_1");
+  const adjustmentKey = find("AJUSTE");
+
+  if (!dateKey || !originKey || !adjustmentKey) {
+    throw new Error(
+      "BD_Datos_Red.xlsx debe contener FECHA, Procedencia 1 y Ajuste.",
+    );
+  }
+
+  return rows
+    .map((row) => ({
+      date: excelDate(row[dateKey]),
+      origin: String(row[originKey] ?? "").trim(),
+      adjustment: parseSpanishNumber(row[adjustmentKey]),
+    }))
+    .filter((record) => record.date && record.origin);
+}
+
+/*
+ * Convierte correctamente números procedentes de Excel,
+ * incluidos valores escritos como texto con formato español.
+ */
+function parseSpanishNumber(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  let text = String(value ?? "").trim();
+
+  if (!text) return 0;
+
+  text = text.replace(/\s/g, "");
+
+  /*
+   * Formato español:
+   * 1.234,56 -> 1234.56
+   */
+  if (text.includes(",")) {
+    text = text.replace(/\./g, "").replace(",", ".");
+  }
+
+  const number = Number(text);
+
+  return Number.isFinite(number) ? number : 0;
+}
+
+/*
+ * Crea un acumulado mensual por:
+ *
+ * Procedencia 1 + año + mes
+ */
+function buildRedAggregates() {
+  state.redAggregates.clear();
+  for (const record of state.redRecords) {
+    const year = Number(record.date.slice(0, 4));
+    const month = Number(record.date.slice(5, 7));
+    const key = `${norm(record.origin)}|${year}|${month}`;
+    state.redAggregates.set(
+      key,
+      (state.redAggregates.get(key) || 0) + record.adjustment,
+    );
+  }
+}
+/* Devuelve la suma de Ajuste para una procedencia,
+ * año y mes determinados.*/
+function monthlyRedAdjustment(origin, year, month) {
+  const key = `${norm(origin)}|${year}|${month}`;
+
+  return state.redAggregates.get(key) || 0;
+}
+/* Devuelve el Ajuste acumulado desde enero hasta endMonth
+ * para una procedencia y un año determinados.*/
+function cumulativeRedAdjustment(origin, year, endMonth) {
+  let total = 0;
+  for (let month = 1; month <= endMonth; month += 1) {
+    total += monthlyRedAdjustment(origin, year, month);
+  }
+  return total;
+}
+/* Devuelve el Ajuste acumulado de los doce meses
+ * para una procedencia y un año determinados.*/
+function annualRedAdjustment(origin, year) {
+  return cumulativeRedAdjustment(origin, year, 12);
+}
+/* Determina si una fila es la excepción ATE Burguillos.
+ *
+ * Columna B: NOM_DISP
+ * Columna C: POBLACIÓN*/
+function isAteBurguillos(row) {
+  const deviceName = norm(row[1]);
+  const population = norm(row[2]);
+  return (
+    deviceName === "ATE BURGUILLOS" &&
+    population === "BURGUILLOS"
+  );
+}
 function buildAggregates() {
   state.aggregates.clear();
   for (const r of state.records) {
@@ -122,18 +243,61 @@ function updatePeriodHeaders() {
     state.matrix[1][c] = state.year - 10 + (c - 11);
 }
 function rowType(row) {
-  const a = String(row[0] ?? "").trim(),
-    d = row[3];
-  if (a && row.slice(1).every((v) => v === "" || v == null)) return "section";
-  if (norm(a) === "COD_DISP") return "header";
+  const code = String(row[0] ?? "").trim();
+  const deviceName = norm(row[1]);
+  const population = norm(row[2]);
+  const factor = row[3];
+
+  /*
+   * Título de población.
+   */
   if (
-    String(d ?? "")
+    code &&
+    row.slice(1).every((value) => value === "" || value == null)
+  ) {
+    return "section";
+  }
+
+  /*
+   * Encabezado COD_DISP.
+   */
+  if (norm(code) === "COD_DISP") {
+    return "header";
+  }
+
+  /*
+   * Fila TOTAL.
+   */
+  if (
+    String(factor ?? "")
       .trim()
       .toUpperCase()
       .startsWith("TOTAL")
-  )
+  ) {
     return "total";
-  if (a && typeof d === "number") return "detail";
+  }
+
+  /*
+   * Excepción ATE Burguillos.
+   *
+   * Esta fila no tiene COD_DISP, pero debe tratarse
+   * como una fila de detalle.
+   */
+  if (
+    deviceName === "ATE BURGUILLOS" &&
+    population === "BURGUILLOS" &&
+    typeof factor === "number"
+  ) {
+    return "detail";
+  }
+
+  /*
+   * Resto de filas de detalle.
+   */
+  if (code && typeof factor === "number") {
+    return "detail";
+  }
+
   return "blank";
 }
 function calculate() {
@@ -151,17 +315,50 @@ function calculate() {
       blockStart = r + 1;
       continue;
     }
+    
     if (type === "detail") {
-      const code = state.matrix[r][0],
-        factor = Number(state.matrix[r][3]) || 0;
+      const currentRow = state.matrix[r];
+      const code = currentRow[0];
+      const population = currentRow[2];
+      const factor = Number(currentRow[3]) || 0;
+      /* EXCEPCIÓN: ATE Burguillos
+      * Solamente afecta a las columnas E, F y G.
+      * El valor de la columna C, Burguillos, se busca
+      * en Procedencia 1 de BD_Datos_Red.xlsx.
+      * El resultado procede de la columna Ajuste.*/
+      if (isAteBurguillos(currentRow)) {
+        /* E: mes anterior.*/
+        state.matrix[r][4] = monthlyRedAdjustment(population, py, pm) * factor;
+        /* F: mes seleccionado del año actual.*/
+        state.matrix[r][5] = monthlyRedAdjustment(population, state.year, state.month,) * factor;
+        /* G: mismo mes del año anterior.*/
+        state.matrix[r][6] = monthlyRedAdjustment(population, state.year - 1, state.month,) * factor;
+        /*I: acumulado de enero al mes seleccionadodel año actual.*/
+        state.matrix[r][8] = cumulativeRedAdjustment(population, state.year, state.month,) * factor;
+        /* J: acumulado de enero al mismo mes del año anterior.*/
+        state.matrix[r][9] = cumulativeRedAdjustment(population, state.year - 1, state.month,) * factor;
+        /* L-U: acumulados anuales de los diez años.*/
+        for (let c = 11; c <= 20; c += 1) {
+          const annualYear = state.year - 10 + (c - 11);
+          state.matrix[r][c] =
+            annualRedAdjustment(population, annualYear,) * factor;
+        }
+        continue;
+      }
+      /* Comportamiento normal del resto de dispositivos.*/
       state.matrix[r][4] = monthly(code, py, pm) * factor;
-      state.matrix[r][5] = monthly(code, state.year, state.month) * factor;
-      state.matrix[r][6] = monthly(code, state.year - 1, state.month) * factor;
-      state.matrix[r][8] = cumulative(code, state.year, state.month) * factor;
+      state.matrix[r][5] =
+        monthly(code, state.year, state.month) * factor;
+      state.matrix[r][6] =
+        monthly(code, state.year - 1, state.month) * factor;
+      state.matrix[r][8] =
+        cumulative(code, state.year, state.month) * factor;
       state.matrix[r][9] =
         cumulative(code, state.year - 1, state.month) * factor;
-      for (let c = 11; c <= 20; c++)
-        state.matrix[r][c] = annual(code, state.year - 10 + (c - 11)) * factor;
+      for (let c = 11; c <= 20; c++) {
+        state.matrix[r][c] =
+          annual(code, state.year - 10 + (c - 11)) * factor;
+      }
       continue;
     }
     if (type === "total" && blockStart !== null) {
@@ -177,82 +374,272 @@ function calculate() {
   }
   renderTable();
 }
-function formatValue(v, c, r) {
-  if (v == null || v === "") return "";
+function formatValue(value, column, row) {
+  if (value == null || value === "") return "";
 
-  // L2:U2 son años de cabecera y se muestran sin decimales.
-  if (r === 1 && c >= 11 && c <= 20) {
-    return String(Math.trunc(Number(v)));
+  /* Los años de la segunda fila se muestran sin decimales.*/
+  if (row === 1 && column >= 11 && column <= 20) {
+    return String(Math.trunc(Number(value)));
   }
+  /* Formato de los resultados numéricos.*/
+  if (column >= 4 && typeof value === "number") {
+    /* Cualquier valor cuya representación con dos decimales
+     * sea cero se normaliza como cero positivo.
+     * Ejemplos:
+     * -0,0049 -> 0,00
+     * -0,0001 -> 0,00
+     * -0       -> 0,00
+     * -0,005   -> -0,01
+     */
+    const displayValue = Math.abs(value) < 0.005 ? 0 : value;
 
-  if (c >= 4 && typeof v === "number") {
-    return v.toLocaleString("es-ES", {
+    return displayValue.toLocaleString("es-ES", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   }
-
-  return String(v);
+  return String(value);
 }
+
 function renderTable() {
   const body = $("tableBody");
+
   body.innerHTML = "";
-  state.matrix.forEach((row, r) => {
-    const type = r < 2 ? "top" : rowType(row);
-    const tr = document.createElement("tr");
-    tr.className = `${type}-row`;
-    for (let c = 0; c < 21; c++) {
-      const td = document.createElement("td");
-      if (c === 7 || c === 10) td.classList.add("spacer-column");
-      if (type === "detail" && c === 0) {
-        td.classList.add("editable-cell");
-        const input = document.createElement("input");
-        input.value = row[c] ?? "";
-        input.type = "text";
-        input.addEventListener("change", () => {
-          state.matrix[r][c] = input.value.trim();
-          state.dirty = true;
-          $("dirtyBadge").hidden = false;
-          calculate();
-        });
-        td.appendChild(input);
-      } else if (type === "detail" && c === 3) {
-        td.classList.add("editable-cell");
-        const select = document.createElement("select");
-        select.className = "factor-select";
-        select.setAttribute("aria-label", "Factor");
 
-        [-1, 0, 1].forEach((factor) => {
-          const option = document.createElement("option");
-          option.value = String(factor);
-          option.textContent = String(factor);
-          option.selected = Number(row[c]) === factor;
-          select.appendChild(option);
-        });
+  /* Localiza la última fila que contiene algún valor.
+  * Las filas vacías intermedias se conservan, pero las filas
+  * vacías situadas al final de la tabla no se muestran.*/
+  let lastContentRow = state.matrix.length - 1;
 
-        select.addEventListener("change", () => {
-          state.matrix[r][c] = Number(select.value);
-          state.dirty = true;
-          $("dirtyBadge").hidden = false;
-          calculate();
-        });
+  while (
+    lastContentRow >= 0 &&
+    state.matrix[lastContentRow].every(
+      (value) => value == null || String(value).trim() === "",
+    )
+  ) {
+    lastContentRow -= 1;
+  }
 
-        td.appendChild(select);
-      } else {
-        td.textContent = formatValue(row[c], c, r);
-        if (c >= 4 && ![7, 10].includes(c)) td.classList.add("calculated");
+  state.matrix.slice(0, lastContentRow + 1).forEach((row, rowIndex) => {
+    const type = rowIndex < 2 ? "top" : rowType(row);
+    const tableRow = document.createElement("tr");
+
+    tableRow.className = `${type}-row`;
+
+    /*
+     * FILA CON EL NOMBRE DE LA POBLACIÓN
+     * Combina visualmente las columnas A, B, C y D.
+     */
+    if (type === "section") {
+      const populationCell = document.createElement("td");
+
+      populationCell.colSpan = 4;
+      populationCell.className = "section-title-cell";
+      populationCell.textContent = row[0] ?? "";
+
+      tableRow.appendChild(populationCell);
+
+      /*
+       * Añade las columnas E hasta U.
+       */
+      for (let column = 4; column < 21; column += 1) {
+        const cell = document.createElement("td");
+
+        if (column >= 4 && column <= 6) {
+          cell.classList.add("period-column");
+        }
+        if (column === 8 || column === 9) {
+          cell.classList.add("accumulated-column");
+        }
+
+        if (column >= 11 && column <= 20) {
+          cell.classList.add("annual-column");
+        }
+
+        if (column === 7 || column === 10) {
+          cell.classList.add("spacer-column");
+        }
+
+        cell.textContent = formatValue(row[column], column, rowIndex);
+        tableRow.appendChild(cell);
       }
-      tr.appendChild(td);
+
+      body.appendChild(tableRow);
+      return;
     }
-    body.appendChild(tr);
+
+    /*
+     * FILAS DE TOTAL
+     * Combina las columnas A, B, C y D.
+     */
+    if (type === "total") {
+      const totalLabelCell = document.createElement("td");
+
+      totalLabelCell.colSpan = 4;
+      totalLabelCell.className = "total-label-cell";
+      totalLabelCell.textContent = row[3] ?? "";
+
+      tableRow.appendChild(totalLabelCell);
+
+      /*
+       * Añade los resultados desde E hasta U.
+       */
+      for (let column = 4; column < 21; column += 1) {
+        const cell = document.createElement("td");
+
+        if (column >= 4 && column <= 6) {
+          cell.classList.add("period-column");
+        }
+        if (column === 8 || column === 9) {
+          cell.classList.add("accumulated-column");
+        }
+
+        if (column >= 11 && column <= 20) {
+          cell.classList.add("annual-column");
+        }
+
+        if (column === 7 || column === 10) {
+          cell.classList.add("spacer-column");
+        } else {
+          cell.classList.add("calculated");
+        }
+
+        cell.textContent = formatValue(row[column], column, rowIndex);
+        tableRow.appendChild(cell);
+      }
+
+      body.appendChild(tableRow);
+      return;
+    }
+
+    /* RESTO DE FILAS
+     * Incluye encabezados, detalles y filas vacías.*/
+    for (let column = 0; column < 21; column += 1) {
+      /* En la primera fila, las columnas E, F y G se muestran
+       * como un único encabezado combinado.*/
+      if (
+          rowIndex === 0 &&
+          (
+            column === 5 ||
+            column === 6 ||
+            column === 9 ||
+            (column >= 12 && column <= 20)
+          )
+        ) {
+          continue;
+        }
+
+      const cell = document.createElement("td");
+
+      if (rowIndex === 0 && column === 4) {
+        /* Encabezado combinado de E, F y G.*/
+        cell.colSpan = 3;
+        cell.classList.add("period-group-header");
+      } else if (rowIndex === 0 && column === 8) {
+        /* Encabezado combinado de I y J.*/
+        cell.colSpan = 2;
+        cell.classList.add("accumulated-group-header");
+      } else if (rowIndex === 0 && column === 11) {
+        /* Encabezado combinado desde L hasta U.*/
+        cell.colSpan = 10;
+        cell.classList.add("annual-group-header");
+      } else {
+        if (column >= 4 && column <= 6) {
+          cell.classList.add("period-column");
+        }
+        if (column === 8 || column === 9) {
+          cell.classList.add("accumulated-column");
+        }
+        if (column >= 11 && column <= 20) {
+          cell.classList.add("annual-column");
+        }
+      }
+
+
+      if (column === 7 || column === 10) {
+        cell.classList.add("spacer-column");
+      }
+
+      /*
+       * Solo son editables COD_DISP y FACTOR
+       * en las filas de detalle.
+       */
+      if (type === "detail" && (column === 0 || column === 3)) {
+        cell.classList.add("editable-cell");
+
+        /*
+         * Columna D: selector FACTOR.
+         */
+        if (column === 3) {
+          const select = document.createElement("select");
+
+          select.className = "factor-select";
+          select.setAttribute("aria-label", "Factor");
+
+          [-1, 0, 1].forEach((factor) => {
+            const option = document.createElement("option");
+
+            option.value = String(factor);
+            option.textContent = String(factor);
+            option.selected = Number(row[column]) === factor;
+
+            select.appendChild(option);
+          });
+
+          select.addEventListener("change", () => {
+            state.matrix[rowIndex][column] = Number(select.value);
+            state.dirty = true;
+            $("dirtyBadge").hidden = false;
+
+            calculate();
+          });
+
+          cell.appendChild(select);
+        } else {
+          /*
+           * Columna A: COD_DISP.
+           */
+          const input = document.createElement("input");
+
+          input.type = "text";
+          input.value = row[column] ?? "";
+          input.setAttribute("aria-label", "Código de dispositivo");
+
+          input.addEventListener("change", () => {
+            state.matrix[rowIndex][column] = input.value.trim();
+            state.dirty = true;
+            $("dirtyBadge").hidden = false;
+
+            calculate();
+          });
+
+          cell.appendChild(input);
+        }
+      } else {
+        /*
+         * Celdas no editables.
+         */
+        cell.textContent = formatValue(row[column], column, rowIndex);
+
+        if (column >= 4 && ![7, 10].includes(column)) {
+          cell.classList.add("calculated");
+        }
+      }
+
+      tableRow.appendChild(cell);
+    }
+
+    body.appendChild(tableRow);
   });
 }
+
 function saveExcel() {
   const ws = state.templateSheet;
   for (let r = 0; r < state.matrix.length; r++) {
     for (let c = 0; c < 21; c++) {
       const addr = XLSX.utils.encode_cell({ r, c });
-      const value = state.matrix[r][c];
+      const originalValue = state.matrix[r][c];
+      const value = typeof originalValue === "number" && c >= 4 && Math.abs(originalValue) < 0.005 ? 0 : originalValue;
       if (value == null || value === "") {
         if (ws[addr]) delete ws[addr];
         continue;
@@ -335,9 +722,10 @@ async function initialize() {
   initializeShell();
   initializeFilters();
   try {
-    const [template, balance] = await Promise.all([
+    const [template, balance, datosRed] = await Promise.all([
       loadWorkbook(CONFIG.template),
       loadWorkbook(CONFIG.source),
+      loadWorkbook(CONFIG.sourceRed),
     ]);
     state.templateWorkbook = template;
     state.templateSheet =
@@ -355,10 +743,13 @@ async function initialize() {
     for (const row of state.matrix) while (row.length < 21) row.push("");
     state.records = parseBalance(balance);
     buildAggregates();
+    state.redRecords = parseDatosRed(datosRed);
+    buildRedAggregates();
     $("dataStatus").textContent =
       `${state.records.length.toLocaleString("es-ES")} registros cargados`;
     $("sourceInfo").textContent =
-      `Balance de poblaciones: ${state.records.length.toLocaleString("es-ES")} registros`;
+      `Balance de poblaciones: ${state.records.length.toLocaleString("es-ES")} registros · ` +
+      `Datos de red: ${state.redRecords.length.toLocaleString("es-ES")} registros`;
     calculate();
   } catch (error) {
     console.error(error);
