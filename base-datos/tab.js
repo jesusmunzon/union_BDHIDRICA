@@ -33,6 +33,7 @@ async function loadGoogleSheetWorkbook(sheetName) {
   return XLSX.read(csv, {
     type: "string",
     cellDates: true,
+    raw: true,
   });
 }
 
@@ -339,6 +340,51 @@ function excelDate(v) {
   m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
   return m ? `${m[3]}-${pad(m[2])}-${pad(m[1])}` : "";
 }
+function parseSpanishNumber(value) {
+  if (value == null || value === "") {
+    return "";
+  }
+  /* Si ya es un número válido, lo conservamos.*/
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : "";
+  }
+  let text = String(value)
+    .trim()
+    .replace(/\s+/g, "");
+
+  if (!text) {
+    return "";
+  }
+  /* Formato español con separadores de miles:
+   * 4.916           -> 4916
+   * 7.897.930       -> 7897930
+   * 1.234.567,89    -> 1234567.89
+   * -25.306,20      -> -25306.20*/
+  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) {
+    text = text
+      .replace(/\./g, "")
+      .replace(",", ".");
+  }
+
+  /* Decimal español sin separadores de miles:
+   *
+   * 4,92    -> 4.92
+   * -0,25   -> -0.25*/
+  else if (/^[+-]?\d+,\d+$/.test(text)) {
+    text = text.replace(",", ".");
+  }
+  /* Número entero normal.*/
+  else if (/^[+-]?\d+$/.test(text)) {
+    // No necesita transformación.
+  }
+  /* Como respaldo, admite números con punto decimal
+   * cuando no tienen el patrón español de miles.*/
+  else if (/^[+-]?\d+\.\d+$/.test(text)) {
+    // No necesita transformación.
+  }
+  const number = Number(text);
+  return Number.isFinite(number) ? number : "";
+}
 const displayDate = (v) => {
   const s = excelDate(v);
   return s ? `${s.slice(8, 10)}/${s.slice(5, 7)}/${s.slice(0, 4)}` : "";
@@ -406,9 +452,7 @@ function calculatedRowsFromSheet(ws, c) {
         const v = a[index.get(normalizeHeader(x))];
         if (c.dateCols.includes(x)) o[x] = excelDate(v);
         else if (c.numeric.includes(x) && !isCalculatedCol(c, x)) {
-          const n = Number(v);
-          o[x] =
-            v === "" ? "" : Number.isFinite(n) ? n : String(v ?? "").trim();
+          o[x] = parseSpanishNumber(v);
         } else o[x] = v ?? "";
       });
       calculateTotal(o, c);
@@ -868,15 +912,15 @@ async function switchDataset(key) {
         .sheet_to_json(ws, { defval: "", raw: true })
         .map((r, i) => {
           const o = { _id: i + 1 };
-          c.cols.forEach(
-            (x) =>
-              (o[x] =
-                x === "FECHA"
-                  ? excelDate(r[x])
-                  : c.numeric.includes(x)
-                    ? Number(r[x] || 0)
-                    : (r[x] ?? "")),
-          );
+          c.cols.forEach((x) => {
+            if (x === "FECHA") {
+              o[x] = excelDate(r[x]);
+            } else if (c.numeric.includes(x)) {
+              o[x] = parseSpanishNumber(r[x]);
+            } else {
+              o[x] = r[x] ?? "";
+            }
+          });
           return o;
         });
       stores[key].rows = rows;
