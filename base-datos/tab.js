@@ -404,23 +404,20 @@ const num = (value, decimals = 2) => {
   let rounded =
     Math.round((number + Number.EPSILON) * factor) /
     factor;
-  /* Evita mostrar -0.*/
-  if (Object.is(rounded, -0)) {
+  /* Evita mostrar -0 y -0,00.*/
+  if (Object.is(rounded, -0) || rounded === 0) {
     rounded = 0;
   }
-  /* Si el valor original es entero, se muestra sin decimales:
-   * 0,00    -> 0
-   * 90,00   -> 90
-   * 4916,00 -> 4.916
-   * Si el valor original tenía decimales, se mantienen
-   * dos posiciones aunque después del redondeo resulte entero:
-   * 90,00001 -> 90,00*/
+  /* Los valores originalmente enteros se presentan
+   * sin decimales. Los no enteros mantienen dos decimales,
+   * aunque el redondeo final sea un número entero.*/
   const displayDecimals = Number.isInteger(number)
     ? 0
     : decimals;
   return rounded.toLocaleString("es-ES", {
     minimumFractionDigits: displayDecimals,
     maximumFractionDigits: displayDecimals,
+    useGrouping: "always",
   });
 };
 const isDateCol = (x) => x === "FECHA" || (cfg().dateCols || []).includes(x);
