@@ -39,7 +39,7 @@ async function loadGoogleSheetWorkbook(sheetName) {
 const DATASETS = {
   balance: {
     label: "Balance de poblaciones",
-    sheet: "Balance_Pobla",
+    sheet: "BD_Balance_Pobla",
     download: "BD_Balance_Poblaciones_modificado.xlsx",
     cols: [
       "FECHA",
@@ -66,7 +66,7 @@ const DATASETS = {
   },
   red: {
     label: "Datos de la Red",
-    sheet: "Datos_Red",
+    sheet: "BD_Datos_Red",
     download: "BD_Datos_Red_modificado.xlsx",
     cols: [
       "FECHA",
@@ -95,7 +95,7 @@ const DATASETS = {
   },
   longitud: {
     label: "Longitud de la Red",
-    sheet: "Longitud_Red",
+    sheet: "BD_Longitud_Red",
     download: "BD_Longitud_Red_modificado.xlsx",
     cols: ["FECHA", "COD", "POBLACIÓN", "Longitud de red (km)"],
     labels: {
@@ -109,7 +109,7 @@ const DATASETS = {
   },
   chg: {
     label: "CHG Población",
-    sheet: "CHG_Poblacion",
+    sheet: "BD_CHG_Poblacion",
     download: "BD_CHG_Poblacion_modificado.xlsx",
     cols: ["Año", "POBLACIÓN", "Nº Habitantes", "Referencia"],
     labels: {
@@ -124,7 +124,7 @@ const DATASETS = {
   },
   acucon: {
     label: "Datos ACUCON",
-    sheet: "Datos_ACUCON",
+    sheet: "BD_Datos_ACUCON",
     download: "BD_Datos_ACUCON_modificado.xlsx",
     cols: [
       "Fecha",
@@ -185,7 +185,7 @@ const DATASETS = {
   },
   carnf: {
     label: "Datos CARNF",
-    sheet: "Datos_CARNF",
+    sheet: "BD_Datos_CARNF",
     download: "BD_Datos_CARNF_modificado.xlsx",
     cols: [
       "FECHA",
@@ -257,93 +257,9 @@ const DATASETS = {
       },
     ],
   },
-  carnf: {
-    label: "Datos CARNF",
-    sheet: "Datos_CARNF",
-    download: "BD_Datos_CARNF_modificado.xlsx",
-    cols: [
-      "FECHA",
-      "FECHA DATOS",
-      "COD POBLACIÓN",
-      "POBLACIÓN",
-      "CONSUMOS PROPIOS",
-      "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL",
-      "ZONAS DEPRIMIDAS Y EVENTOS",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-      "PURGAS SIN CONTADOR",
-      "PUNTOS MEDIDA CLORO",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
-    ],
-    labels: {
-      FECHA: "Fecha",
-      "FECHA DATOS": "Fecha datos",
-      "COD POBLACIÓN": "Código<br>población",
-      POBLACIÓN: "Población",
-      "CONSUMOS PROPIOS": "Consumos<br>propios",
-      "PURGAS CON CONTADOR AQUA-WS": "Purgas con contador<br>AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL": "Riegos y baldeo<br>municipal",
-      "ZONAS DEPRIMIDAS Y EVENTOS": "Zonas deprimidas<br>y eventos",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)":
-        "TOTAL AGUA REGISTRADA<br>NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)":
-        "Mantenimiento<br>(intervenciones de redes)",
-      "PURGAS SIN CONTADOR": "Purgas sin<br>contador",
-      "PUNTOS MEDIDA CLORO": "Puntos medida<br>cloro",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)":
-        "TOTAL AGUA NO REGISTRADA<br>NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)":
-        "Fugas en intervenciones de redes<br>(pérdidas evitables)",
-    },
-    numeric: [
-      "CONSUMOS PROPIOS",
-      "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL",
-      "ZONAS DEPRIMIDAS Y EVENTOS",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-      "PURGAS SIN CONTADOR",
-      "PUNTOS MEDIDA CLORO",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
-    ],
-    notes: null,
-    dateCols: ["FECHA", "FECHA DATOS"],
-    totalCols: [
-      {
-        col: "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-        sumCols: [
-          "CONSUMOS PROPIOS",
-          "PURGAS CON CONTADOR AQUA-WS",
-          "RIEGOS Y BALDEO MUNICIPAL",
-          "ZONAS DEPRIMIDAS Y EVENTOS",
-        ],
-      },
-      {
-        col: "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-        sumCols: [
-          "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-          "PURGAS SIN CONTADOR",
-          "PUNTOS MEDIDA CLORO",
-        ],
-      },
-    ],
-    sumCols: [
-      "CONSUMOS PROPIOS",
-      "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL",
-      "ZONAS DEPRIMIDAS Y EVENTOS",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-      "PURGAS SIN CONTADOR",
-      "PUNTOS MEDIDA CLORO",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
-    ],
-  },
   aforos: {
     label: "Datos Aforos y Pérdidas",
-    sheet: "Datos_Aforos_y_Perdidas",
+    sheet: "BD_Datos_Aforos_y_Perdidas",
     download: "BD_Datos_Aforos_y_Perdidas_modificado.xlsx",
     cols: [
       "FECHA",
