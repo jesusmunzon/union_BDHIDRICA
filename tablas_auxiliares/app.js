@@ -7,7 +7,12 @@ const CONFIG = {
   },
 };
 function googleSheetCsvUrl(sheetName) {
-  const params = new URLSearchParams({ tqx: "out:csv", sheet: sheetName, _: String(Date.now()) });
+  const params = new URLSearchParams({
+    tqx: "out:csv",
+    sheet: sheetName,
+    headers: "0",
+    _: String(Date.now()),
+  });
   return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/gviz/tq?${params}`;
 }
 async function loadGoogleSheet(sheetName) {
@@ -707,32 +712,94 @@ function initializeShell() {
 async function initialize() {
   initializeShell();
   initializeFilters();
+
   try {
-    const [configBook,balanceBook,redBook]=await Promise.all([
-      loadGoogleSheet(CONFIG.sheets.config),loadGoogleSheet(CONFIG.sheets.balance),loadGoogleSheet(CONFIG.sheets.red),
+    const [configBook, balanceBook, redBook] = await Promise.all([
+      loadGoogleSheet(CONFIG.sheets.config),
+      loadGoogleSheet(CONFIG.sheets.balance),
+      loadGoogleSheet(CONFIG.sheets.red),
     ]);
-    const configSheet=configBook.Sheets[configBook.SheetNames[0]];
-    state.matrix=XLSX.utils.sheet_to_json(configSheet,{header:1,defval:"",raw:true});
-    while(state.matrix.length<2) state.matrix.push([]);
-    for(const row of state.matrix){
-      while(row.length<21) row.push("");
-      if(row[3]!=="" && row[3]!=null && !String(row[3]).toUpperCase().startsWith("TOTAL")){
-        const f=parseSpanishNumber(row[3]); if([-1,0,1].includes(f)) row[3]=f;
+
+    const configSheet = configBook.Sheets[configBook.SheetNames[0]];
+
+    state.matrix = XLSX.utils.sheet_to_json(configSheet, {
+      header: 1,
+      defval: "",
+      raw: true,
+    });
+
+    /*
+     * La estructura completa procede de CFG_Distribuido_Poblaciones.
+     * Se fijan únicamente los textos de las dos filas superiores para
+     * impedir que Google Visualization interprete las filas visuales
+     * como cabeceras CSV y altere los encabezados combinados.
+     */
+    while (state.matrix.length < 2) state.matrix.push([]);
+    for (const row of state.matrix) {
+      while (row.length < 21) row.push("");
+    }
+
+    state.matrix[0] = Array(21).fill("");
+    state.matrix[0][4] = "VOLUMENES MENSUALES (m³)";
+    state.matrix[0][8] = "VOLUMENES ACUMULADOS HASTA MES (m³)";
+    state.matrix[0][11] = "VOLUMENES ACUMULADOS ANUALES (m³)";
+
+    state.matrix[1] = Array(21).fill("");
+    state.matrix[1][4] = "mes-1 consulta";
+    state.matrix[1][5] = "mes consulta";
+    state.matrix[1][6] = "mes consulta año-1";
+    state.matrix[1][8] = "mes consulta";
+    state.matrix[1][9] = "mes consulta año-1";
+    for (let column = 11; column <= 20; column += 1) {
+      state.matrix[1][column] = `Año-${21 - column}`;
+    }
+
+    for (let rowIndex = 2; rowIndex < state.matrix.length; rowIndex += 1) {
+      const factorValue = state.matrix[rowIndex][3];
+      if (
+        factorValue !== "" &&
+        factorValue != null &&
+        !String(factorValue).toUpperCase().startsWith("TOTAL")
+      ) {
+        const factor = parseSpanishNumber(factorValue);
+        if ([-1, 0, 1].includes(factor)) {
+          state.matrix[rowIndex][3] = factor;
+        }
       }
     }
-    state.templateWorkbook=XLSX.utils.book_new();
-    state.templateSheet=XLSX.utils.aoa_to_sheet(state.matrix);
-    XLSX.utils.book_append_sheet(state.templateWorkbook,state.templateSheet,CONFIG.sheets.config);
-    balanceBook.Sheets[CONFIG.sheets.balance]=balanceBook.Sheets[balanceBook.SheetNames[0]];
-    redBook.Sheets[CONFIG.sheets.red]=redBook.Sheets[redBook.SheetNames[0]];
-    state.records=parseBalance(balanceBook); buildAggregates();
-    state.redRecords=parseDatosRed(redBook); buildRedAggregates();
-    $("dataStatus").textContent=`${state.records.length.toLocaleString("es-ES")} registros cargados`;
-    $("sourceInfo").textContent=`Google Sheets: ${state.records.length.toLocaleString("es-ES")} registros de balance · ${state.redRecords.length.toLocaleString("es-ES")} registros de red`;
+
+    /* Libro temporal solo para la descarga del resultado calculado. */
+    state.templateWorkbook = XLSX.utils.book_new();
+    state.templateSheet = XLSX.utils.aoa_to_sheet(state.matrix);
+    XLSX.utils.book_append_sheet(
+      state.templateWorkbook,
+      state.templateSheet,
+      CONFIG.sheets.config,
+    );
+
+    balanceBook.Sheets[CONFIG.sheets.balance] =
+      balanceBook.Sheets[balanceBook.SheetNames[0]];
+    redBook.Sheets[CONFIG.sheets.red] =
+      redBook.Sheets[redBook.SheetNames[0]];
+
+    state.records = parseBalance(balanceBook);
+    buildAggregates();
+    state.redRecords = parseDatosRed(redBook);
+    buildRedAggregates();
+
+    $("dataStatus").textContent =
+      `${state.records.length.toLocaleString("es-ES")} registros cargados`;
+    $("sourceInfo").textContent =
+      `Google Sheets: ${state.records.length.toLocaleString("es-ES")} registros de balance · ` +
+      `${state.redRecords.length.toLocaleString("es-ES")} registros de red`;
+
     calculate();
-  } catch(error) {
-    console.error(error); $("dataStatus").textContent="Error cargando datos"; $("errorBox").hidden=false;
-    $("errorBox").textContent=`No se pudo completar la carga desde Google Sheets: ${error.message}`;
+  } catch (error) {
+    console.error(error);
+    $("dataStatus").textContent = "Error cargando datos";
+    $("errorBox").hidden = false;
+    $("errorBox").textContent =
+      `No se pudo completar la carga desde Google Sheets: ${error.message}`;
   }
 }
 initialize();
