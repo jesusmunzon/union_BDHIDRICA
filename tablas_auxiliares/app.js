@@ -6,18 +6,18 @@ const CONFIG = {
     red: "BD_Datos_Red",
   },
 };
-function googleSheetCsvUrl(sheetName) {
+function googleSheetCsvUrl(sheetName, headerRows = 1) {
   const params = new URLSearchParams({
     tqx: "out:csv",
     sheet: sheetName,
-    headers: "1",
+    headers: String(headerRows),
     _: String(Date.now()),
   });
 
   return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/gviz/tq?${params}`;
 }
-async function loadGoogleSheet(sheetName) {
-  const response = await fetch(googleSheetCsvUrl(sheetName), { cache: "no-store" });
+async function loadGoogleSheet(sheetName, headerRows = 1) {
+  const response = await fetch(googleSheetCsvUrl(sheetName, headerRows), { cache: "no-store" });
   if (!response.ok) throw new Error(`${sheetName}: HTTP ${response.status}`);
   const csv = await response.text();
   if (!csv.trim() || /^<!doctype html/i.test(csv.trim())) {
@@ -464,10 +464,27 @@ function formatNumber(value, decimals = 2) {
   const shownDecimals=Number.isInteger(number) ? 0 : decimals;
   return rounded.toLocaleString("es-ES", {minimumFractionDigits:shownDecimals,maximumFractionDigits:shownDecimals,useGrouping:"always"});
 }
-function formatValue(value,column,row) {
+function formatValue(value, column, row) {
   if (value == null || value === "") return "";
-  if (row === 1 && column >= 11 && column <= 20) return String(Math.trunc(parseSpanishNumber(value)));
-  if (column >= 4 && ![7,10].includes(column)) return formatNumber(value,2);
+
+  /* Los textos de la primera fila son encabezados, no números. */
+  if (row === 0) return String(value);
+
+  /* Los años de la segunda fila se muestran sin decimales. */
+  if (row === 1 && column >= 11 && column <= 20) {
+    return String(Math.trunc(parseSpanishNumber(value)));
+  }
+
+  /* Solo se formatean como volumen los valores numéricos de datos. */
+  if (
+    row >= 2 &&
+    column >= 4 &&
+    ![7, 10].includes(column) &&
+    (typeof value === "number" || String(value).trim() !== "")
+  ) {
+    return formatNumber(value, 2);
+  }
+
   return String(value);
 }
 function renderTable() {
@@ -793,9 +810,9 @@ async function initialize() {
 
   try {
     const [configBook, balanceBook, redBook] = await Promise.all([
-      loadGoogleSheet(CONFIG.sheets.config),
-      loadGoogleSheet(CONFIG.sheets.balance),
-      loadGoogleSheet(CONFIG.sheets.red),
+      loadGoogleSheet(CONFIG.sheets.config, 0),
+      loadGoogleSheet(CONFIG.sheets.balance, 1),
+      loadGoogleSheet(CONFIG.sheets.red, 1),
     ]);
 
     const configSheet = configBook.Sheets[configBook.SheetNames[0]];
