@@ -80,30 +80,73 @@ function excelDate(value) {
   if(m&&months[m[1]]){let y=Number(m[2]);if(y<100)y+=y>=70?1900:2000;return `${y}-${pad(months[m[1]])}-01`;}
   return "";
 }
-function parseBalance(workbook) {
-  const sheet =
-    workbook.Sheets[
-      workbook.SheetNames.includes(CONFIG.sheets.balance)
-        ? CONFIG.sheets.balance
-        : workbook.SheetNames[0]
-    ];
-  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: true });
-  const headers = rows.length ? Object.keys(rows[0]) : [];
-  const find = (...names) => headers.find((h) => names.includes(norm(h)));
-  const dateKey = find("FECHA", "FECHA DATOS");
-  const codeKey = find("COD_DISP", "COD DISP", "CODIGO DISP.", "CÓDIGO DISP.");
-  const valueKey = find("CMES");
-  if (!dateKey || !codeKey || !valueKey)
-    throw new Error(
-      "El Excel de Balance debe contener FECHA, COD_DISP y CMES.",
+function sheetRows(workbook) {
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    defval: "",
+    raw: true,
+  });
+}
+
+function findHeaderRow(rows, requiredHeaders) {
+  return rows.findIndex((row) => {
+    const normalized = row.map(norm);
+    return requiredHeaders.every((acceptedNames) =>
+      acceptedNames.some((name) => normalized.includes(norm(name))),
     );
+  });
+}
+
+function headerIndexMap(headerRow) {
+  const map = new Map();
+  headerRow.forEach((value, index) => {
+    map.set(norm(value), index);
+  });
+  return map;
+}
+
+function findColumnIndex(indexMap, ...acceptedNames) {
+  for (const name of acceptedNames) {
+    const index = indexMap.get(norm(name));
+    if (index !== undefined) return index;
+  }
+  return -1;
+}
+
+function parseBalance(workbook) {
+  const rows = sheetRows(workbook);
+  const headerRowIndex = findHeaderRow(rows, [
+    ["FECHA", "FECHA DATOS"],
+    ["COD_DISP", "COD DISP", "CODIGO DISP.", "CÓDIGO DISP."],
+    ["CMES"],
+  ]);
+
+  if (headerRowIndex < 0) {
+    throw new Error(
+      "La hoja BD_Balance_Pobla debe contener FECHA, COD_DISP y CMES.",
+    );
+  }
+
+  const indexes = headerIndexMap(rows[headerRowIndex]);
+  const dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
+  const codeIndex = findColumnIndex(
+    indexes,
+    "COD_DISP",
+    "COD DISP",
+    "CODIGO DISP.",
+    "CÓDIGO DISP.",
+  );
+  const valueIndex = findColumnIndex(indexes, "CMES");
+
   return rows
+    .slice(headerRowIndex + 1)
     .map((row) => ({
-      date: excelDate(row[dateKey]),
-      code: String(row[codeKey] ?? "").trim(),
-      value: parseSpanishNumber(row[valueKey]),
+      date: excelDate(row[dateIndex]),
+      code: String(row[codeIndex] ?? "").trim(),
+      value: parseSpanishNumber(row[valueIndex]),
     }))
-    .filter((r) => r.date && r.code);
+    .filter((record) => record.date && record.code);
 }
 /*
  * Lee los ajustes mensuales de BD_Datos_Red.xlsx.
@@ -114,33 +157,35 @@ function parseBalance(workbook) {
  * - Ajuste
  */
 function parseDatosRed(workbook) {
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = sheetRows(workbook);
+  const headerRowIndex = findHeaderRow(rows, [
+    ["FECHA", "FECHA DATOS"],
+    ["PROCEDENCIA_1", "PROCEDENCIA 1", "PROCEDENCIA1"],
+    ["AJUSTE"],
+  ]);
 
-  const rows = XLSX.utils.sheet_to_json(sheet, {
-    defval: "",
-    raw: true,
-  });
-
-  const headers = rows.length ? Object.keys(rows[0]) : [];
-
-  const find = (...names) =>
-    headers.find((header) => names.includes(norm(header)));
-
-  const dateKey = find("FECHA", "FECHA DATOS");
-  const originKey = find("PROCEDENCIA_1");
-  const adjustmentKey = find("AJUSTE");
-
-  if (!dateKey || !originKey || !adjustmentKey) {
+  if (headerRowIndex < 0) {
     throw new Error(
-      "BD_Datos_Red.xlsx debe contener FECHA, Procedencia 1 y Ajuste.",
+      "La hoja BD_Datos_Red debe contener FECHA, PROCEDENCIA_1 y AJUSTE.",
     );
   }
 
+  const indexes = headerIndexMap(rows[headerRowIndex]);
+  const dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
+  const originIndex = findColumnIndex(
+    indexes,
+    "PROCEDENCIA_1",
+    "PROCEDENCIA 1",
+    "PROCEDENCIA1",
+  );
+  const adjustmentIndex = findColumnIndex(indexes, "AJUSTE");
+
   return rows
+    .slice(headerRowIndex + 1)
     .map((row) => ({
-      date: excelDate(row[dateKey]),
-      origin: String(row[originKey] ?? "").trim(),
-      adjustment: parseSpanishNumber(row[adjustmentKey]),
+      date: excelDate(row[dateIndex]),
+      origin: String(row[originIndex] ?? "").trim(),
+      adjustment: parseSpanishNumber(row[adjustmentIndex]),
     }))
     .filter((record) => record.date && record.origin);
 }
