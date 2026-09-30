@@ -8,12 +8,13 @@ const CONFIG = {
 };
 function googleSheetCsvUrl(sheetName) {
   const params = new URLSearchParams({
-    format: "csv",
+    tqx: "out:csv",
     sheet: sheetName,
+    headers: "1",
     _: String(Date.now()),
   });
 
-  return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/export?${params}`;
+  return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/gviz/tq?${params}`;
 }
 async function loadGoogleSheet(sheetName) {
   const response = await fetch(googleSheetCsvUrl(sheetName), { cache: "no-store" });
