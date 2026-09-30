@@ -450,6 +450,51 @@ function parseSpanishNumber(value) {
   const number = Number(text);
   return Number.isFinite(number) ? number : "";
 }
+function parseSpanishNumber(value) {
+  if (value == null || value === "") {
+    return "";
+  }
+  /* Si ya es un número válido, lo conservamos.*/
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : "";
+  }
+  let text = String(value)
+    .trim()
+    .replace(/\s+/g, "");
+
+  if (!text) {
+    return "";
+  }
+  /* Formato español con separadores de miles:
+   * 4.916           -> 4916
+   * 7.897.930       -> 7897930
+   * 1.234.567,89    -> 1234567.89
+   * -25.306,20      -> -25306.20*/
+  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) {
+    text = text
+      .replace(/\./g, "")
+      .replace(",", ".");
+  }
+
+  /* Decimal español sin separadores de miles:
+   *
+   * 4,92    -> 4.92
+   * -0,25   -> -0.25*/
+  else if (/^[+-]?\d+,\d+$/.test(text)) {
+    text = text.replace(",", ".");
+  }
+  /* Número entero normal.*/
+  else if (/^[+-]?\d+$/.test(text)) {
+    // No necesita transformación.
+  }
+  /* Como respaldo, admite números con punto decimal
+   * cuando no tienen el patrón español de miles.*/
+  else if (/^[+-]?\d+\.\d+$/.test(text)) {
+    // No necesita transformación.
+  }
+  const number = Number(text);
+  return Number.isFinite(number) ? number : "";
+}
 const displayDate = (v) => {
   const s = excelDate(v);
   return s ? `${s.slice(8, 10)}/${s.slice(5, 7)}/${s.slice(0, 4)}` : "";
