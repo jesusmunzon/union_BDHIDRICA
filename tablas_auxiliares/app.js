@@ -1,9 +1,24 @@
 const CONFIG = {
-  template: "tablas_excel/Distribuido_Poblaciones.xlsx",
-  source: "../base-datos/tablas-excel/BD_Balance_Poblaciones.xlsx",
-  sourceRed: "../base-datos/tablas-excel/BD_Datos_Red.xlsx",
-  sheet: "Distribuido_Poblaciones",
+  spreadsheetId: "1GnN7jWdumlIezbJuB79PiG2mWSlNVf1zo8BXGmVWEpQ",
+  sheets: {
+    config: "CFG_Distribuido_Poblaciones",
+    balance: "BD_Balance_Pobla",
+    red: "BD_Datos_Red",
+  },
 };
+function googleSheetCsvUrl(sheetName) {
+  const params = new URLSearchParams({ tqx: "out:csv", sheet: sheetName, _: String(Date.now()) });
+  return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/gviz/tq?${params}`;
+}
+async function loadGoogleSheet(sheetName) {
+  const response = await fetch(googleSheetCsvUrl(sheetName), { cache: "no-store" });
+  if (!response.ok) throw new Error(`${sheetName}: HTTP ${response.status}`);
+  const csv = await response.text();
+  if (!csv.trim() || /^<!doctype html/i.test(csv.trim())) {
+    throw new Error(`No se pudo leer ${sheetName}. Revisa el acceso por enlace y el nombre de la pestaña.`);
+  }
+  return XLSX.read(csv, { type: "string", raw: true, cellDates: false });
+}
 const MONTHS = [
   "Enero",
   "Febrero",
@@ -44,31 +59,27 @@ function toast(text) {
   setTimeout(() => $("toast").classList.remove("show"), 2200);
 }
 function excelDate(value) {
-  if (value instanceof Date && !isNaN(value))
-    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+  if (value == null || value === "") return "";
+  if (value instanceof Date && !isNaN(value)) return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())}`;
   if (typeof value === "number") {
     const d = XLSX.SSF.parse_date_code(value);
     return d ? `${d.y}-${pad(d.m)}-${pad(d.d)}` : "";
   }
-  const s = String(value ?? "").trim();
-  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-  return m ? `${m[3]}-${pad(m[2])}-${pad(m[1])}` : "";
-}
-async function loadWorkbook(path) {
-  const response = await fetch(path, { cache: "no-store" });
-  if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
-  return XLSX.read(await response.arrayBuffer(), {
-    type: "array",
-    cellDates: true,
-  });
+  const text = String(value).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  let m = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+  m = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})$/);
+  if (m) { let y=Number(m[3]); if(y<100)y+=y>=70?1900:2000; return `${y}-${pad(m[2])}-${pad(m[1])}`; }
+  const months={enero:1,ene:1,febrero:2,feb:2,marzo:3,mar:3,abril:4,abr:4,mayo:5,may:5,junio:6,jun:6,julio:7,jul:7,agosto:8,ago:8,septiembre:9,sept:9,sep:9,octubre:10,oct:10,noviembre:11,nov:11,diciembre:12,dic:12};
+  m=text.match(/^([a-z]+)[\s/-]+(\d{2}|\d{4})$/);
+  if(m&&months[m[1]]){let y=Number(m[2]);if(y<100)y+=y>=70?1900:2000;return `${y}-${pad(months[m[1]])}-01`;}
+  return "";
 }
 function parseBalance(workbook) {
   const sheet =
     workbook.Sheets[
-      workbook.SheetNames.includes("Balance_Pobla")
-        ? "Balance_Pobla"
+      workbook.SheetNames.includes(CONFIG.sheets.balance)
+        ? CONFIG.sheets.balance
         : workbook.SheetNames[0]
     ];
   const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: true });
@@ -85,7 +96,7 @@ function parseBalance(workbook) {
     .map((row) => ({
       date: excelDate(row[dateKey]),
       code: String(row[codeKey] ?? "").trim(),
-      value: Number(row[valueKey]) || 0,
+      value: parseSpanishNumber(row[valueKey]),
     }))
     .filter((r) => r.date && r.code);
 }
@@ -134,30 +145,17 @@ function parseDatosRed(workbook) {
  * incluidos valores escritos como texto con formato español.
  */
 function parseSpanishNumber(value) {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  let text = String(value ?? "").trim();
-
+  if (value == null || value === "") return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  let text=String(value).trim().replace(/\s+/g, "");
   if (!text) return 0;
-
-  text = text.replace(/\s/g, "");
-
-  /*
-   * Formato español:
-   * 1.234,56 -> 1234.56
-   */
-  if (text.includes(",")) {
-    text = text.replace(/\./g, "").replace(",", ".");
-  }
-
-  const number = Number(text);
-
+  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) text=text.replace(/\./g, "").replace(",", ".");
+  else if (/^[+-]?\d+,\d+$/.test(text)) text=text.replace(",", ".");
+  const number=Number(text);
   return Number.isFinite(number) ? number : 0;
 }
-
 /*
+ * Crea un acumulado mensual/*
  * Crea un acumulado mensual por:
  *
  * Procedencia 1 + año + mes
@@ -374,33 +372,21 @@ function calculate() {
   }
   renderTable();
 }
-function formatValue(value, column, row) {
+function formatNumber(value, decimals = 2) {
+  const number=typeof value === "number" ? value : parseSpanishNumber(value);
+  if (!Number.isFinite(number)) return String(value ?? "");
+  const factor=10 ** decimals;
+  let rounded=Math.round((number + Number.EPSILON) * factor) / factor;
+  if (Object.is(rounded,-0) || Math.abs(rounded) < 0.005) rounded=0;
+  const shownDecimals=Number.isInteger(number) ? 0 : decimals;
+  return rounded.toLocaleString("es-ES", {minimumFractionDigits:shownDecimals,maximumFractionDigits:shownDecimals,useGrouping:"always"});
+}
+function formatValue(value,column,row) {
   if (value == null || value === "") return "";
-
-  /* Los años de la segunda fila se muestran sin decimales.*/
-  if (row === 1 && column >= 11 && column <= 20) {
-    return String(Math.trunc(Number(value)));
-  }
-  /* Formato de los resultados numéricos.*/
-  if (column >= 4 && typeof value === "number") {
-    /* Cualquier valor cuya representación con dos decimales
-     * sea cero se normaliza como cero positivo.
-     * Ejemplos:
-     * -0,0049 -> 0,00
-     * -0,0001 -> 0,00
-     * -0       -> 0,00
-     * -0,005   -> -0,01
-     */
-    const displayValue = Math.abs(value) < 0.005 ? 0 : value;
-
-    return displayValue.toLocaleString("es-ES", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  }
+  if (row === 1 && column >= 11 && column <= 20) return String(Math.trunc(parseSpanishNumber(value)));
+  if (column >= 4 && ![7,10].includes(column)) return formatNumber(value,2);
   return String(value);
 }
-
 function renderTable() {
   const body = $("tableBody");
 
@@ -646,7 +632,7 @@ function saveExcel() {
       }
       ws[addr] = { t: typeof value === "number" ? "n" : "s", v: value };
       if (typeof value === "number" && c >= 4) {
-        ws[addr].z = r === 1 && c >= 11 && c <= 20 ? "0" : "#,##0.00";
+        ws[addr].z = r === 1 && c >= 11 && c <= 20 ? "0" : "#,##0.##";
       }
     }
   }
@@ -662,7 +648,7 @@ function saveExcel() {
           t: "n",
           f: `SUM(${col}${blockStart + 1}:${col}${r})`,
           v: Number(state.matrix[r][c]) || 0,
-          z: "#,##0.00",
+          z: "#,##0.##",
         };
       }
       blockStart = null;
@@ -722,41 +708,31 @@ async function initialize() {
   initializeShell();
   initializeFilters();
   try {
-    const [template, balance, datosRed] = await Promise.all([
-      loadWorkbook(CONFIG.template),
-      loadWorkbook(CONFIG.source),
-      loadWorkbook(CONFIG.sourceRed),
+    const [configBook,balanceBook,redBook]=await Promise.all([
+      loadGoogleSheet(CONFIG.sheets.config),loadGoogleSheet(CONFIG.sheets.balance),loadGoogleSheet(CONFIG.sheets.red),
     ]);
-    state.templateWorkbook = template;
-    state.templateSheet =
-      template.Sheets[
-        template.SheetNames.includes(CONFIG.sheet)
-          ? CONFIG.sheet
-          : template.SheetNames[0]
-      ];
-    state.matrix = XLSX.utils.sheet_to_json(state.templateSheet, {
-      header: 1,
-      defval: "",
-      raw: true,
-    });
-    while (state.matrix.length < 217) state.matrix.push([]);
-    for (const row of state.matrix) while (row.length < 21) row.push("");
-    state.records = parseBalance(balance);
-    buildAggregates();
-    state.redRecords = parseDatosRed(datosRed);
-    buildRedAggregates();
-    $("dataStatus").textContent =
-      `${state.records.length.toLocaleString("es-ES")} registros cargados`;
-    $("sourceInfo").textContent =
-      `Balance de poblaciones: ${state.records.length.toLocaleString("es-ES")} registros · ` +
-      `Datos de red: ${state.redRecords.length.toLocaleString("es-ES")} registros`;
+    const configSheet=configBook.Sheets[configBook.SheetNames[0]];
+    state.matrix=XLSX.utils.sheet_to_json(configSheet,{header:1,defval:"",raw:true});
+    while(state.matrix.length<2) state.matrix.push([]);
+    for(const row of state.matrix){
+      while(row.length<21) row.push("");
+      if(row[3]!=="" && row[3]!=null && !String(row[3]).toUpperCase().startsWith("TOTAL")){
+        const f=parseSpanishNumber(row[3]); if([-1,0,1].includes(f)) row[3]=f;
+      }
+    }
+    state.templateWorkbook=XLSX.utils.book_new();
+    state.templateSheet=XLSX.utils.aoa_to_sheet(state.matrix);
+    XLSX.utils.book_append_sheet(state.templateWorkbook,state.templateSheet,CONFIG.sheets.config);
+    balanceBook.Sheets[CONFIG.sheets.balance]=balanceBook.Sheets[balanceBook.SheetNames[0]];
+    redBook.Sheets[CONFIG.sheets.red]=redBook.Sheets[redBook.SheetNames[0]];
+    state.records=parseBalance(balanceBook); buildAggregates();
+    state.redRecords=parseDatosRed(redBook); buildRedAggregates();
+    $("dataStatus").textContent=`${state.records.length.toLocaleString("es-ES")} registros cargados`;
+    $("sourceInfo").textContent=`Google Sheets: ${state.records.length.toLocaleString("es-ES")} registros de balance · ${state.redRecords.length.toLocaleString("es-ES")} registros de red`;
     calculate();
-  } catch (error) {
-    console.error(error);
-    $("dataStatus").textContent = "Error cargando datos";
-    $("errorBox").hidden = false;
-    $("errorBox").textContent =
-      `No se pudo completar la carga: ${error.message}`;
+  } catch(error) {
+    console.error(error); $("dataStatus").textContent="Error cargando datos"; $("errorBox").hidden=false;
+    $("errorBox").textContent=`No se pudo completar la carga desde Google Sheets: ${error.message}`;
   }
 }
 initialize();

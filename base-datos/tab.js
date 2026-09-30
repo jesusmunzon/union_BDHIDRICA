@@ -33,13 +33,14 @@ async function loadGoogleSheetWorkbook(sheetName) {
   return XLSX.read(csv, {
     type: "string",
     cellDates: true,
+    raw: true,
   });
 }
 
 const DATASETS = {
   balance: {
     label: "Balance de poblaciones",
-    sheet: "Balance_Pobla",
+    sheet: "BD_Balance_Pobla",
     download: "BD_Balance_Poblaciones_modificado.xlsx",
     cols: [
       "FECHA",
@@ -66,7 +67,7 @@ const DATASETS = {
   },
   red: {
     label: "Datos de la Red",
-    sheet: "Datos_Red",
+    sheet: "BD_Datos_Red",
     download: "BD_Datos_Red_modificado.xlsx",
     cols: [
       "FECHA",
@@ -95,7 +96,7 @@ const DATASETS = {
   },
   longitud: {
     label: "Longitud de la Red",
-    sheet: "Longitud_Red",
+    sheet: "BD_Longitud_Red",
     download: "BD_Longitud_Red_modificado.xlsx",
     cols: ["FECHA", "COD", "POBLACIÓN", "Longitud de red (km)"],
     labels: {
@@ -109,7 +110,7 @@ const DATASETS = {
   },
   chg: {
     label: "CHG Población",
-    sheet: "CHG_Poblacion",
+    sheet: "BD_CHG_Poblacion",
     download: "BD_CHG_Poblacion_modificado.xlsx",
     cols: ["Año", "POBLACIÓN", "Nº Habitantes", "Referencia"],
     labels: {
@@ -124,7 +125,7 @@ const DATASETS = {
   },
   acucon: {
     label: "Datos ACUCON",
-    sheet: "Datos_ACUCON",
+    sheet: "BD_Datos_ACUCON",
     download: "BD_Datos_ACUCON_modificado.xlsx",
     cols: [
       "Fecha",
@@ -185,7 +186,7 @@ const DATASETS = {
   },
   carnf: {
     label: "Datos CARNF",
-    sheet: "Datos_CARNF",
+    sheet: "BD_Datos_CARNF",
     download: "BD_Datos_CARNF_modificado.xlsx",
     cols: [
       "FECHA",
@@ -257,93 +258,9 @@ const DATASETS = {
       },
     ],
   },
-  carnf: {
-    label: "Datos CARNF",
-    sheet: "Datos_CARNF",
-    download: "BD_Datos_CARNF_modificado.xlsx",
-    cols: [
-      "FECHA",
-      "FECHA DATOS",
-      "COD POBLACIÓN",
-      "POBLACIÓN",
-      "CONSUMOS PROPIOS",
-      "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL",
-      "ZONAS DEPRIMIDAS Y EVENTOS",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-      "PURGAS SIN CONTADOR",
-      "PUNTOS MEDIDA CLORO",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
-    ],
-    labels: {
-      FECHA: "Fecha",
-      "FECHA DATOS": "Fecha datos",
-      "COD POBLACIÓN": "Código<br>población",
-      POBLACIÓN: "Población",
-      "CONSUMOS PROPIOS": "Consumos<br>propios",
-      "PURGAS CON CONTADOR AQUA-WS": "Purgas con contador<br>AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL": "Riegos y baldeo<br>municipal",
-      "ZONAS DEPRIMIDAS Y EVENTOS": "Zonas deprimidas<br>y eventos",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)":
-        "TOTAL AGUA REGISTRADA<br>NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)":
-        "Mantenimiento<br>(intervenciones de redes)",
-      "PURGAS SIN CONTADOR": "Purgas sin<br>contador",
-      "PUNTOS MEDIDA CLORO": "Puntos medida<br>cloro",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)":
-        "TOTAL AGUA NO REGISTRADA<br>NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)":
-        "Fugas en intervenciones de redes<br>(pérdidas evitables)",
-    },
-    numeric: [
-      "CONSUMOS PROPIOS",
-      "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL",
-      "ZONAS DEPRIMIDAS Y EVENTOS",
-      "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-      "PURGAS SIN CONTADOR",
-      "PUNTOS MEDIDA CLORO",
-      "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
-    ],
-    notes: null,
-    dateCols: ["FECHA", "FECHA DATOS"],
-    totalCols: [
-      {
-        col: "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-        sumCols: [
-          "CONSUMOS PROPIOS",
-          "PURGAS CON CONTADOR AQUA-WS",
-          "RIEGOS Y BALDEO MUNICIPAL",
-          "ZONAS DEPRIMIDAS Y EVENTOS",
-        ],
-      },
-      {
-        col: "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-        sumCols: [
-          "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-          "PURGAS SIN CONTADOR",
-          "PUNTOS MEDIDA CLORO",
-        ],
-      },
-    ],
-    sumCols: [
-      "CONSUMOS PROPIOS",
-      "PURGAS CON CONTADOR AQUA-WS",
-      "RIEGOS Y BALDEO MUNICIPAL",
-      "ZONAS DEPRIMIDAS Y EVENTOS",
-      "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-      "PURGAS SIN CONTADOR",
-      "PUNTOS MEDIDA CLORO",
-      "FUGAS EN INTERVENCIONES DE REDES (PÉRDIDAS EVITABLES)",
-    ],
-  },
   aforos: {
     label: "Datos Aforos y Pérdidas",
-    sheet: "Datos_Aforos_y_Perdidas",
+    sheet: "BD_Datos_Aforos_y_Perdidas",
     download: "BD_Datos_Aforos_y_Perdidas_modificado.xlsx",
     cols: [
       "FECHA",
@@ -409,19 +326,129 @@ const esc = (v) =>
       ],
   );
 const pad = (n) => String(n).padStart(2, "0");
-function excelDate(v) {
-  if (v == null || v === "") return "";
-  if (v instanceof Date && !isNaN(v))
-    return `${v.getFullYear()}-${pad(v.getMonth() + 1)}-${pad(v.getDate())}`;
-  if (typeof v === "number") {
-    const o = XLSX.SSF.parse_date_code(v);
-    return o ? `${o.y}-${pad(o.m)}-${pad(o.d)}` : "";
+function excelDate(value) {
+  if (value == null || value === "") return "";
+
+  if (value instanceof Date && !isNaN(value)) {
+    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
   }
-  const s = String(v).trim();
-  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-  return m ? `${m[3]}-${pad(m[2])}-${pad(m[1])}` : "";
+
+  if (typeof value === "number") {
+    const parsed = XLSX.SSF.parse_date_code(value);
+    return parsed
+      ? `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)}`
+      : "";
+  }
+
+  const text = String(value)
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  /* 2009-01-01 */
+  let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (match) {
+    return `${match[1]}-${pad(match[2])}-${pad(match[3])}`;
+  }
+
+  /* 01/01/2009, 1/1/2009, 01-01-09 */
+  match = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})$/);
+  if (match) {
+    let year = Number(match[3]);
+    if (year < 100) year += year >= 70 ? 1900 : 2000;
+    return `${year}-${pad(match[2])}-${pad(match[1])}`;
+  }
+
+  /* enero-09, ene-09, enero-2009, enero/2009, ene 2009 */
+  const monthNumbers = {
+    enero: 1,
+    ene: 1,
+    febrero: 2,
+    feb: 2,
+    marzo: 3,
+    mar: 3,
+    abril: 4,
+    abr: 4,
+    mayo: 5,
+    may: 5,
+    junio: 6,
+    jun: 6,
+    julio: 7,
+    jul: 7,
+    agosto: 8,
+    ago: 8,
+    septiembre: 9,
+    sept: 9,
+    sep: 9,
+    octubre: 10,
+    oct: 10,
+    noviembre: 11,
+    nov: 11,
+    diciembre: 12,
+    dic: 12,
+  };
+
+  match = text.match(/^([a-z]+)[\s\/-]+(\d{2}|\d{4})$/);
+  if (match && monthNumbers[match[1]]) {
+    let year = Number(match[2]);
+    if (year < 100) year += year >= 70 ? 1900 : 2000;
+    return `${year}-${pad(monthNumbers[match[1]])}-01`;
+  }
+
+  /* Respuesta alternativa de Google: Date(2009,0,1) */
+  match = text.match(/^date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})\)$/);
+  if (match) {
+    return `${match[1]}-${pad(Number(match[2]) + 1)}-${pad(match[3])}`;
+  }
+
+  console.warn("Fecha no reconocida:", value);
+  return "";
+}
+function parseSpanishNumber(value) {
+  if (value == null || value === "") {
+    return "";
+  }
+  /* Si ya es un número válido, lo conservamos.*/
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : "";
+  }
+  let text = String(value)
+    .trim()
+    .replace(/\s+/g, "");
+
+  if (!text) {
+    return "";
+  }
+  /* Formato español con separadores de miles:
+   * 4.916           -> 4916
+   * 7.897.930       -> 7897930
+   * 1.234.567,89    -> 1234567.89
+   * -25.306,20      -> -25306.20*/
+  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) {
+    text = text
+      .replace(/\./g, "")
+      .replace(",", ".");
+  }
+
+  /* Decimal español sin separadores de miles:
+   *
+   * 4,92    -> 4.92
+   * -0,25   -> -0.25*/
+  else if (/^[+-]?\d+,\d+$/.test(text)) {
+    text = text.replace(",", ".");
+  }
+  /* Número entero normal.*/
+  else if (/^[+-]?\d+$/.test(text)) {
+    // No necesita transformación.
+  }
+  /* Como respaldo, admite números con punto decimal
+   * cuando no tienen el patrón español de miles.*/
+  else if (/^[+-]?\d+\.\d+$/.test(text)) {
+    // No necesita transformación.
+  }
+  const number = Number(text);
+  return Number.isFinite(number) ? number : "";
 }
 const displayDate = (v) => {
   const s = excelDate(v);
@@ -431,19 +458,31 @@ const num = (value, decimals = 2) => {
   if (value == null || value === "") {
     return "";
   }
-
-  const number = Number(value);
-
+  const number =
+    typeof value === "number"
+      ? value
+      : parseSpanishNumber(value);
   if (!Number.isFinite(number)) {
     return String(value);
   }
-
   const factor = 10 ** decimals;
-  const rounded = Math.round((number + Number.EPSILON) * factor) / factor;
-
+  let rounded =
+    Math.round((number + Number.EPSILON) * factor) /
+    factor;
+  /* Evita mostrar -0 y -0,00.*/
+  if (Object.is(rounded, -0) || rounded === 0) {
+    rounded = 0;
+  }
+  /* Los valores originalmente enteros se presentan
+   * sin decimales. Los no enteros mantienen dos decimales,
+   * aunque el redondeo final sea un número entero.*/
+  const displayDecimals = Number.isInteger(number)
+    ? 0
+    : decimals;
   return rounded.toLocaleString("es-ES", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
+    minimumFractionDigits: displayDecimals,
+    maximumFractionDigits: displayDecimals,
+    useGrouping: "always",
   });
 };
 const isDateCol = (x) => x === "FECHA" || (cfg().dateCols || []).includes(x);
@@ -490,9 +529,7 @@ function calculatedRowsFromSheet(ws, c) {
         const v = a[index.get(normalizeHeader(x))];
         if (c.dateCols.includes(x)) o[x] = excelDate(v);
         else if (c.numeric.includes(x) && !isCalculatedCol(c, x)) {
-          const n = Number(v);
-          o[x] =
-            v === "" ? "" : Number.isFinite(n) ? n : String(v ?? "").trim();
+          o[x] = parseSpanishNumber(v);
         } else o[x] = v ?? "";
       });
       calculateTotal(o, c);
@@ -952,15 +989,15 @@ async function switchDataset(key) {
         .sheet_to_json(ws, { defval: "", raw: true })
         .map((r, i) => {
           const o = { _id: i + 1 };
-          c.cols.forEach(
-            (x) =>
-              (o[x] =
-                x === "FECHA"
-                  ? excelDate(r[x])
-                  : c.numeric.includes(x)
-                    ? Number(r[x] || 0)
-                    : (r[x] ?? "")),
-          );
+          c.cols.forEach((x) => {
+            if (x === "FECHA") {
+              o[x] = excelDate(r[x]);
+            } else if (c.numeric.includes(x)) {
+              o[x] = parseSpanishNumber(r[x]);
+            } else {
+              o[x] = r[x] ?? "";
+            }
+          });
           return o;
         });
       stores[key].rows = rows;
