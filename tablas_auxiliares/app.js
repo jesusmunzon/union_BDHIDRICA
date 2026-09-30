@@ -8,12 +8,12 @@ const CONFIG = {
 };
 function googleSheetCsvUrl(sheetName) {
   const params = new URLSearchParams({
-    tqx: "out:csv",
+    format: "csv",
     sheet: sheetName,
-    headers: "0",
     _: String(Date.now()),
   });
-  return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/gviz/tq?${params}`;
+
+  return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/export?${params}`;
 }
 async function loadGoogleSheet(sheetName) {
   const response = await fetch(googleSheetCsvUrl(sheetName), { cache: "no-store" });
@@ -191,8 +191,14 @@ function parseDatosRed(workbook) {
   ]);
 
   if (headerRowIndex < 0) {
+    const detected = rows
+      .slice(0, 3)
+      .map((row) => row.filter((value) => String(value).trim() !== "").join(" | "))
+      .join(" / ");
+
     throw new Error(
-      "La hoja BD_Datos_Red debe contener FECHA, PROCEDENCIA_1 y AJUSTE.",
+      `La hoja BD_Datos_Red debe contener FECHA, PROCEDENCIA_1 y AJUSTE. ` +
+      `Encabezados recibidos: ${detected || "ninguno"}`,
     );
   }
 
