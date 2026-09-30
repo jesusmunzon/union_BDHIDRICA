@@ -1,7 +1,44 @@
+const GOOGLE_SHEETS = {
+  spreadsheetId: "1GnN7jWdumlIezbJuB79PiG2mWSlNVf1zo8BXGmVWEpQ",
+  baseUrl: "https://docs.google.com/spreadsheets/d",
+};
+
+function googleSheetCsvUrl(sheetName) {
+  const params = new URLSearchParams({
+    tqx: "out:csv",
+    sheet: sheetName,
+    _: String(Date.now()),
+  });
+
+  return `${GOOGLE_SHEETS.baseUrl}/${GOOGLE_SHEETS.spreadsheetId}/gviz/tq?${params}`;
+}
+
+async function loadGoogleSheetWorkbook(sheetName) {
+  const response = await fetch(googleSheetCsvUrl(sheetName), {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Google Sheets: HTTP ${response.status}`);
+  }
+
+  const csv = await response.text();
+
+  if (!csv.trim() || /^<!doctype html/i.test(csv.trim())) {
+    throw new Error(
+      `No se pudo leer la pestaña ${sheetName}. Comprueba que el libro permita la lectura mediante enlace y que la pestaña exista.`,
+    );
+  }
+
+  return XLSX.read(csv, {
+    type: "string",
+    cellDates: true,
+  });
+}
+
 const DATASETS = {
   balance: {
     label: "Balance de poblaciones",
-    file: "tablas-excel/BD_Balance_Poblaciones.xlsx",
     sheet: "Balance_Pobla",
     download: "BD_Balance_Poblaciones_modificado.xlsx",
     cols: [
@@ -29,7 +66,6 @@ const DATASETS = {
   },
   red: {
     label: "Datos de la Red",
-    file: "tablas-excel/BD_Datos_Red.xlsx",
     sheet: "Datos_Red",
     download: "BD_Datos_Red_modificado.xlsx",
     cols: [
@@ -59,7 +95,6 @@ const DATASETS = {
   },
   longitud: {
     label: "Longitud de la Red",
-    file: "tablas-excel/BD_Longitud_Red.xlsx",
     sheet: "Longitud_Red",
     download: "BD_Longitud_Red_modificado.xlsx",
     cols: ["FECHA", "COD", "POBLACIÓN", "Longitud de red (km)"],
@@ -74,7 +109,6 @@ const DATASETS = {
   },
   chg: {
     label: "CHG Población",
-    file: "tablas-excel/BD_CHG_Poblacion.xlsx",
     sheet: "CHG_Poblacion",
     download: "BD_CHG_Poblacion_modificado.xlsx",
     cols: ["Año", "POBLACIÓN", "Nº Habitantes", "Referencia"],
@@ -90,7 +124,6 @@ const DATASETS = {
   },
   acucon: {
     label: "Datos ACUCON",
-    file: "tablas-excel/BD_Datos_ACUCON.xlsx",
     sheet: "Datos_ACUCON",
     download: "BD_Datos_ACUCON_modificado.xlsx",
     cols: [
@@ -152,7 +185,6 @@ const DATASETS = {
   },
   carnf: {
     label: "Datos CARNF",
-    file: "tablas-excel/BD_Datos_CARNF.xlsx",
     sheet: "Datos_CARNF",
     download: "BD_Datos_CARNF_modificado.xlsx",
     cols: [
@@ -227,7 +259,6 @@ const DATASETS = {
   },
   carnf: {
     label: "Datos CARNF",
-    file: "tablas-excel/BD_Datos_CARNF.xlsx",
     sheet: "Datos_CARNF",
     download: "BD_Datos_CARNF_modificado.xlsx",
     cols: [
@@ -312,7 +343,6 @@ const DATASETS = {
   },
   aforos: {
     label: "Datos Aforos y Pérdidas",
-    file: "tablas-excel/BD_Datos_Aforos_y_Perdidas.xlsx",
     sheet: "Datos_Aforos_y_Perdidas",
     download: "BD_Datos_Aforos_y_Perdidas_modificado.xlsx",
     cols: [
@@ -871,14 +901,9 @@ async function switchDataset(key) {
     return;
   }
   try {
-    const c = cfg(),
-      res = await fetch(c.file, { cache: "no-store" });
-    if (!res.ok) throw Error(`HTTP ${res.status}`);
-    const wb = XLSX.read(await res.arrayBuffer(), {
-        type: "array",
-        cellDates: true,
-      }),
-      ws = wb.Sheets[c.sheet] || wb.Sheets[wb.SheetNames[0]];
+    const c = cfg();
+    const wb = await loadGoogleSheetWorkbook(c.sheet);
+    const ws = wb.Sheets[wb.SheetNames[0]];
     if (key === "acucon" || key === "carnf" || key === "aforos") {
       rows = calculatedRowsFromSheet(ws, c);
       stores[key].rows = rows;
@@ -945,8 +970,8 @@ async function switchDataset(key) {
     applyFilters();
   } catch (e) {
     console.error(e);
-    $("rowCount").textContent = "No se pudo abrir el Excel";
-    toast(`Error cargando ${cfg().file.split("/").pop()}`);
+    $("rowCount").textContent = "No se pudo abrir Google Sheets";
+    toast(`Error cargando la pestaña ${cfg().sheet}`);
   }
 }
 function actionButtons(kind, i) {
