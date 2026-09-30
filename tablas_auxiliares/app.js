@@ -116,31 +116,57 @@ function findColumnIndex(indexMap, ...acceptedNames) {
 
 function parseBalance(workbook) {
   const rows = sheetRows(workbook);
-  const headerRowIndex = findHeaderRow(rows, [
+  let headerRowIndex = findHeaderRow(rows, [
     ["FECHA", "FECHA DATOS"],
     ["COD_DISP", "COD DISP", "CODIGO DISP.", "CÓDIGO DISP."],
     ["CMES"],
   ]);
 
-  if (headerRowIndex < 0) {
-    throw new Error(
-      "La hoja BD_Balance_Pobla debe contener FECHA, COD_DISP y CMES.",
+  let dateIndex;
+  let codeIndex;
+  let valueIndex;
+  let dataStart;
+
+  if (headerRowIndex >= 0) {
+    const indexes = headerIndexMap(rows[headerRowIndex]);
+    dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
+    codeIndex = findColumnIndex(
+      indexes,
+      "COD_DISP",
+      "COD DISP",
+      "CODIGO DISP.",
+      "CÓDIGO DISP.",
     );
+    valueIndex = findColumnIndex(indexes, "CMES");
+    dataStart = headerRowIndex + 1;
+  } else {
+    /*
+     * Google Visualization puede consumir la primera fila como cabecera
+     * y devolver directamente los registros. La tabla BD_Balance_Pobla
+     * tiene una estructura estable: A=FECHA, B=COD_DISP y G=CMES.
+     */
+    const firstDataRow = rows.findIndex(
+      (row) => excelDate(row[0]) && String(row[1] ?? "").trim(),
+    );
+
+    if (firstDataRow < 0 || rows[firstDataRow].length < 7) {
+      const preview = rows
+        .slice(0, 3)
+        .map((row) => row.slice(0, 8).join(" | "))
+        .join(" / ");
+      throw new Error(
+        `No se localizaron FECHA, COD_DISP y CMES en BD_Balance_Pobla. Primeras filas: ${preview}`,
+      );
+    }
+
+    dateIndex = 0;
+    codeIndex = 1;
+    valueIndex = 6;
+    dataStart = firstDataRow;
   }
 
-  const indexes = headerIndexMap(rows[headerRowIndex]);
-  const dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
-  const codeIndex = findColumnIndex(
-    indexes,
-    "COD_DISP",
-    "COD DISP",
-    "CODIGO DISP.",
-    "CÓDIGO DISP.",
-  );
-  const valueIndex = findColumnIndex(indexes, "CMES");
-
   return rows
-    .slice(headerRowIndex + 1)
+    .slice(dataStart)
     .map((row) => ({
       date: excelDate(row[dateIndex]),
       code: String(row[codeIndex] ?? "").trim(),
