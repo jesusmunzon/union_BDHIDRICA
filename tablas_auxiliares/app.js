@@ -381,6 +381,60 @@ function rowType(row) {
 
   return "blank";
 }
+function createTotalRows(matrix) {
+  /* Conserva sin cambios las dos primeras filas
+   * de encabezados superiores.*/
+  const result = matrix
+    .slice(0, 2)
+    .map((row) => [...row]);
+  let currentPopulation = "";
+  let blockHasDetails = false;
+  /* Añade la fila TOTAL del bloque anterior.*/
+  const appendTotalRow = () => {
+    if (!currentPopulation || !blockHasDetails) {
+      return;
+    }
+    const totalRow = Array(21).fill("");
+    /* rowType() reconoce las filas TOTAL porque
+     * la columna D comienza por "TOTAL".*/
+    totalRow[3] = `TOTAL ${currentPopulation}`;
+    result.push(totalRow);
+  };
+  for (
+    let rowIndex = 2;
+    rowIndex < matrix.length;
+    rowIndex += 1
+  ) {
+    const row = [...matrix[rowIndex]];
+    while (row.length < 21) {
+      row.push("");
+    }
+    const type = rowType(row);
+    /* Al comenzar una población nueva, se cierra
+     * automáticamente la población anterior.*/
+    if (type === "section") {
+      appendTotalRow();
+      currentPopulation =
+        String(row[0] ?? "").trim();
+      blockHasDetails = false;
+      result.push(row);
+      continue;
+    }
+    /* Solo se genera TOTAL cuando el bloque contiene
+     * al menos una fila válida de detalle.*/
+    if (type === "detail") {
+      blockHasDetails = true;
+    }
+    /* Si hubiese quedado alguna fila TOTAL antigua
+     * en Google Sheets, no se incorpora.*/
+    if (type !== "total") {
+      result.push(row);
+    }
+  }
+  /* Cierra la última población de la tabla.*/
+  appendTotalRow();
+  return result;
+}
 function calculate() {
   updatePeriodHeaders();
   let py = state.year,
@@ -862,6 +916,9 @@ async function initialize() {
         }
       }
     }
+    /* Genera automáticamente una fila TOTAL
+    * al final de cada bloque de población.*/
+    state.matrix = createTotalRows(state.matrix);
 
     /* Libro temporal solo para la descarga del resultado calculado. */
     state.templateWorkbook = XLSX.utils.book_new();
