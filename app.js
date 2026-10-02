@@ -460,11 +460,11 @@ function update() {
           beginAtZero: true,
           afterDataLimits(scale) {
           /*
-          * Reserva un 12 % respecto al valor máximo.
+          * Reserva un 5 % respecto al valor máximo.
           * Este margen es estable y no depende del
           * redondeo automático de grace.
           */
-          scale.max *= 1.10;
+          scale.max *= 1.05;
           },
           grid: { display: false },
           border: { display: false },
