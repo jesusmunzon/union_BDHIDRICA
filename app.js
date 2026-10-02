@@ -418,7 +418,7 @@ function update() {
       labels: popNames,
       datasets: [
         {
-          label: String(prev),
+          label: `${months[m - 1]}-${prev}`,
           data: popNames.map((name) =>
             hm(previousPopulationTotals.get(name) || 0),
           ),
@@ -426,7 +426,7 @@ function update() {
           borderRadius: 3,
         },
         {
-          label: String(y),
+          label: `${months[m - 1]}-${y}`,
           data: popNames.map((name) =>
             hm(currentPopulationTotals.get(name) || 0),
           ),
@@ -435,7 +435,28 @@ function update() {
         },
       ],
     },
-    { indexAxis: "y" },
+    {
+      indexAxis: "y",
+      scales: {
+        x: {
+          display: false,
+          beginAtZero: true,
+          grid: { display: false },
+          border: { display: false },
+        },
+        y: {
+          beginAtZero: true,
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            display: true,
+            autoSkip: false,
+            color: "#738394",
+            font: { size: 9 },
+          },
+        },
+      },
+    },
   );
 }
 
