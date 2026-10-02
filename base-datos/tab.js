@@ -2,7 +2,6 @@ import { GOOGLE_DATABASE } from "../js/config.js";
 import { loadGoogleSheetWorkbook } from "../js/google-sheets.js";
 import {
   excelDate,
-  formatSpanishNumber as num,
   normalizeHeader,
   pad,
   parseSpanishNumber,
