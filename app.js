@@ -454,12 +454,6 @@ function update() {
     },
     {
       indexAxis: "y",
-      layout: {
-        padding: {
-          left: 18,
-          right: 0,
-        },
-      },
       scales: {
         x: {
           display: false,
