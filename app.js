@@ -272,7 +272,24 @@ function chart(id, type, data, options = {}) {
         },
         tooltip: {
           callbacks: {
-            label: (c) => " " + c.dataset.label + ": " + fmt(c.raw),
+            label: (c) => {
+              if (c.chart.canvas.id === "poblaciones") {
+                const valueM3 = Number(c.raw) * 1e6;
+                return (
+                  " " +
+                  c.dataset.label +
+                  ": " +
+                  valueM3.toLocaleString("es-ES", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    useGrouping: true,
+                  }) +
+                  " m³"
+                );
+              }
+
+              return " " + c.dataset.label + ": " + fmt(c.raw);
+            },
           },
         },
       },
@@ -441,6 +458,7 @@ function update() {
         x: {
           display: false,
           beginAtZero: true,
+          grace: "20%",
           grid: { display: false },
           border: { display: false },
         },

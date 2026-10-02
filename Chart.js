@@ -26,16 +26,12 @@ const populationValueLabels = {
           useGrouping: true,
         });
 
-        const textWidth = ctx.measureText(label).width;
-        let x = bar.x + 6;
-
-        if (x + textWidth > chartArea.right - 2) {
-          x = bar.x - textWidth - 6;
-          ctx.fillStyle = "#ffffff";
-        } else {
-          ctx.fillStyle = "#475569";
-        }
-
+        /*
+         * La etiqueta se dibuja siempre fuera de la barra.
+         * El margen adicional se reserva en la escala X del gráfico.
+         */
+        const x = bar.x + 6;
+        ctx.fillStyle = "#475569";
         ctx.fillText(label, x, bar.y);
       });
     });
