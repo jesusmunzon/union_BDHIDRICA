@@ -98,3 +98,6 @@ const populationValueLabels = {
     ctx.restore();
   },
 };
+Chart.register(
+  populationValueLabels,
+);
