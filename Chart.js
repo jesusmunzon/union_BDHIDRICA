@@ -1,23 +1,10 @@
 const populationValueLabels = {
   id: "populationValueLabels",
 
-  beforeInit(chartInstance) {
-    if (chartInstance.canvas.id !== "poblaciones") return;
-
-    chartInstance.options.layout = chartInstance.options.layout || {};
-    const currentPadding = chartInstance.options.layout.padding || {};
-
-    chartInstance.options.layout.padding = {
-      ...currentPadding,
-      right: Math.max(Number(currentPadding.right) || 0, 70),
-    };
-  },
-
   afterDatasetsDraw(chartInstance) {
     if (chartInstance.canvas.id !== "poblaciones") return;
 
     const { ctx, data, chartArea } = chartInstance;
-
     ctx.save();
     ctx.fillStyle = "#475569";
     ctx.font = "600 10px Inter, sans-serif";
@@ -32,22 +19,24 @@ const populationValueLabels = {
         const valueHm3 = Number(dataset.data[dataIndex]);
         if (!Number.isFinite(valueHm3)) return;
 
-        /* Las barras están expresadas en hm³; la etiqueta se muestra en m³. */
         const valueM3 = Math.round(valueHm3 * 1e6);
-        const formattedValue = valueM3.toLocaleString("es-ES", {
+        const label = valueM3.toLocaleString("es-ES", {
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
           useGrouping: true,
         });
 
-        const textWidth = ctx.measureText(formattedValue).width;
+        const textWidth = ctx.measureText(label).width;
         let x = bar.x + 6;
 
-        if (x + textWidth > chartArea.right + 66) {
-          x = chartArea.right + 66 - textWidth;
+        if (x + textWidth > chartArea.right - 2) {
+          x = bar.x - textWidth - 6;
+          ctx.fillStyle = "#ffffff";
+        } else {
+          ctx.fillStyle = "#475569";
         }
 
-        ctx.fillText(formattedValue, x, bar.y);
+        ctx.fillText(label, x, bar.y);
       });
     });
 

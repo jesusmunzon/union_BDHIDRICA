@@ -1,3 +1,17 @@
+import { GOOGLE_DATABASE } from "./js/config.js";
+import { loadGoogleSheet } from "./js/google-sheets.js";
+import {
+  excelDate,
+  norm,
+  parseSpanishNumber,
+} from "./js/formats.js";
+import {
+  findColumnIndex,
+  findHeaderRow,
+  headerIndexMap,
+  sheetRows,
+} from "./js/table-utils.js";
+
 const C = {
   blue: "#1677ff",
   cyan: "#19b6c9",
@@ -20,13 +34,188 @@ const months = [
   "Noviembre",
   "Diciembre",
 ];
-let D = [],
-  charts = {};
-const norm = (s) =>
-  (s || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase();
+let D = [];
+let balanceRecords = [];
+let distributedConfig = [];
+let charts = {};
+function parseDatosRed(workbook) {
+  const rows = sheetRows(workbook);
+  const headerRowIndex = findHeaderRow(rows, [
+    ["FECHA", "FECHA DATOS"],
+    ["TIPO"],
+    ["SUBTIPO"],
+    ["PROCEDENCIA_1", "PROCEDENCIA 1", "PROCEDENCIA1"],
+    ["PROCEDENCIA_2", "PROCEDENCIA 2", "PROCEDENCIA2"],
+    ["AJUSTE"],
+  ]);
+
+  if (headerRowIndex < 0) {
+    throw new Error("BD_Datos_Red no contiene los encabezados necesarios.");
+  }
+
+  const indexes = headerIndexMap(rows[headerRowIndex]);
+  const dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
+  const typeIndex = findColumnIndex(indexes, "TIPO");
+  const subtypeIndex = findColumnIndex(indexes, "SUBTIPO");
+  const origin1Index = findColumnIndex(
+    indexes,
+    "PROCEDENCIA_1",
+    "PROCEDENCIA 1",
+    "PROCEDENCIA1",
+  );
+  const origin2Index = findColumnIndex(
+    indexes,
+    "PROCEDENCIA_2",
+    "PROCEDENCIA 2",
+    "PROCEDENCIA2",
+  );
+  const adjustmentIndex = findColumnIndex(indexes, "AJUSTE");
+
+  return rows
+    .slice(headerRowIndex + 1)
+    .map((row) => ({
+      d: excelDate(row[dateIndex]),
+      tipo: String(row[typeIndex] ?? "").trim(),
+      sub: String(row[subtypeIndex] ?? "").trim(),
+      p1: String(row[origin1Index] ?? "").trim(),
+      p2: String(row[origin2Index] ?? "").trim(),
+      v: parseSpanishNumber(row[adjustmentIndex], 0),
+    }))
+    .filter((record) => record.d);
+}
+
+function parseBalance(workbook) {
+  const rows = sheetRows(workbook);
+  let headerRowIndex = findHeaderRow(rows, [
+    ["FECHA", "FECHA DATOS"],
+    ["COD_DISP", "COD DISP", "CODIGO DISP.", "CÓDIGO DISP."],
+    ["CMES"],
+  ]);
+
+  let dateIndex;
+  let codeIndex;
+  let valueIndex;
+  let dataStart;
+
+  if (headerRowIndex >= 0) {
+    const indexes = headerIndexMap(rows[headerRowIndex]);
+    dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
+    codeIndex = findColumnIndex(
+      indexes,
+      "COD_DISP",
+      "COD DISP",
+      "CODIGO DISP.",
+      "CÓDIGO DISP.",
+    );
+    valueIndex = findColumnIndex(indexes, "CMES");
+    dataStart = headerRowIndex + 1;
+  } else {
+    const firstDataRow = rows.findIndex(
+      (row) => excelDate(row[0]) && String(row[1] ?? "").trim(),
+    );
+    if (firstDataRow < 0 || rows[firstDataRow].length < 7) {
+      throw new Error("No se localizaron FECHA, COD_DISP y CMES en BD_Balance_Pobla.");
+    }
+    dateIndex = 0;
+    codeIndex = 1;
+    valueIndex = 6;
+    dataStart = firstDataRow;
+  }
+
+  return rows
+    .slice(dataStart)
+    .map((row) => ({
+      date: excelDate(row[dateIndex]),
+      code: String(row[codeIndex] ?? "").trim(),
+      value: parseSpanishNumber(row[valueIndex], 0),
+    }))
+    .filter((record) => record.date && record.code);
+}
+
+function parseDistributedConfig(workbook) {
+  const rows = sheetRows(workbook);
+  const result = [];
+  let currentBlock = "";
+
+  for (let rowIndex = 2; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex] ?? [];
+    const code = String(row[0] ?? "").trim();
+    const name = String(row[1] ?? "").trim();
+    const population = String(row[2] ?? "").trim();
+    const factorText = String(row[3] ?? "").trim();
+
+    if (code && !name && !population && !factorText) {
+      currentBlock = code;
+      continue;
+    }
+
+    if (norm(code) === "COD_DISP") continue;
+    if (norm(factorText).startsWith("TOTAL")) continue;
+
+    const factor = parseSpanishNumber(row[3], NaN);
+    const isBurguillos =
+      norm(name) === "ATE BURGUILLOS" && norm(population) === "BURGUILLOS";
+
+    if (currentBlock && (code || isBurguillos) && [-1, 0, 1].includes(factor)) {
+      result.push({
+        block: currentBlock,
+        code,
+        name,
+        population,
+        factor,
+        isBurguillos,
+      });
+    }
+  }
+
+  return result;
+}
+
+function balanceAccumulated(code, selectedYear, selectedMonth) {
+  return balanceRecords
+    .filter((record) => {
+      const recordYear = Number(record.date.slice(0, 4));
+      const recordMonth = Number(record.date.slice(5, 7));
+      return (
+        norm(record.code) === norm(code) &&
+        recordYear === selectedYear &&
+        recordMonth <= selectedMonth
+      );
+    })
+    .reduce((total, record) => total + record.value, 0);
+}
+
+function redAccumulated(origin, selectedYear, selectedMonth) {
+  return D
+    .filter((record) => {
+      const recordYear = Number(record.d.slice(0, 4));
+      const recordMonth = Number(record.d.slice(5, 7));
+      return (
+        norm(record.p1) === norm(origin) &&
+        recordYear === selectedYear &&
+        recordMonth <= selectedMonth
+      );
+    })
+    .reduce((total, record) => total + record.v, 0);
+}
+
+function populationAccumulatedTotals(selectedYear, selectedMonth) {
+  const totals = new Map();
+
+  for (const configRow of distributedConfig) {
+    const sourceValue = configRow.isBurguillos
+      ? redAccumulated(configRow.population, selectedYear, selectedMonth)
+      : balanceAccumulated(configRow.code, selectedYear, selectedMonth);
+
+    totals.set(
+      configRow.block,
+      (totals.get(configRow.block) || 0) + sourceValue * configRow.factor,
+    );
+  }
+
+  return totals;
+}
+
 const hm = (v) => v / 1e6;
 const fmt = (v) =>
   new Intl.NumberFormat("es-ES", {
@@ -216,38 +405,12 @@ function update() {
       },
     ],
   });
+  const currentPopulationTotals = populationAccumulatedTotals(y, m);
+  const previousPopulationTotals = populationAccumulatedTotals(prev, m);
   const popNames = [
-    "Aljarafesa",
-    "Huesna",
-    "Burguillos",
-    "El Garrobo",
-    "El Ronquillo",
-    "Adufe",
-    "Mairena del Alcor",
-    "La Galbana",
+    ...new Set(distributedConfig.map((row) => row.block).filter(Boolean)),
   ];
-  const popVal = (n, yy) => {
-    if (["Aljarafesa", "Huesna", "Burguillos"].includes(n))
-      return hm(
-        sum(
-          (r) =>
-            norm(r.sub) === "AGUA TRATADA EXPORTADA" &&
-            norm(r.p1).includes(norm(n)),
-          yy,
-          m,
-        ),
-      );
-    return hm(
-      sum(
-        (r) =>
-          (norm(r.sub) === "AGUA PRODUCIDA ETAP" ||
-            norm(r.sub) === "AGUA TRATADA IMPORTADA") &&
-          (norm(r.p1).includes(norm(n)) || norm(r.p2).includes(norm(n))),
-        yy,
-        m,
-      ),
-    );
-  };
+
   chart(
     "poblaciones",
     "bar",
@@ -255,20 +418,45 @@ function update() {
       labels: popNames,
       datasets: [
         {
-          label: String(prev),
-          data: popNames.map((n) => popVal(n, prev)),
+          label: `${months[m - 1]}-${prev}`,
+          data: popNames.map((name) =>
+            hm(previousPopulationTotals.get(name) || 0),
+          ),
           backgroundColor: C.gray,
           borderRadius: 3,
         },
         {
-          label: String(y),
-          data: popNames.map((n) => popVal(n, y)),
+          label: `${months[m - 1]}-${y}`,
+          data: popNames.map((name) =>
+            hm(currentPopulationTotals.get(name) || 0),
+          ),
           backgroundColor: C.blue,
           borderRadius: 3,
         },
       ],
     },
-    { indexAxis: "y" },
+    {
+      indexAxis: "y",
+      scales: {
+        x: {
+          display: false,
+          beginAtZero: true,
+          grid: { display: false },
+          border: { display: false },
+        },
+        y: {
+          beginAtZero: true,
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            display: true,
+            autoSkip: false,
+            color: "#738394",
+            font: { size: 9 },
+          },
+        },
+      },
+    },
   );
 }
 
@@ -351,28 +539,42 @@ function initializeInterface() {
 
 initializeInterface();
 
-fetch("datos-red.json")
-  .then((response) => {
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  })
-  .then((data) => {
-    D = data;
-    const years = [...new Set(D.map((row) => +row.d.slice(0, 4)))].sort(
-      (a, b) => a - b,
-    );
+async function initializeData() {
+  try {
+    const [datosRedBook, balanceBook, configBook] = await Promise.all([
+      loadGoogleSheet(GOOGLE_DATABASE.sheets.datosRed, 1),
+      loadGoogleSheet(GOOGLE_DATABASE.sheets.balancePoblaciones, 1),
+      loadGoogleSheet(GOOGLE_DATABASE.sheets.distribuidoPoblaciones, 0),
+    ]);
+
+    D = parseDatosRed(datosRedBook);
+    balanceRecords = parseBalance(balanceBook);
+    distributedConfig = parseDistributedConfig(configBook);
+
+    const years = [...new Set(D.map((row) => Number(row.d.slice(0, 4))))]
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b);
+
+    const storedMonth = Number(localStorage.getItem("control-red-month"));
+    const storedYear = Number(localStorage.getItem("control-red-year"));
+    const selectedMonth = storedMonth >= 1 && storedMonth <= 12 ? storedMonth : 8;
+    const selectedYear = years.includes(storedYear)
+      ? storedYear
+      : years.includes(2023)
+        ? 2023
+        : years.at(-1);
 
     month.innerHTML = months
       .map(
         (name, index) =>
-          `<option value="${index + 1}" ${index === 7 ? "selected" : ""}>${name}</option>`,
+          `<option value="${index + 1}" ${index + 1 === selectedMonth ? "selected" : ""}>${name}</option>`,
       )
       .join("");
 
     year.innerHTML = years
       .map(
         (value) =>
-          `<option ${value === 2023 ? "selected" : ""}>${value}</option>`,
+          `<option value="${value}" ${value === selectedYear ? "selected" : ""}>${value}</option>`,
       )
       .join("");
 
@@ -381,9 +583,11 @@ fetch("datos-red.json")
 
     update();
     loading.style.display = "none";
-  })
-  .catch((error) => {
-    loading.textContent =
-      "No se pudieron cargar los datos. Abre la aplicación mediante GitHub Pages o un servidor web.";
+  } catch (error) {
     console.error(error);
-  });
+    loading.textContent =
+      `No se pudieron cargar los datos desde Google Sheets: ${error.message}`;
+  }
+}
+
+initializeData();
