@@ -464,7 +464,7 @@ function update() {
           * Este margen es estable y no depende del
           * redondeo automático de grace.
           */
-          scale.max *= 1.12;
+          scale.max *= 1.10;
           },
           grid: { display: false },
           border: { display: false },
