@@ -1,30 +1,29 @@
+import { GOOGLE_DATABASE } from "../js/config.js";
+import { loadGoogleSheet } from "../js/google-sheets.js";
+import {
+  excelDate,
+  formatSpanishNumber,
+  norm,
+  pad,
+  parseSpanishNumber as parseSpanishNumberShared,
+} from "../js/formats.js";
+import {
+  findColumnIndex,
+  findHeaderRow,
+  headerIndexMap,
+  sheetRows,
+} from "../js/table-utils.js";
+
 const CONFIG = {
-  spreadsheetId: "1GnN7jWdumlIezbJuB79PiG2mWSlNVf1zo8BXGmVWEpQ",
   sheets: {
-    config: "CFG_Distribuido_Poblaciones",
-    balance: "BD_Balance_Pobla",
-    red: "BD_Datos_Red",
+    config: GOOGLE_DATABASE.sheets.distribuidoPoblaciones,
+    balance: GOOGLE_DATABASE.sheets.balancePoblaciones,
+    red: GOOGLE_DATABASE.sheets.datosRed,
   },
 };
-function googleSheetCsvUrl(sheetName, headerRows = 1) {
-  const params = new URLSearchParams({
-    tqx: "out:csv",
-    sheet: sheetName,
-    headers: String(headerRows),
-    _: String(Date.now()),
-  });
 
-  return `https://docs.google.com/spreadsheets/d/${CONFIG.spreadsheetId}/gviz/tq?${params}`;
-}
-async function loadGoogleSheet(sheetName, headerRows = 1) {
-  const response = await fetch(googleSheetCsvUrl(sheetName, headerRows), { cache: "no-store" });
-  if (!response.ok) throw new Error(`${sheetName}: HTTP ${response.status}`);
-  const csv = await response.text();
-  if (!csv.trim() || /^<!doctype html/i.test(csv.trim())) {
-    throw new Error(`No se pudo leer ${sheetName}. Revisa el acceso por enlace y el nombre de la pestaña.`);
-  }
-  return XLSX.read(csv, { type: "string", raw: true, cellDates: false });
-}
+const parseSpanishNumber = (value) => parseSpanishNumberShared(value, 0);
+
 const MONTHS = [
   "Enero",
   "Febrero",
@@ -52,69 +51,11 @@ const state = {
   year: 2023,
 };
 const $ = (id) => document.getElementById(id);
-const pad = (n) => String(n).padStart(2, "0");
-const norm = (s) =>
-  String(s ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toUpperCase();
 function toast(text) {
   $("toast").textContent = text;
   $("toast").classList.add("show");
   setTimeout(() => $("toast").classList.remove("show"), 2200);
 }
-function excelDate(value) {
-  if (value == null || value === "") return "";
-  if (value instanceof Date && !isNaN(value)) return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())}`;
-  if (typeof value === "number") {
-    const d = XLSX.SSF.parse_date_code(value);
-    return d ? `${d.y}-${pad(d.m)}-${pad(d.d)}` : "";
-  }
-  const text = String(value).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  let m = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
-  m = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})$/);
-  if (m) { let y=Number(m[3]); if(y<100)y+=y>=70?1900:2000; return `${y}-${pad(m[2])}-${pad(m[1])}`; }
-  const months={enero:1,ene:1,febrero:2,feb:2,marzo:3,mar:3,abril:4,abr:4,mayo:5,may:5,junio:6,jun:6,julio:7,jul:7,agosto:8,ago:8,septiembre:9,sept:9,sep:9,octubre:10,oct:10,noviembre:11,nov:11,diciembre:12,dic:12};
-  m=text.match(/^([a-z]+)[\s/-]+(\d{2}|\d{4})$/);
-  if(m&&months[m[1]]){let y=Number(m[2]);if(y<100)y+=y>=70?1900:2000;return `${y}-${pad(months[m[1]])}-01`;}
-  return "";
-}
-function sheetRows(workbook) {
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet, {
-    header: 1,
-    defval: "",
-    raw: true,
-  });
-}
-
-function findHeaderRow(rows, requiredHeaders) {
-  return rows.findIndex((row) => {
-    const normalized = row.map(norm);
-    return requiredHeaders.every((acceptedNames) =>
-      acceptedNames.some((name) => normalized.includes(norm(name))),
-    );
-  });
-}
-
-function headerIndexMap(headerRow) {
-  const map = new Map();
-  headerRow.forEach((value, index) => {
-    map.set(norm(value), index);
-  });
-  return map;
-}
-
-function findColumnIndex(indexMap, ...acceptedNames) {
-  for (const name of acceptedNames) {
-    const index = indexMap.get(norm(name));
-    if (index !== undefined) return index;
-  }
-  return -1;
-}
-
 function parseBalance(workbook) {
   const rows = sheetRows(workbook);
   let headerRowIndex = findHeaderRow(rows, [
@@ -226,22 +167,6 @@ function parseDatosRed(workbook) {
 /*
  * Convierte correctamente números procedentes de Excel,
  * incluidos valores escritos como texto con formato español.
- */
-function parseSpanishNumber(value) {
-  if (value == null || value === "") return 0;
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  let text=String(value).trim().replace(/\s+/g, "");
-  if (!text) return 0;
-  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) text=text.replace(/\./g, "").replace(",", ".");
-  else if (/^[+-]?\d+,\d+$/.test(text)) text=text.replace(",", ".");
-  const number=Number(text);
-  return Number.isFinite(number) ? number : 0;
-}
-/*
- * Crea un acumulado mensual/*
- * Crea un acumulado mensual por:
- *
- * Procedencia 1 + año + mes
  */
 function buildRedAggregates() {
   state.redAggregates.clear();
@@ -509,15 +434,6 @@ function calculate() {
   }
   renderTable();
 }
-function formatNumber(value, decimals = 2) {
-  const number=typeof value === "number" ? value : parseSpanishNumber(value);
-  if (!Number.isFinite(number)) return String(value ?? "");
-  const factor=10 ** decimals;
-  let rounded=Math.round((number + Number.EPSILON) * factor) / factor;
-  if (Object.is(rounded,-0) || Math.abs(rounded) < 0.005) rounded=0;
-  const shownDecimals=Number.isInteger(number) ? 0 : decimals;
-  return rounded.toLocaleString("es-ES", {minimumFractionDigits:shownDecimals,maximumFractionDigits:shownDecimals,useGrouping:"always"});
-}
 function formatValue(value, column, row) {
   if (value == null || value === "") return "";
 
@@ -536,7 +452,7 @@ function formatValue(value, column, row) {
     ![7, 10].includes(column) &&
     (typeof value === "number" || String(value).trim() !== "")
   ) {
-    return formatNumber(value, 2);
+    return formatSpanishNumber(value, 2);
   }
 
   return String(value);

@@ -1,46 +1,17 @@
-const GOOGLE_SHEETS = {
-  spreadsheetId: "1GnN7jWdumlIezbJuB79PiG2mWSlNVf1zo8BXGmVWEpQ",
-  baseUrl: "https://docs.google.com/spreadsheets/d",
-};
-
-function googleSheetCsvUrl(sheetName) {
-  const params = new URLSearchParams({
-    tqx: "out:csv",
-    sheet: sheetName,
-    _: String(Date.now()),
-  });
-
-  return `${GOOGLE_SHEETS.baseUrl}/${GOOGLE_SHEETS.spreadsheetId}/gviz/tq?${params}`;
-}
-
-async function loadGoogleSheetWorkbook(sheetName) {
-  const response = await fetch(googleSheetCsvUrl(sheetName), {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Google Sheets: HTTP ${response.status}`);
-  }
-
-  const csv = await response.text();
-
-  if (!csv.trim() || /^<!doctype html/i.test(csv.trim())) {
-    throw new Error(
-      `No se pudo leer la pestaña ${sheetName}. Comprueba que el libro permita la lectura mediante enlace y que la pestaña exista.`,
-    );
-  }
-
-  return XLSX.read(csv, {
-    type: "string",
-    cellDates: true,
-    raw: true,
-  });
-}
+import { GOOGLE_DATABASE } from "../js/config.js";
+import { loadGoogleSheetWorkbook } from "../js/google-sheets.js";
+import {
+  excelDate,
+  formatSpanishNumber as num,
+  normalizeHeader,
+  pad,
+  parseSpanishNumber,
+} from "../js/formats.js";
 
 const DATASETS = {
   balance: {
     label: "Balance de poblaciones",
-    sheet: "BD_Balance_Pobla",
+    sheet: GOOGLE_DATABASE.sheets.balancePoblaciones,
     download: "BD_Balance_Poblaciones_modificado.xlsx",
     cols: [
       "FECHA",
@@ -67,7 +38,7 @@ const DATASETS = {
   },
   red: {
     label: "Datos de la Red",
-    sheet: "BD_Datos_Red",
+    sheet: GOOGLE_DATABASE.sheets.datosRed,
     download: "BD_Datos_Red_modificado.xlsx",
     cols: [
       "FECHA",
@@ -96,7 +67,7 @@ const DATASETS = {
   },
   longitud: {
     label: "Longitud de la Red",
-    sheet: "BD_Longitud_Red",
+    sheet: GOOGLE_DATABASE.sheets.longitudRed,
     download: "BD_Longitud_Red_modificado.xlsx",
     cols: ["FECHA", "COD", "POBLACIÓN", "Longitud de red (km)"],
     labels: {
@@ -110,7 +81,7 @@ const DATASETS = {
   },
   chg: {
     label: "CHG Población",
-    sheet: "BD_CHG_Poblacion",
+    sheet: GOOGLE_DATABASE.sheets.chgPoblacion,
     download: "BD_CHG_Poblacion_modificado.xlsx",
     cols: ["Año", "POBLACIÓN", "Nº Habitantes", "Referencia"],
     labels: {
@@ -125,7 +96,7 @@ const DATASETS = {
   },
   acucon: {
     label: "Datos ACUCON",
-    sheet: "BD_Datos_ACUCON",
+    sheet: GOOGLE_DATABASE.sheets.datosAcucon,
     download: "BD_Datos_ACUCON_modificado.xlsx",
     cols: [
       "Fecha",
@@ -186,7 +157,7 @@ const DATASETS = {
   },
   carnf: {
     label: "Datos CARNF",
-    sheet: "BD_Datos_CARNF",
+    sheet: GOOGLE_DATABASE.sheets.datosCarnf,
     download: "BD_Datos_CARNF_modificado.xlsx",
     cols: [
       "FECHA",
@@ -260,7 +231,7 @@ const DATASETS = {
   },
   aforos: {
     label: "Datos Aforos y Pérdidas",
-    sheet: "BD_Datos_Aforos_y_Perdidas",
+    sheet: GOOGLE_DATABASE.sheets.datosAforosPerdidas,
     download: "BD_Datos_Aforos_y_Perdidas_modificado.xlsx",
     cols: [
       "FECHA",
@@ -313,7 +284,6 @@ const stores = {
     acucon: { rows: null, changes: 0 },
     carnf: { rows: null, changes: 0 },
     aforos: { rows: null, changes: 0 },
-    carnf: { rows: null, changes: 0 },
   },
   $ = (id) => document.getElementById(id),
   cfg = () => DATASETS[activeKey];
@@ -325,176 +295,6 @@ const esc = (v) =>
         c
       ],
   );
-const pad = (n) => String(n).padStart(2, "0");
-function excelDate(value) {
-  if (value == null || value === "") return "";
-
-  if (value instanceof Date && !isNaN(value)) {
-    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
-  }
-
-  if (typeof value === "number") {
-    const parsed = XLSX.SSF.parse_date_code(value);
-    return parsed
-      ? `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)}`
-      : "";
-  }
-
-  const text = String(value)
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-  /* 2009-01-01 */
-  let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (match) {
-    return `${match[1]}-${pad(match[2])}-${pad(match[3])}`;
-  }
-
-  /* 01/01/2009, 1/1/2009, 01-01-09 */
-  match = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2}|\d{4})$/);
-  if (match) {
-    let year = Number(match[3]);
-    if (year < 100) year += year >= 70 ? 1900 : 2000;
-    return `${year}-${pad(match[2])}-${pad(match[1])}`;
-  }
-
-  /* enero-09, ene-09, enero-2009, enero/2009, ene 2009 */
-  const monthNumbers = {
-    enero: 1,
-    ene: 1,
-    febrero: 2,
-    feb: 2,
-    marzo: 3,
-    mar: 3,
-    abril: 4,
-    abr: 4,
-    mayo: 5,
-    may: 5,
-    junio: 6,
-    jun: 6,
-    julio: 7,
-    jul: 7,
-    agosto: 8,
-    ago: 8,
-    septiembre: 9,
-    sept: 9,
-    sep: 9,
-    octubre: 10,
-    oct: 10,
-    noviembre: 11,
-    nov: 11,
-    diciembre: 12,
-    dic: 12,
-  };
-
-  match = text.match(/^([a-z]+)[\s\/-]+(\d{2}|\d{4})$/);
-  if (match && monthNumbers[match[1]]) {
-    let year = Number(match[2]);
-    if (year < 100) year += year >= 70 ? 1900 : 2000;
-    return `${year}-${pad(monthNumbers[match[1]])}-01`;
-  }
-
-  /* Respuesta alternativa de Google: Date(2009,0,1) */
-  match = text.match(/^date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})\)$/);
-  if (match) {
-    return `${match[1]}-${pad(Number(match[2]) + 1)}-${pad(match[3])}`;
-  }
-
-  console.warn("Fecha no reconocida:", value);
-  return "";
-}
-function parseSpanishNumber(value) {
-  if (value == null || value === "") {
-    return "";
-  }
-  /* Si ya es un número válido, lo conservamos.*/
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : "";
-  }
-  let text = String(value)
-    .trim()
-    .replace(/\s+/g, "");
-
-  if (!text) {
-    return "";
-  }
-  /* Formato español con separadores de miles:
-   * 4.916           -> 4916
-   * 7.897.930       -> 7897930
-   * 1.234.567,89    -> 1234567.89
-   * -25.306,20      -> -25306.20*/
-  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) {
-    text = text
-      .replace(/\./g, "")
-      .replace(",", ".");
-  }
-
-  /* Decimal español sin separadores de miles:
-   *
-   * 4,92    -> 4.92
-   * -0,25   -> -0.25*/
-  else if (/^[+-]?\d+,\d+$/.test(text)) {
-    text = text.replace(",", ".");
-  }
-  /* Número entero normal.*/
-  else if (/^[+-]?\d+$/.test(text)) {
-    // No necesita transformación.
-  }
-  /* Como respaldo, admite números con punto decimal
-   * cuando no tienen el patrón español de miles.*/
-  else if (/^[+-]?\d+\.\d+$/.test(text)) {
-    // No necesita transformación.
-  }
-  const number = Number(text);
-  return Number.isFinite(number) ? number : "";
-}
-function parseSpanishNumber(value) {
-  if (value == null || value === "") {
-    return "";
-  }
-  /* Si ya es un número válido, lo conservamos.*/
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : "";
-  }
-  let text = String(value)
-    .trim()
-    .replace(/\s+/g, "");
-
-  if (!text) {
-    return "";
-  }
-  /* Formato español con separadores de miles:
-   * 4.916           -> 4916
-   * 7.897.930       -> 7897930
-   * 1.234.567,89    -> 1234567.89
-   * -25.306,20      -> -25306.20*/
-  if (/^[+-]?\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) {
-    text = text
-      .replace(/\./g, "")
-      .replace(",", ".");
-  }
-
-  /* Decimal español sin separadores de miles:
-   *
-   * 4,92    -> 4.92
-   * -0,25   -> -0.25*/
-  else if (/^[+-]?\d+,\d+$/.test(text)) {
-    text = text.replace(",", ".");
-  }
-  /* Número entero normal.*/
-  else if (/^[+-]?\d+$/.test(text)) {
-    // No necesita transformación.
-  }
-  /* Como respaldo, admite números con punto decimal
-   * cuando no tienen el patrón español de miles.*/
-  else if (/^[+-]?\d+\.\d+$/.test(text)) {
-    // No necesita transformación.
-  }
-  const number = Number(text);
-  return Number.isFinite(number) ? number : "";
-}
 const displayDate = (v) => {
   const s = excelDate(v);
   return s ? `${s.slice(8, 10)}/${s.slice(5, 7)}/${s.slice(0, 4)}` : "";
@@ -549,13 +349,6 @@ function isCalculatedCol(c, x) {
     x === c.totalCol ||
     (c.totalCols || c.calculatedTotals || []).some((t) => t.col === x)
   );
-}
-function normalizeHeader(v) {
-  return String(v ?? "")
-    .replace(/[\u200B-\u200D\uFEFF]/g, "")
-    .replace(/\u00A0/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 function calculatedRowsFromSheet(ws, c) {
   const data = XLSX.utils.sheet_to_json(ws, {
