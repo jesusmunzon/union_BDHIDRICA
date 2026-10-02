@@ -458,7 +458,7 @@ function update() {
         x: {
           display: false,
           beginAtZero: true,
-          grace: "10%",
+          grace: "15%",
           grid: { display: false },
           border: { display: false },
         },
