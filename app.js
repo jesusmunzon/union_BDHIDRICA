@@ -458,7 +458,14 @@ function update() {
         x: {
           display: false,
           beginAtZero: true,
-          grace: "12%",
+          afterDataLimits(scale) {
+          /*
+          * Reserva un 12 % respecto al valor máximo.
+          * Este margen es estable y no depende del
+          * redondeo automático de grace.
+          */
+          scale.max *= 1.12;
+          },
           grid: { display: false },
           border: { display: false },
         },
