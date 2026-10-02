@@ -1,45 +1,29 @@
-import {
-  GOOGLE_DATABASE,
-} from "./config.js";
+import { GOOGLE_DATABASE } from "./config.js";
 
-export function googleSheetCsvUrl(sheetName) {
-  const parameters = new URLSearchParams({
+export function googleSheetCsvUrl(sheetName, headerRows = 1) {
+  const params = new URLSearchParams({
     tqx: "out:csv",
     sheet: sheetName,
-    headers: "1",
+    headers: String(headerRows),
     _: String(Date.now()),
   });
 
-  return (
-    "https://docs.google.com/spreadsheets/d/" +
-    `${GOOGLE_DATABASE.spreadsheetId}/gviz/tq?` +
-    parameters
-  );
+  return `${GOOGLE_DATABASE.baseUrl}/${GOOGLE_DATABASE.spreadsheetId}/gviz/tq?${params}`;
 }
 
-export async function loadGoogleSheet(sheetName) {
-  const response = await fetch(
-    googleSheetCsvUrl(sheetName),
-    {
-      cache: "no-store",
-    },
-  );
+export async function loadGoogleSheetWorkbook(sheetName, headerRows = 1) {
+  const response = await fetch(googleSheetCsvUrl(sheetName, headerRows), {
+    cache: "no-store",
+  });
 
   if (!response.ok) {
-    throw new Error(
-      `${sheetName}: HTTP ${response.status}`,
-    );
+    throw new Error(`${sheetName}: HTTP ${response.status}`);
   }
 
   const csv = await response.text();
-
-  if (
-    !csv.trim() ||
-    /^<!doctype html/i.test(csv.trim())
-  ) {
+  if (!csv.trim() || /^<!doctype html/i.test(csv.trim())) {
     throw new Error(
-      `No se pudo leer la pestaña ${sheetName}. ` +
-      "Comprueba el acceso y el nombre.",
+      `No se pudo leer ${sheetName}. Revisa el acceso por enlace y el nombre de la pestaña.`,
     );
   }
 
@@ -50,17 +34,4 @@ export async function loadGoogleSheet(sheetName) {
   });
 }
 
-export async function loadGoogleSheets(
-  sheetNames,
-) {
-  const workbooks = await Promise.all(
-    sheetNames.map(loadGoogleSheet),
-  );
-
-  return Object.fromEntries(
-    sheetNames.map((sheetName, index) => [
-      sheetName,
-      workbooks[index],
-    ]),
-  );
-}
+export const loadGoogleSheet = loadGoogleSheetWorkbook;

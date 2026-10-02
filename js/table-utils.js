@@ -1,11 +1,7 @@
-import {
-  normalizeText,
-} from "./formats.js";
+import { norm } from "./formats.js";
 
 export function sheetRows(workbook) {
-  const sheet =
-    workbook.Sheets[workbook.SheetNames[0]];
-
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
   return XLSX.utils.sheet_to_json(sheet, {
     header: 1,
     defval: "",
@@ -13,44 +9,25 @@ export function sheetRows(workbook) {
   });
 }
 
-export function findHeaderRow(
-  rows,
-  requiredHeaders,
-) {
+export function findHeaderRow(rows, requiredHeaders) {
   return rows.findIndex((row) => {
-    const normalized = row.map(normalizeText);
-
+    const normalized = row.map(norm);
     return requiredHeaders.every((acceptedNames) =>
-      acceptedNames.some((name) =>
-        normalized.includes(normalizeText(name)),
-      ),
+      acceptedNames.some((name) => normalized.includes(norm(name))),
     );
   });
 }
 
 export function headerIndexMap(headerRow) {
-  const indexes = new Map();
-
-  headerRow.forEach((value, index) => {
-    indexes.set(normalizeText(value), index);
-  });
-
-  return indexes;
+  const map = new Map();
+  headerRow.forEach((value, index) => map.set(norm(value), index));
+  return map;
 }
 
-export function findColumnIndex(
-  indexMap,
-  ...acceptedNames
-) {
+export function findColumnIndex(indexMap, ...acceptedNames) {
   for (const name of acceptedNames) {
-    const index = indexMap.get(
-      normalizeText(name),
-    );
-
-    if (index !== undefined) {
-      return index;
-    }
+    const index = indexMap.get(norm(name));
+    if (index !== undefined) return index;
   }
-
   return -1;
 }
