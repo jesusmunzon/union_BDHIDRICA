@@ -231,8 +231,21 @@ const sum = (pred, y, m = 12) =>
  * Agua captada: se agrupa únicamente por PROCEDENCIA_1.
  * El valor sumado es siempre AJUSTE, almacenado en record.v.
  */
-const capPred = (name) => (record) =>
-  norm(record.p1) === norm(name);
+const capPred = (name) => (record) => {
+  const searchedSource = norm(name);
+
+  /*
+   * Minilla y Gergal se buscan en PROCEDENCIA_1.
+   * Melonares se busca en PROCEDENCIA_2.
+   * El valor sumado es siempre AJUSTE, almacenado en record.v.
+   */
+  const source =
+    searchedSource === "MELONARES"
+      ? norm(record.p2)
+      : norm(record.p1);
+
+  return source.includes(searchedSource);
+};
 
 function isLeapYear(yearValue) {
   return (
