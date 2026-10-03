@@ -156,15 +156,32 @@ function parseDistributedConfig(workbook) {
     const isBurguillos =
       norm(name) === "ATE BURGUILLOS" && norm(population) === "BURGUILLOS";
 
-    if (currentBlock && (code || isBurguillos) && [-1, 0, 1].includes(factor)) {
+    /*
+     * La primera población puede llegar desde Google Sheets sin una fila
+     * de título independiente. En ese caso, usar exclusivamente currentBlock
+     * deja fuera todo el primer bloque. La columna POBLACIÓN identifica el
+     * bloque de forma segura para esas filas de detalle.
+     */
+    const populationBlock = currentBlock || population;
+
+    if (
+      populationBlock &&
+      (code || isBurguillos) &&
+      [-1, 0, 1].includes(factor)
+    ) {
       result.push({
-        block: currentBlock,
+        block: populationBlock,
         code,
         name,
         population,
         factor,
         isBurguillos,
       });
+
+      /* Conserva el bloque detectado para las filas siguientes. */
+      if (!currentBlock && population) {
+        currentBlock = population;
+      }
     }
   }
 
@@ -280,100 +297,51 @@ function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
 }
 const interPred = (sub) => (r) => norm(r.sub) === norm(sub);
 function distributedPeriod(dataYear, selectedYear, selectedMonth) {
-  const isSelectedYear = dataYear === selectedYear;
-
+  const selected = dataYear === selectedYear;
   return {
-    endMonth: isSelectedYear ? selectedMonth : 12,
-    dayCount: isSelectedYear
+    endMonth: selected ? selectedMonth : 12,
+    days: selected
       ? daysThroughMonth(dataYear, selectedMonth)
       : daysInYear(dataYear),
   };
 }
 
-function distributedComponentsAccumulated(dataYear, endMonth) {
-  /*
-   * Todos los componentes se suman sobre AJUSTE (record.v).
-   * No se modifica ninguna configuración visual del gráfico.
-   */
-  const imported = sum(
-    (record) => norm(record.sub) === "AGUA TRATADA IMPORTADA",
-    dataYear,
-    endMonth,
-  );
-
-  const produced = sum(
-    (record) => norm(record.sub) === "AGUA PRODUCIDA ETAP",
-    dataYear,
-    endMonth,
-  );
-
+function distributedTotalAccumulated(dataYear, endMonth) {
+  const imported = sum(interPred("AGUA TRATADA IMPORTADA"), dataYear, endMonth);
+  const produced = sum(interPred("AGUA PRODUCIDA ETAP"), dataYear, endMonth);
   const reservoirBalance = sum(
-    (record) => norm(record.p1) === "BALANCE DEPOSITOS",
+    (record) => norm(record.p1).includes("BALANCE DEPOSITOS"),
     dataYear,
     endMonth,
   );
+  const exported = sum(interPred("AGUA TRATADA EXPORTADA"), dataYear, endMonth);
 
-  const exported = sum(
-    (record) => norm(record.sub) === "AGUA TRATADA EXPORTADA",
-    dataYear,
-    endMonth,
-  );
-
-  return {
-    imported,
-    produced,
-    reservoirBalance,
-    exported,
-    distributed: imported + produced - reservoirBalance - exported,
-  };
+  return imported + produced - reservoirBalance - exported;
 }
 
 function populationsAccumulated(dataYear, endMonth) {
-  /*
-   * Es exactamente la suma de los totales calculados para cada bloque
-   * de CFG_Distribuido_Poblaciones, con sus factores y la excepción
-   * de Burguillos.
-   */
-  const totalsByPopulation = populationAccumulatedTotals(
-    dataYear,
-    endMonth,
-  );
-
-  return [...totalsByPopulation.values()].reduce(
+  return [...populationAccumulatedTotals(dataYear, endMonth).values()].reduce(
     (total, value) => total + Number(value || 0),
     0,
   );
 }
 
 function distributedDaily(dataYear, selectedYear, selectedMonth) {
-  const { endMonth, dayCount } = distributedPeriod(
+  const { endMonth, days } = distributedPeriod(
     dataYear,
     selectedYear,
     selectedMonth,
   );
 
-  if (!dayCount) {
-    return { distributed: 0, sevilla: 0, populations: 0 };
-  }
+  if (!days) return { distributed: 0, sevilla: 0, populations: 0 };
 
-  const components = distributedComponentsAccumulated(
-    dataYear,
-    endMonth,
-  );
-
-  const populationsVolume = populationsAccumulated(
-    dataYear,
-    endMonth,
-  );
-
-  const distributed = components.distributed / dayCount;
-  const populations = populationsVolume / dayCount;
-  const sevilla = distributed - populations;
+  const distributed = distributedTotalAccumulated(dataYear, endMonth) / days;
+  const populations = populationsAccumulated(dataYear, endMonth) / days;
 
   return {
     distributed,
-    sevilla,
     populations,
+    sevilla: distributed - populations,
   };
 }
 
