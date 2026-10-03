@@ -230,6 +230,8 @@ const formatM3Day = (value) =>
     useGrouping: true,
   }) + " m³/día";
 
+const dam = (value) => value / 1e3;
+
 const sum = (pred, y, m = 12) =>
   D.filter(
     (r) => +r.d.slice(0, 4) === y && +r.d.slice(5, 7) <= m && pred(r),
@@ -310,7 +312,22 @@ function chart(id, type, data, options = {}) {
           callbacks: {
             label: (c) => {
               if (c.chart.canvas.id === "captada") {
-                return " " + c.dataset.label + ": " + formatM3Day(c.raw);
+                const actualValue = c.dataset.actualValues?.[c.dataIndex] ?? 0;
+                return " " + c.dataset.label + ": " + formatM3Day(actualValue);
+              }
+
+              if (["bruta", "importada", "exportada"].includes(c.chart.canvas.id)) {
+                return (
+                  " " +
+                  c.dataset.label +
+                  ": " +
+                  Number(c.raw).toLocaleString("es-ES", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                    useGrouping: true,
+                  }) +
+                  " dam³"
+                );
               }
 
               return " " + c.dataset.label + ": " + formatM3(c.raw);
@@ -347,7 +364,7 @@ function monthly(sub, y) {
    * Diciembre = acumulado anual
    * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.*/
   return months.map((_, i) =>
-    sum(interPred(sub), y, i + 1),
+    dam(sum(interPred(sub), y, i + 1)),
   );
 }
 function update() {
@@ -383,6 +400,30 @@ function update() {
     pct.toLocaleString("es-ES", { maximumFractionDigits: 1 }) +
     " %";
   k4.style.color = pct >= 0 ? C.green : "#d64545";
+  const capturedBySource = {
+    Melonares: ys.map((dataYear) =>
+      capturedDaily("Melonares", dataYear, y, m),
+    ),
+    Gergal: ys.map((dataYear) =>
+      capturedDaily("Gergal", dataYear, y, m),
+    ),
+    Minilla: ys.map((dataYear) =>
+      capturedDaily("Minilla", dataYear, y, m),
+    ),
+  };
+
+  const capturedYearTotals = ys.map((_, index) =>
+    capturedBySource.Melonares[index] +
+    capturedBySource.Gergal[index] +
+    capturedBySource.Minilla[index],
+  );
+
+  const capturedPercentages = (sourceValues) =>
+    sourceValues.map((value, index) => {
+      const totalValue = capturedYearTotals[index];
+      return totalValue ? (value / totalValue) * 100 : 0;
+    });
+
   chart(
     "captada",
     "bar",
@@ -391,25 +432,40 @@ function update() {
       datasets: [
         {
           label: "Melonares",
-          data: ys.map((z) => capturedDaily("Melonares", z, y, m)),
+          data: capturedPercentages(capturedBySource.Melonares),
+          actualValues: capturedBySource.Melonares,
           backgroundColor: C.blue,
           borderRadius: 3,
         },
         {
           label: "Gergal",
-          data: ys.map((z) => capturedDaily("Gergal", z, y, m)),
+          data: capturedPercentages(capturedBySource.Gergal),
+          actualValues: capturedBySource.Gergal,
           backgroundColor: C.cyan,
           borderRadius: 3,
         },
         {
           label: "Minilla",
-          data: ys.map((z) => capturedDaily("Minilla", z, y, m)),
+          data: capturedPercentages(capturedBySource.Minilla),
+          actualValues: capturedBySource.Minilla,
           backgroundColor: C.navy,
           borderRadius: 3,
         },
       ],
     },
-    { scales: { x: { stacked: true }, y: { stacked: true } } },
+    {
+      scales: {
+        x: { stacked: true },
+        y: {
+          stacked: true,
+          min: 0,
+          max: 100,
+          ticks: {
+            callback: (value) => `${value} %`,
+          },
+        },
+      },
+    },
   );
   [
     ["bruta", "AGUA ADUCIDA BRUTA EXPORTADA", C.orange],
