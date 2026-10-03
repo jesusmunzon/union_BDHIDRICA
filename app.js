@@ -216,13 +216,15 @@ function populationAccumulatedTotals(selectedYear, selectedMonth) {
   return totals;
 }
 
-const hm = (v) => v / 1e6;
-const dam = (v) => v / 1e3;
-const fmt = (v) =>
-  new Intl.NumberFormat("es-ES", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 1,
-  }).format(v) + " hm³";
+const dam = (valueM3) => valueM3 / 1e3;
+
+/* Formato general de Estadísticos 1: metros cúbicos. */
+const fmt = (valueM3) =>
+  Number(valueM3).toLocaleString("es-ES", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  }) + " m³";
 const sum = (pred, y, m = 12) =>
   D.filter(
     (r) => +r.d.slice(0, 4) === y && +r.d.slice(5, 7) <= m && pred(r),
@@ -456,11 +458,11 @@ function update() {
   const dist = ys.map((yy) => distributed(yy, m));
   k1.textContent =
     Math.round(captured.at(-1) || 0).toLocaleString("es-ES") + " m³/día";
-  k2.textContent = fmt(hm(dist.at(-1)));
+  k2.textContent = fmt(dist.at(-1));
   const bal =
     sum(interPred("AGUA TRATADA IMPORTADA"), y, m) -
     sum(interPred("AGUA TRATADA EXPORTADA"), y, m);
-  k3.textContent = fmt(hm(bal));
+  k3.textContent = fmt(bal);
   const dp = distributed(prev, m),
     pct = dp ? (distributed(y, m) / dp - 1) * 100 : 0;
   k4.textContent =
@@ -540,12 +542,13 @@ function update() {
       ],
     }),
   );
+  /* Agua distribuida conserva el gráfico de líneas y puntos. */
   chart("distribuida", "line", {
     labels: ys,
     datasets: [
       {
         label: "Sevilla",
-        data: ys.map((z) => hm(distributed(z, m, true))),
+        data: ys.map((z) => distributed(z, m, true)),
         borderColor: C.blue,
         backgroundColor: C.blue,
         tension: 0.3,
@@ -553,7 +556,9 @@ function update() {
       },
       {
         label: "Resto de poblaciones",
-        data: ys.map((z) => hm(distributed(z, m) - distributed(z, m, true))),
+        data: ys.map(
+          (z) => distributed(z, m) - distributed(z, m, true),
+        ),
         borderColor: C.green,
         backgroundColor: C.green,
         tension: 0.3,
