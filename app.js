@@ -314,8 +314,19 @@ function chart(id, type, data, options = {}) {
   });
 }
 function monthly(sub, y) {
+  /*
+   * Serie mensual acumulada desde enero.
+   *
+   * Enero   = enero
+   * Febrero = enero + febrero
+   * Marzo   = enero + febrero + marzo
+   * ...
+   * Diciembre = acumulado anual
+   *
+   * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.
+   */
   return months.map((_, i) =>
-    hm(sum(interPred(sub), y, i + 1) - sum(interPred(sub), y, i)),
+    hm(sum(interPred(sub), y, i + 1)),
   );
 }
 function update() {
