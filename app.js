@@ -280,51 +280,100 @@ function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
 }
 const interPred = (sub) => (r) => norm(r.sub) === norm(sub);
 function distributedPeriod(dataYear, selectedYear, selectedMonth) {
-  const selected = dataYear === selectedYear;
+  const isSelectedYear = dataYear === selectedYear;
+
   return {
-    endMonth: selected ? selectedMonth : 12,
-    days: selected
+    endMonth: isSelectedYear ? selectedMonth : 12,
+    dayCount: isSelectedYear
       ? daysThroughMonth(dataYear, selectedMonth)
       : daysInYear(dataYear),
   };
 }
 
-function distributedTotalAccumulated(dataYear, endMonth) {
-  const imported = sum(interPred("AGUA TRATADA IMPORTADA"), dataYear, endMonth);
-  const produced = sum(interPred("AGUA PRODUCIDA ETAP"), dataYear, endMonth);
-  const reservoirBalance = sum(
-    (record) => norm(record.p1).includes("BALANCE DEPOSITOS"),
+function distributedComponentsAccumulated(dataYear, endMonth) {
+  /*
+   * Todos los componentes se suman sobre AJUSTE (record.v).
+   * No se modifica ninguna configuración visual del gráfico.
+   */
+  const imported = sum(
+    (record) => norm(record.sub) === "AGUA TRATADA IMPORTADA",
     dataYear,
     endMonth,
   );
-  const exported = sum(interPred("AGUA TRATADA EXPORTADA"), dataYear, endMonth);
 
-  return imported + produced - reservoirBalance - exported;
+  const produced = sum(
+    (record) => norm(record.sub) === "AGUA PRODUCIDA ETAP",
+    dataYear,
+    endMonth,
+  );
+
+  const reservoirBalance = sum(
+    (record) => norm(record.p1) === "BALANCE DEPOSITOS",
+    dataYear,
+    endMonth,
+  );
+
+  const exported = sum(
+    (record) => norm(record.sub) === "AGUA TRATADA EXPORTADA",
+    dataYear,
+    endMonth,
+  );
+
+  return {
+    imported,
+    produced,
+    reservoirBalance,
+    exported,
+    distributed: imported + produced - reservoirBalance - exported,
+  };
 }
 
 function populationsAccumulated(dataYear, endMonth) {
-  return [...populationAccumulatedTotals(dataYear, endMonth).values()].reduce(
+  /*
+   * Es exactamente la suma de los totales calculados para cada bloque
+   * de CFG_Distribuido_Poblaciones, con sus factores y la excepción
+   * de Burguillos.
+   */
+  const totalsByPopulation = populationAccumulatedTotals(
+    dataYear,
+    endMonth,
+  );
+
+  return [...totalsByPopulation.values()].reduce(
     (total, value) => total + Number(value || 0),
     0,
   );
 }
 
 function distributedDaily(dataYear, selectedYear, selectedMonth) {
-  const { endMonth, days } = distributedPeriod(
+  const { endMonth, dayCount } = distributedPeriod(
     dataYear,
     selectedYear,
     selectedMonth,
   );
 
-  if (!days) return { distributed: 0, sevilla: 0, populations: 0 };
+  if (!dayCount) {
+    return { distributed: 0, sevilla: 0, populations: 0 };
+  }
 
-  const distributed = distributedTotalAccumulated(dataYear, endMonth) / days;
-  const populations = populationsAccumulated(dataYear, endMonth) / days;
+  const components = distributedComponentsAccumulated(
+    dataYear,
+    endMonth,
+  );
+
+  const populationsVolume = populationsAccumulated(
+    dataYear,
+    endMonth,
+  );
+
+  const distributed = components.distributed / dayCount;
+  const populations = populationsVolume / dayCount;
+  const sevilla = distributed - populations;
 
   return {
     distributed,
+    sevilla,
     populations,
-    sevilla: distributed - populations,
   };
 }
 
