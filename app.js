@@ -217,6 +217,7 @@ function populationAccumulatedTotals(selectedYear, selectedMonth) {
 }
 
 const hm = (v) => v / 1e6;
+const dam = (v) => v / 1e3;
 const fmt = (v) =>
   new Intl.NumberFormat("es-ES", {
     maximumFractionDigits: 1,
@@ -273,8 +274,11 @@ function chart(id, type, data, options = {}) {
         tooltip: {
           callbacks: {
             label: (c) => {
+              /* Distribución por poblaciones:
+              * datos del gráfico en hm³, presentación en m³.*/
               if (c.chart.canvas.id === "poblaciones") {
                 const valueM3 = Number(c.raw) * 1e6;
+
                 return (
                   " " +
                   c.dataset.label +
@@ -288,7 +292,42 @@ function chart(id, type, data, options = {}) {
                 );
               }
 
-              return " " + c.dataset.label + ": " + fmt(c.raw);
+              /*
+              * Gráficos acumulados mensuales:
+              * valores ya convertidos a dam³ por monthly().
+              */
+              if (
+                [
+                  "bruta",
+                  "importada",
+                  "exportada",
+                ].includes(c.chart.canvas.id)
+              ) {
+                return (
+                  " " +
+                  c.dataset.label +
+                  ": " +
+                  Number(c.raw).toLocaleString(
+                    "es-ES",
+                    {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                      useGrouping: true,
+                    },
+                  ) +
+                  " dam³"
+                );
+              }
+
+              /*
+              * Resto de gráficos en hm³.
+              */
+              return (
+                " " +
+                c.dataset.label +
+                ": " +
+                fmt(c.raw)
+              );
             },
           },
         },
@@ -314,19 +353,15 @@ function chart(id, type, data, options = {}) {
   });
 }
 function monthly(sub, y) {
-  /*
-   * Serie mensual acumulada desde enero.
-   *
+  /* Serie mensual acumulada desde enero.
    * Enero   = enero
    * Febrero = enero + febrero
    * Marzo   = enero + febrero + marzo
    * ...
    * Diciembre = acumulado anual
-   *
-   * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.
-   */
+   * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.*/
   return months.map((_, i) =>
-    hm(sum(interPred(sub), y, i + 1)),
+    dam(sum(interPred(sub), y, i + 1)),
   );
 }
 function update() {
