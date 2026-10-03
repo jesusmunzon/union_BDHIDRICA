@@ -506,8 +506,11 @@ function update() {
     sum(interPred("AGUA TRATADA IMPORTADA"), y, m) -
     sum(interPred("AGUA TRATADA EXPORTADA"), y, m);
   k3.textContent = fmt(bal);
-  const dp = distributed(prev, m),
-    pct = dp ? (distributed(y, m) / dp - 1) * 100 : 0;
+  const previousDistributedDaily = distributedDaily(prev, y, m).distributed;
+  const currentDistributedDaily = distributedDaily(y, y, m).distributed;
+  const pct = previousDistributedDaily
+    ? (currentDistributedDaily / previousDistributedDaily - 1) * 100
+    : 0;
   k4.textContent =
     (pct >= 0 ? "+" : "") +
     pct.toLocaleString("es-ES", { maximumFractionDigits: 1 }) +
