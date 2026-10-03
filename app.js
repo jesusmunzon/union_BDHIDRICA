@@ -216,25 +216,60 @@ function populationAccumulatedTotals(selectedYear, selectedMonth) {
   return totals;
 }
 
-const hm = (v) => v / 1e6;
-const dam = (v) => v / 1e3;
-const fmt = (v) =>
-  new Intl.NumberFormat("es-ES", {
-    maximumFractionDigits: 1,
-    minimumFractionDigits: 1,
-  }).format(v) + " hm³";
+const formatM3 = (value) =>
+  Number(value).toLocaleString("es-ES", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  }) + " m³";
+
+const formatM3Day = (value) =>
+  Number(value).toLocaleString("es-ES", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  }) + " m³/día";
+
 const sum = (pred, y, m = 12) =>
   D.filter(
     (r) => +r.d.slice(0, 4) === y && +r.d.slice(5, 7) <= m && pred(r),
   ).reduce((a, r) => a + r.v, 0);
-const capPred = (name) => (r) =>
-  r.tipo === "AGUA CAPTADA" &&
-  r.sub === "AGUA BRUTA" &&
-  (name === "Melonares"
-    ? norm(r.p2) === "MELONARES"
-    : name === "Gergal"
-      ? norm(r.p1) === "GERGAL"
-      : norm(r.p1) === "MINILLA");
+
+/*
+ * Agua captada: búsqueda exclusivamente en PROCEDENCIA_1.
+ * El valor agregado procede siempre de AJUSTE, almacenado en r.v.
+ */
+const capPred = (name) => (r) => norm(r.p1) === norm(name);
+
+function isLeapYear(yearValue) {
+  return (
+    yearValue % 400 === 0 ||
+    (yearValue % 4 === 0 && yearValue % 100 !== 0)
+  );
+}
+
+function daysInYear(yearValue) {
+  return isLeapYear(yearValue) ? 366 : 365;
+}
+
+function elapsedDaysThroughMonth(yearValue, monthValue) {
+  return Math.round(
+    (Date.UTC(yearValue, monthValue, 1) - Date.UTC(yearValue, 0, 1)) /
+      86400000,
+  );
+}
+
+function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
+  const isSelectedYear = dataYear === selectedYear;
+  const lastMonth = isSelectedYear ? selectedMonth : 12;
+  const divisor = isSelectedYear
+    ? elapsedDaysThroughMonth(dataYear, selectedMonth)
+    : daysInYear(dataYear);
+
+  if (!divisor) return 0;
+  return sum(capPred(source), dataYear, lastMonth) / divisor;
+}
+
 const interPred = (sub) => (r) => norm(r.sub) === norm(sub);
 function distributed(y, m, sevillaOnly = false) {
   const produced =
@@ -274,60 +309,11 @@ function chart(id, type, data, options = {}) {
         tooltip: {
           callbacks: {
             label: (c) => {
-              /* Distribución por poblaciones:
-              * datos del gráfico en hm³, presentación en m³.*/
-              if (c.chart.canvas.id === "poblaciones") {
-                const valueM3 = Number(c.raw) * 1e6;
-
-                return (
-                  " " +
-                  c.dataset.label +
-                  ": " +
-                  valueM3.toLocaleString("es-ES", {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                    useGrouping: true,
-                  }) +
-                  " m³"
-                );
+              if (c.chart.canvas.id === "captada") {
+                return " " + c.dataset.label + ": " + formatM3Day(c.raw);
               }
 
-              /*
-              * Gráficos acumulados mensuales:
-              * valores ya convertidos a dam³ por monthly().
-              */
-              if (
-                [
-                  "bruta",
-                  "importada",
-                  "exportada",
-                ].includes(c.chart.canvas.id)
-              ) {
-                return (
-                  " " +
-                  c.dataset.label +
-                  ": " +
-                  Number(c.raw).toLocaleString(
-                    "es-ES",
-                    {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 2,
-                      useGrouping: true,
-                    },
-                  ) +
-                  " dam³"
-                );
-              }
-
-              /*
-              * Resto de gráficos en hm³.
-              */
-              return (
-                " " +
-                c.dataset.label +
-                ": " +
-                fmt(c.raw)
-              );
+              return " " + c.dataset.label + ": " + formatM3(c.raw);
             },
           },
         },
@@ -361,7 +347,7 @@ function monthly(sub, y) {
    * Diciembre = acumulado anual
    * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.*/
   return months.map((_, i) =>
-    dam(sum(interPred(sub), y, i + 1)),
+    sum(interPred(sub), y, i + 1),
   );
 }
 function update() {
@@ -378,17 +364,18 @@ function update() {
   const ys = availableYears.filter((yy) => yy >= y - 10 && yy <= y);
   const captured = ys.map((yy) =>
     ["Melonares", "Gergal", "Minilla"].reduce(
-      (a, n) => a + sum(capPred(n), yy, m),
+      (total, source) =>
+        total + capturedDaily(source, yy, y, m),
       0,
     ),
   );
   const dist = ys.map((yy) => distributed(yy, m));
-  k1.textContent = fmt(captured.at(-1));
-  k2.textContent = fmt(hm(dist.at(-1)));
+  k1.textContent = formatM3Day(captured.at(-1));
+  k2.textContent = formatM3(dist.at(-1));
   const bal =
     sum(interPred("AGUA TRATADA IMPORTADA"), y, m) -
     sum(interPred("AGUA TRATADA EXPORTADA"), y, m);
-  k3.textContent = fmt(hm(bal));
+  k3.textContent = formatM3(bal);
   const dp = distributed(prev, m),
     pct = dp ? (distributed(y, m) / dp - 1) * 100 : 0;
   k4.textContent =
@@ -404,19 +391,19 @@ function update() {
       datasets: [
         {
           label: "Melonares",
-          data: ys.map((z) => hm(sum(capPred("Melonares"), z, m))),
+          data: ys.map((z) => capturedDaily("Melonares", z, y, m)),
           backgroundColor: C.blue,
           borderRadius: 3,
         },
         {
           label: "Gergal",
-          data: ys.map((z) => hm(sum(capPred("Gergal"), z, m))),
+          data: ys.map((z) => capturedDaily("Gergal", z, y, m)),
           backgroundColor: C.cyan,
           borderRadius: 3,
         },
         {
           label: "Minilla",
-          data: ys.map((z) => hm(sum(capPred("Minilla"), z, m))),
+          data: ys.map((z) => capturedDaily("Minilla", z, y, m)),
           backgroundColor: C.navy,
           borderRadius: 3,
         },
@@ -452,7 +439,7 @@ function update() {
     datasets: [
       {
         label: "Sevilla",
-        data: ys.map((z) => hm(distributed(z, m, true))),
+        data: ys.map((z) => distributed(z, m, true)),
         borderColor: C.blue,
         backgroundColor: C.blue,
         tension: 0.3,
@@ -460,7 +447,7 @@ function update() {
       },
       {
         label: "Resto de poblaciones",
-        data: ys.map((z) => hm(distributed(z, m) - distributed(z, m, true))),
+        data: ys.map((z) => distributed(z, m) - distributed(z, m, true)),
         borderColor: C.green,
         backgroundColor: C.green,
         tension: 0.3,
@@ -483,7 +470,7 @@ function update() {
         {
           label: `${months[m - 1]}-${prev}`,
           data: popNames.map((name) =>
-            hm(previousPopulationTotals.get(name) || 0),
+            previousPopulationTotals.get(name) || 0,
           ),
           backgroundColor: C.gray,
           borderRadius: 3,
@@ -491,7 +478,7 @@ function update() {
         {
           label: `${months[m - 1]}-${y}`,
           data: popNames.map((name) =>
-            hm(currentPopulationTotals.get(name) || 0),
+            currentPopulationTotals.get(name) || 0,
           ),
           backgroundColor: C.blue,
           borderRadius: 3,
