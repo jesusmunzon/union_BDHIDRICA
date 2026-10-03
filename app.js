@@ -216,32 +216,23 @@ function populationAccumulatedTotals(selectedYear, selectedMonth) {
   return totals;
 }
 
-const formatM3 = (value) =>
-  Number(value).toLocaleString("es-ES", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-    useGrouping: true,
-  }) + " m³";
-
-const formatM3Day = (value) =>
-  Number(value).toLocaleString("es-ES", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-    useGrouping: true,
-  }) + " m³/día";
-
-const dam = (value) => value / 1e3;
-
+const hm = (v) => v / 1e6;
+const dam = (v) => v / 1e3;
+const fmt = (v) =>
+  new Intl.NumberFormat("es-ES", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 1,
+  }).format(v) + " hm³";
 const sum = (pred, y, m = 12) =>
   D.filter(
     (r) => +r.d.slice(0, 4) === y && +r.d.slice(5, 7) <= m && pred(r),
   ).reduce((a, r) => a + r.v, 0);
-
 /*
- * Agua captada: búsqueda exclusivamente en PROCEDENCIA_1.
- * El valor agregado procede siempre de AJUSTE, almacenado en r.v.
+ * Agua captada: se agrupa únicamente por PROCEDENCIA_1.
+ * El valor sumado es siempre AJUSTE, almacenado en record.v.
  */
-const capPred = (name) => (r) => norm(r.p1) === norm(name);
+const capPred = (name) => (record) =>
+  norm(record.p1) === norm(name);
 
 function isLeapYear(yearValue) {
   return (
@@ -254,7 +245,7 @@ function daysInYear(yearValue) {
   return isLeapYear(yearValue) ? 366 : 365;
 }
 
-function elapsedDaysThroughMonth(yearValue, monthValue) {
+function daysThroughMonth(yearValue, monthValue) {
   return Math.round(
     (Date.UTC(yearValue, monthValue, 1) - Date.UTC(yearValue, 0, 1)) /
       86400000,
@@ -263,15 +254,15 @@ function elapsedDaysThroughMonth(yearValue, monthValue) {
 
 function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
   const isSelectedYear = dataYear === selectedYear;
-  const lastMonth = isSelectedYear ? selectedMonth : 12;
-  const divisor = isSelectedYear
-    ? elapsedDaysThroughMonth(dataYear, selectedMonth)
+  const throughMonth = isSelectedYear ? selectedMonth : 12;
+  const elapsedDays = isSelectedYear
+    ? daysThroughMonth(dataYear, selectedMonth)
     : daysInYear(dataYear);
 
-  if (!divisor) return 0;
-  return sum(capPred(source), dataYear, lastMonth) / divisor;
-}
+  if (!elapsedDays) return 0;
 
+  return sum(capPred(source), dataYear, throughMonth) / elapsedDays;
+}
 const interPred = (sub) => (r) => norm(r.sub) === norm(sub);
 function distributed(y, m, sevillaOnly = false) {
   const produced =
@@ -311,26 +302,78 @@ function chart(id, type, data, options = {}) {
         tooltip: {
           callbacks: {
             label: (c) => {
-              if (c.chart.canvas.id === "captada") {
-                const actualValue = c.dataset.actualValues?.[c.dataIndex] ?? 0;
-                return " " + c.dataset.label + ": " + formatM3Day(actualValue);
-              }
+              /* Distribución por poblaciones: datos ya expresados en m³. */
+              if (c.chart.canvas.id === "poblaciones") {
+                const valueM3 = Number(c.raw);
 
-              if (["bruta", "importada", "exportada"].includes(c.chart.canvas.id)) {
                 return (
                   " " +
                   c.dataset.label +
                   ": " +
-                  Number(c.raw).toLocaleString("es-ES", {
+                  valueM3.toLocaleString("es-ES", {
                     minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
+                    maximumFractionDigits: 0,
                     useGrouping: true,
                   }) +
+                  " m³"
+                );
+              }
+
+              /*
+               * Agua captada apilada al 100 %: la barra usa porcentajes,
+               * pero el tooltip muestra el valor real en m³/día.
+               */
+              if (c.chart.canvas.id === "captada") {
+                const actualValue = c.dataset.actualValues?.[c.dataIndex] ?? 0;
+                return (
+                  " " +
+                  c.dataset.label +
+                  ": " +
+                  Number(actualValue).toLocaleString("es-ES", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    useGrouping: true,
+                  }) +
+                  " m³/día"
+                );
+              }
+
+              /*
+              * Gráficos acumulados mensuales:
+              * valores ya convertidos a dam³ por monthly().
+              */
+              if (
+                [
+                  "bruta",
+                  "importada",
+                  "exportada",
+                ].includes(c.chart.canvas.id)
+              ) {
+                return (
+                  " " +
+                  c.dataset.label +
+                  ": " +
+                  Number(c.raw).toLocaleString(
+                    "es-ES",
+                    {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                      useGrouping: true,
+                    },
+                  ) +
                   " dam³"
                 );
               }
 
-              return " " + c.dataset.label + ": " + formatM3(c.raw);
+              /*
+              * Resto de gráficos en hm³.
+              */
+              return (
+                " " +
+                c.dataset.label +
+                ": " +
+                fmt(c.raw)
+              );
             },
           },
         },
@@ -379,20 +422,32 @@ function update() {
     .filter(Number.isFinite)
     .sort((a, b) => a - b);
   const ys = availableYears.filter((yy) => yy >= y - 10 && yy <= y);
-  const captured = ys.map((yy) =>
-    ["Melonares", "Gergal", "Minilla"].reduce(
-      (total, source) =>
-        total + capturedDaily(source, yy, y, m),
-      0,
+  const capturedBySource = {
+    Minilla: ys.map((dataYear) =>
+      capturedDaily("Minilla", dataYear, y, m),
     ),
+    Gergal: ys.map((dataYear) =>
+      capturedDaily("Gergal", dataYear, y, m),
+    ),
+    Melonares: ys.map((dataYear) =>
+      capturedDaily("Melonares", dataYear, y, m),
+    ),
+  };
+
+  const captured = ys.map(
+    (_, index) =>
+      capturedBySource.Minilla[index] +
+      capturedBySource.Gergal[index] +
+      capturedBySource.Melonares[index],
   );
   const dist = ys.map((yy) => distributed(yy, m));
-  k1.textContent = formatM3Day(captured.at(-1));
-  k2.textContent = formatM3(dist.at(-1));
+  k1.textContent =
+    Math.round(captured.at(-1) || 0).toLocaleString("es-ES") + " m³/día";
+  k2.textContent = fmt(hm(dist.at(-1)));
   const bal =
     sum(interPred("AGUA TRATADA IMPORTADA"), y, m) -
     sum(interPred("AGUA TRATADA EXPORTADA"), y, m);
-  k3.textContent = formatM3(bal);
+  k3.textContent = fmt(hm(bal));
   const dp = distributed(prev, m),
     pct = dp ? (distributed(y, m) / dp - 1) * 100 : 0;
   k4.textContent =
@@ -400,28 +455,10 @@ function update() {
     pct.toLocaleString("es-ES", { maximumFractionDigits: 1 }) +
     " %";
   k4.style.color = pct >= 0 ? C.green : "#d64545";
-  const capturedBySource = {
-    Melonares: ys.map((dataYear) =>
-      capturedDaily("Melonares", dataYear, y, m),
-    ),
-    Gergal: ys.map((dataYear) =>
-      capturedDaily("Gergal", dataYear, y, m),
-    ),
-    Minilla: ys.map((dataYear) =>
-      capturedDaily("Minilla", dataYear, y, m),
-    ),
-  };
-
-  const capturedYearTotals = ys.map((_, index) =>
-    capturedBySource.Melonares[index] +
-    capturedBySource.Gergal[index] +
-    capturedBySource.Minilla[index],
-  );
-
-  const capturedPercentages = (sourceValues) =>
+  const toPercentages = (sourceValues) =>
     sourceValues.map((value, index) => {
-      const totalValue = capturedYearTotals[index];
-      return totalValue ? (value / totalValue) * 100 : 0;
+      const total = captured[index];
+      return total ? (value / total) * 100 : 0;
     });
 
   chart(
@@ -431,24 +468,24 @@ function update() {
       labels: ys,
       datasets: [
         {
-          label: "Melonares",
-          data: capturedPercentages(capturedBySource.Melonares),
-          actualValues: capturedBySource.Melonares,
-          backgroundColor: C.blue,
+          label: "Minilla",
+          data: toPercentages(capturedBySource.Minilla),
+          actualValues: capturedBySource.Minilla,
+          backgroundColor: C.navy,
           borderRadius: 3,
         },
         {
           label: "Gergal",
-          data: capturedPercentages(capturedBySource.Gergal),
+          data: toPercentages(capturedBySource.Gergal),
           actualValues: capturedBySource.Gergal,
           backgroundColor: C.cyan,
           borderRadius: 3,
         },
         {
-          label: "Minilla",
-          data: capturedPercentages(capturedBySource.Minilla),
-          actualValues: capturedBySource.Minilla,
-          backgroundColor: C.navy,
+          label: "Melonares",
+          data: toPercentages(capturedBySource.Melonares),
+          actualValues: capturedBySource.Melonares,
+          backgroundColor: C.blue,
           borderRadius: 3,
         },
       ],
@@ -495,7 +532,7 @@ function update() {
     datasets: [
       {
         label: "Sevilla",
-        data: ys.map((z) => distributed(z, m, true)),
+        data: ys.map((z) => hm(distributed(z, m, true))),
         borderColor: C.blue,
         backgroundColor: C.blue,
         tension: 0.3,
@@ -503,7 +540,7 @@ function update() {
       },
       {
         label: "Resto de poblaciones",
-        data: ys.map((z) => distributed(z, m) - distributed(z, m, true)),
+        data: ys.map((z) => hm(distributed(z, m) - distributed(z, m, true))),
         borderColor: C.green,
         backgroundColor: C.green,
         tension: 0.3,
