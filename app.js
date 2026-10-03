@@ -279,27 +279,55 @@ function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
   return sum(capPred(source), dataYear, throughMonth) / elapsedDays;
 }
 const interPred = (sub) => (r) => norm(r.sub) === norm(sub);
-function distributed(y, m, sevillaOnly = false) {
-  const produced =
-    sum((r) => norm(r.sub) === "AGUA PRODUCIDA ETAP", y, m) +
-    sum(interPred("AGUA TRATADA IMPORTADA"), y, m);
-  const exports = sum(interPred("AGUA TRATADA EXPORTADA"), y, m);
-  const total = produced - exports;
-  if (!sevillaOnly) return total;
-  return Math.max(
+function distributedPeriod(dataYear, selectedYear, selectedMonth) {
+  const selected = dataYear === selectedYear;
+  return {
+    endMonth: selected ? selectedMonth : 12,
+    days: selected
+      ? daysThroughMonth(dataYear, selectedMonth)
+      : daysInYear(dataYear),
+  };
+}
+
+function distributedTotalAccumulated(dataYear, endMonth) {
+  const imported = sum(interPred("AGUA TRATADA IMPORTADA"), dataYear, endMonth);
+  const produced = sum(interPred("AGUA PRODUCIDA ETAP"), dataYear, endMonth);
+  const reservoirBalance = sum(
+    (record) => norm(record.p1).includes("BALANCE DEPOSITOS"),
+    dataYear,
+    endMonth,
+  );
+  const exported = sum(interPred("AGUA TRATADA EXPORTADA"), dataYear, endMonth);
+
+  return imported + produced - reservoirBalance - exported;
+}
+
+function populationsAccumulated(dataYear, endMonth) {
+  return [...populationAccumulatedTotals(dataYear, endMonth).values()].reduce(
+    (total, value) => total + Number(value || 0),
     0,
-    produced -
-      sum(
-        (r) =>
-          norm(r.sub) === "AGUA TRATADA IMPORTADA" ||
-          norm(r.sub) === "AGUA TRATADA EXPORTADA" ||
-          (norm(r.sub) === "AGUA PRODUCIDA ETAP" &&
-            norm(r.p1) !== "ETAP CARAMBOLO"),
-        y,
-        m,
-      ),
   );
 }
+
+function distributedDaily(dataYear, selectedYear, selectedMonth) {
+  const { endMonth, days } = distributedPeriod(
+    dataYear,
+    selectedYear,
+    selectedMonth,
+  );
+
+  if (!days) return { distributed: 0, sevilla: 0, populations: 0 };
+
+  const distributed = distributedTotalAccumulated(dataYear, endMonth) / days;
+  const populations = populationsAccumulated(dataYear, endMonth) / days;
+
+  return {
+    distributed,
+    populations,
+    sevilla: distributed - populations,
+  };
+}
+
 function chart(id, type, data, options = {}) {
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart(document.getElementById(id), {
@@ -350,6 +378,17 @@ function chart(id, type, data, options = {}) {
                     useGrouping: true,
                   }) +
                   " m³/día"
+                );
+              }
+
+              if (c.chart.canvas.id === "distribuida") {
+                return (
+                  " " + c.dataset.label + ": " +
+                  Number(c.raw).toLocaleString("es-ES", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                    useGrouping: true,
+                  }) + " m³/día"
                 );
               }
 
@@ -455,10 +494,14 @@ function update() {
       capturedBySource.Gergal[index] +
       capturedBySource.Melonares[index],
   );
-  const dist = ys.map((yy) => distributed(yy, m));
+  const distributedValues = ys.map((dataYear) =>
+    distributedDaily(dataYear, y, m),
+  );
+  const dist = distributedValues.map((values) => values.distributed);
   k1.textContent =
     Math.round(captured.at(-1) || 0).toLocaleString("es-ES") + " m³/día";
-  k2.textContent = fmt(dist.at(-1));
+  k2.textContent =
+    Math.round(dist.at(-1) || 0).toLocaleString("es-ES") + " m³/día";
   const bal =
     sum(interPred("AGUA TRATADA IMPORTADA"), y, m) -
     sum(interPred("AGUA TRATADA EXPORTADA"), y, m);
@@ -542,23 +585,21 @@ function update() {
       ],
     }),
   );
-  /* Agua distribuida conserva el gráfico de líneas y puntos. */
+  /* Agua distribuida en m³/día. */
   chart("distribuida", "line", {
     labels: ys,
     datasets: [
       {
         label: "Sevilla",
-        data: ys.map((z) => distributed(z, m, true)),
+        data: distributedValues.map((values) => values.sevilla),
         borderColor: C.blue,
         backgroundColor: C.blue,
         tension: 0.3,
         pointRadius: 3,
       },
       {
-        label: "Resto de poblaciones",
-        data: ys.map(
-          (z) => distributed(z, m) - distributed(z, m, true),
-        ),
+        label: "Poblaciones",
+        data: distributedValues.map((values) => values.populations),
         borderColor: C.green,
         backgroundColor: C.green,
         tension: 0.3,
