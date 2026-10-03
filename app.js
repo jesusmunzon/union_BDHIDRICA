@@ -38,6 +38,19 @@ let D = [];
 let balanceRecords = [];
 let distributedConfig = [];
 let charts = {};
+
+/* Índices acumulados: evitan recorrer las hojas completas en cada cálculo. */
+let redMonthlyIndex = new Map();
+let redOriginMonthlyIndex = new Map();
+let redOrigin2MonthlyIndex = new Map();
+let balanceMonthlyIndex = new Map();
+let populationTotalsCache = new Map();
+let monthlySeriesCache = new Map();
+
+/* Caché de sesión: evita volver a descargar las tres hojas al recargar. */
+const DATA_CACHE_KEY = "estadisticos1-data-v10";
+const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
+
 function parseDatosRed(workbook) {
   const rows = sheetRows(workbook);
   const headerRowIndex = findHeaderRow(rows, [
@@ -171,35 +184,114 @@ function parseDistributedConfig(workbook) {
   return result;
 }
 
-function balanceAccumulated(code, selectedYear, selectedMonth) {
-  return balanceRecords
-    .filter((record) => {
-      const recordYear = Number(record.date.slice(0, 4));
-      const recordMonth = Number(record.date.slice(5, 7));
-      return (
-        norm(record.code) === norm(code) &&
-        recordYear === selectedYear &&
-        recordMonth <= selectedMonth
-      );
-    })
-    .reduce((total, record) => total + record.value, 0);
+function addToIndex(index, key, value) {
+  index.set(key, (index.get(key) || 0) + Number(value || 0));
 }
 
-function redAccumulated(origin, selectedYear, selectedMonth) {
-  return D
-    .filter((record) => {
-      const recordYear = Number(record.d.slice(0, 4));
-      const recordMonth = Number(record.d.slice(5, 7));
-      return (
-        norm(record.p1) === norm(origin) &&
-        recordYear === selectedYear &&
-        recordMonth <= selectedMonth
-      );
-    })
-    .reduce((total, record) => total + record.v, 0);
+function cumulativeKey(entity, yearValue, monthValue) {
+  return `${norm(entity)}|${yearValue}|${monthValue}`;
+}
+
+function buildCumulativeIndex(monthlyIndex) {
+  const grouped = new Map();
+
+  for (const [key, value] of monthlyIndex) {
+    const separator2 = key.lastIndexOf("|");
+    const separator1 = key.lastIndexOf("|", separator2 - 1);
+    const entity = key.slice(0, separator1);
+    const yearValue = Number(key.slice(separator1 + 1, separator2));
+    const monthValue = Number(key.slice(separator2 + 1));
+    const groupKey = `${entity}|${yearValue}`;
+
+    if (!grouped.has(groupKey)) grouped.set(groupKey, Array(13).fill(0));
+    grouped.get(groupKey)[monthValue] += value;
+  }
+
+  const cumulative = new Map();
+  for (const [groupKey, values] of grouped) {
+    let total = 0;
+    for (let monthValue = 1; monthValue <= 12; monthValue += 1) {
+      total += values[monthValue] || 0;
+      cumulative.set(`${groupKey}|${monthValue}`, total);
+    }
+  }
+
+  return cumulative;
+}
+
+function buildDataIndexes() {
+  const subtypeMonthly = new Map();
+  const origin1Monthly = new Map();
+  const origin2Monthly = new Map();
+  const balanceByMonth = new Map();
+
+  for (const record of D) {
+    const yearValue = Number(record.d.slice(0, 4));
+    const monthValue = Number(record.d.slice(5, 7));
+    if (!Number.isFinite(yearValue) || !Number.isFinite(monthValue)) continue;
+
+    addToIndex(
+      subtypeMonthly,
+      cumulativeKey(record.sub, yearValue, monthValue),
+      record.v,
+    );
+    addToIndex(
+      origin1Monthly,
+      cumulativeKey(record.p1, yearValue, monthValue),
+      record.v,
+    );
+    addToIndex(
+      origin2Monthly,
+      cumulativeKey(record.p2, yearValue, monthValue),
+      record.v,
+    );
+  }
+
+  for (const record of balanceRecords) {
+    const yearValue = Number(record.date.slice(0, 4));
+    const monthValue = Number(record.date.slice(5, 7));
+    if (!Number.isFinite(yearValue) || !Number.isFinite(monthValue)) continue;
+
+    addToIndex(
+      balanceByMonth,
+      cumulativeKey(record.code, yearValue, monthValue),
+      record.value,
+    );
+  }
+
+  redMonthlyIndex = buildCumulativeIndex(subtypeMonthly);
+  redOriginMonthlyIndex = buildCumulativeIndex(origin1Monthly);
+  redOrigin2MonthlyIndex = buildCumulativeIndex(origin2Monthly);
+  balanceMonthlyIndex = buildCumulativeIndex(balanceByMonth);
+  populationTotalsCache.clear();
+  monthlySeriesCache.clear();
+}
+
+function indexedValue(index, entity, selectedYear, selectedMonth) {
+  return index.get(cumulativeKey(entity, selectedYear, selectedMonth)) || 0;
+}
+
+function balanceAccumulated(code, selectedYear, selectedMonth) {
+  return indexedValue(balanceMonthlyIndex, code, selectedYear, selectedMonth);
+}
+
+function redAccumulated(origin, selectedYear, selectedMonth, originColumn = 1) {
+  const index = originColumn === 2
+    ? redOrigin2MonthlyIndex
+    : redOriginMonthlyIndex;
+  return indexedValue(index, origin, selectedYear, selectedMonth);
+}
+
+function subtypeAccumulated(subtype, selectedYear, selectedMonth) {
+  return indexedValue(redMonthlyIndex, subtype, selectedYear, selectedMonth);
 }
 
 function populationAccumulatedTotals(selectedYear, selectedMonth) {
+  const cacheKey = `${selectedYear}|${selectedMonth}`;
+  if (populationTotalsCache.has(cacheKey)) {
+    return new Map(populationTotalsCache.get(cacheKey));
+  }
+
   const totals = new Map();
 
   for (const configRow of distributedConfig) {
@@ -213,6 +305,7 @@ function populationAccumulatedTotals(selectedYear, selectedMonth) {
     );
   }
 
+  populationTotalsCache.set(cacheKey, [...totals.entries()]);
   return totals;
 }
 
@@ -225,28 +318,46 @@ const fmt = (valueM3) =>
     maximumFractionDigits: 0,
     useGrouping: true,
   }) + " m³";
-const sum = (pred, y, m = 12) =>
-  D.filter(
-    (r) => +r.d.slice(0, 4) === y && +r.d.slice(5, 7) <= m && pred(r),
-  ).reduce((a, r) => a + r.v, 0);
+const sum = (pred, y, m = 12) => {
+  if (pred.indexType === "subtype") {
+    return subtypeAccumulated(pred.indexValue, y, m);
+  }
+  if (pred.indexType === "origin1") {
+    return redAccumulated(pred.indexValue, y, m, 1);
+  }
+  if (pred.indexType === "origin2") {
+    return redAccumulated(pred.indexValue, y, m, 2);
+  }
+
+  /* Respaldo para condiciones compuestas poco frecuentes. */
+  let total = 0;
+  for (const record of D) {
+    if (
+      Number(record.d.slice(0, 4)) === y &&
+      Number(record.d.slice(5, 7)) <= m &&
+      pred(record)
+    ) {
+      total += record.v;
+    }
+  }
+  return total;
+};
 /*
  * Agua captada: se agrupa únicamente por PROCEDENCIA_1.
  * El valor sumado es siempre AJUSTE, almacenado en record.v.
  */
-const capPred = (name) => (record) => {
+const capPred = (name) => {
   const searchedSource = norm(name);
-
-  /*
-   * Minilla y Gergal se buscan en PROCEDENCIA_1.
-   * Melonares se busca en PROCEDENCIA_2.
-   * El valor sumado es siempre AJUSTE, almacenado en record.v.
-   */
-  const source =
-    searchedSource === "MELONARES"
+  const predicate = (record) => {
+    const source = searchedSource === "MELONARES"
       ? norm(record.p2)
       : norm(record.p1);
+    return source.includes(searchedSource);
+  };
 
-  return source.includes(searchedSource);
+  predicate.indexType = searchedSource === "MELONARES" ? "origin2" : "origin1";
+  predicate.indexValue = searchedSource;
+  return predicate;
 };
 
 function isLeapYear(yearValue) {
@@ -278,102 +389,58 @@ function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
 
   return sum(capPred(source), dataYear, throughMonth) / elapsedDays;
 }
-const interPred = (sub) => (r) => norm(r.sub) === norm(sub);
+const interPred = (subtype) => {
+  const predicate = (record) => norm(record.sub) === norm(subtype);
+  predicate.indexType = "subtype";
+  predicate.indexValue = subtype;
+  return predicate;
+};
 function distributedPeriod(dataYear, selectedYear, selectedMonth) {
-  const isSelectedYear = dataYear === selectedYear;
-
+  const selected = dataYear === selectedYear;
   return {
-    endMonth: isSelectedYear ? selectedMonth : 12,
-    dayCount: isSelectedYear
+    endMonth: selected ? selectedMonth : 12,
+    days: selected
       ? daysThroughMonth(dataYear, selectedMonth)
       : daysInYear(dataYear),
   };
 }
 
-function distributedComponentsAccumulated(dataYear, endMonth) {
-  /*
-   * Todos los componentes se suman sobre AJUSTE (record.v).
-   * No se modifica ninguna configuración visual del gráfico.
-   */
-  const imported = sum(
-    (record) => norm(record.sub) === "AGUA TRATADA IMPORTADA",
-    dataYear,
-    endMonth,
-  );
-
-  const produced = sum(
-    (record) => norm(record.sub) === "AGUA PRODUCIDA ETAP",
-    dataYear,
-    endMonth,
-  );
-
+function distributedTotalAccumulated(dataYear, endMonth) {
+  const imported = sum(interPred("AGUA TRATADA IMPORTADA"), dataYear, endMonth);
+  const produced = sum(interPred("AGUA PRODUCIDA ETAP"), dataYear, endMonth);
   const reservoirBalance = sum(
-    (record) => norm(record.p1) === "BALANCE DEPOSITOS",
+    (record) => norm(record.p1).includes("BALANCE DEPOSITOS"),
     dataYear,
     endMonth,
   );
+  const exported = sum(interPred("AGUA TRATADA EXPORTADA"), dataYear, endMonth);
 
-  const exported = sum(
-    (record) => norm(record.sub) === "AGUA TRATADA EXPORTADA",
-    dataYear,
-    endMonth,
-  );
-
-  return {
-    imported,
-    produced,
-    reservoirBalance,
-    exported,
-    distributed: imported + produced - reservoirBalance - exported,
-  };
+  return imported + produced - reservoirBalance - exported;
 }
 
 function populationsAccumulated(dataYear, endMonth) {
-  /*
-   * Es exactamente la suma de los totales calculados para cada bloque
-   * de CFG_Distribuido_Poblaciones, con sus factores y la excepción
-   * de Burguillos.
-   */
-  const totalsByPopulation = populationAccumulatedTotals(
-    dataYear,
-    endMonth,
-  );
-
-  return [...totalsByPopulation.values()].reduce(
+  return [...populationAccumulatedTotals(dataYear, endMonth).values()].reduce(
     (total, value) => total + Number(value || 0),
     0,
   );
 }
 
 function distributedDaily(dataYear, selectedYear, selectedMonth) {
-  const { endMonth, dayCount } = distributedPeriod(
+  const { endMonth, days } = distributedPeriod(
     dataYear,
     selectedYear,
     selectedMonth,
   );
 
-  if (!dayCount) {
-    return { distributed: 0, sevilla: 0, populations: 0 };
-  }
+  if (!days) return { distributed: 0, sevilla: 0, populations: 0 };
 
-  const components = distributedComponentsAccumulated(
-    dataYear,
-    endMonth,
-  );
-
-  const populationsVolume = populationsAccumulated(
-    dataYear,
-    endMonth,
-  );
-
-  const distributed = components.distributed / dayCount;
-  const populations = populationsVolume / dayCount;
-  const sevilla = distributed - populations;
+  const distributed = distributedTotalAccumulated(dataYear, endMonth) / days;
+  const populations = populationsAccumulated(dataYear, endMonth) / days;
 
   return {
     distributed,
-    sevilla,
     populations,
+    sevilla: distributed - populations,
   };
 }
 
@@ -502,6 +569,11 @@ function chart(id, type, data, options = {}) {
   });
 }
 function monthly(sub, y) {
+  const cacheKey = `${norm(sub)}|${y}`;
+  if (monthlySeriesCache.has(cacheKey)) {
+    return [...monthlySeriesCache.get(cacheKey)];
+  }
+
   /* Serie mensual acumulada desde enero.
    * Enero   = enero
    * Febrero = enero + febrero
@@ -509,9 +581,11 @@ function monthly(sub, y) {
    * ...
    * Diciembre = acumulado anual
    * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.*/
-  return months.map((_, i) =>
-    dam(sum(interPred(sub), y, i + 1)),
+  const values = months.map((_, i) =>
+    dam(subtypeAccumulated(sub, y, i + 1)),
   );
+  monthlySeriesCache.set(cacheKey, values);
+  return [...values];
 }
 function update() {
   const y = +year.value, m = +month.value, prev = y - 1;
@@ -804,17 +878,55 @@ function initializeInterface() {
 
 initializeInterface();
 
+function readSessionDataCache() {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(DATA_CACHE_KEY) || "null");
+    if (!cached || Date.now() - cached.savedAt > DATA_CACHE_TTL_MS) return null;
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionDataCache() {
+  try {
+    sessionStorage.setItem(
+      DATA_CACHE_KEY,
+      JSON.stringify({
+        savedAt: Date.now(),
+        D,
+        balanceRecords,
+        distributedConfig,
+      }),
+    );
+  } catch {
+    /* Si el navegador limita sessionStorage, la aplicación sigue sin caché. */
+  }
+}
+
 async function initializeData() {
   try {
-    const [datosRedBook, balanceBook, configBook] = await Promise.all([
-      loadGoogleSheet(GOOGLE_DATABASE.sheets.datosRed, 1),
-      loadGoogleSheet(GOOGLE_DATABASE.sheets.balancePoblaciones, 1),
-      loadGoogleSheet(GOOGLE_DATABASE.sheets.distribuidoPoblaciones, 0),
-    ]);
+    const cachedData = readSessionDataCache();
 
-    D = parseDatosRed(datosRedBook);
-    balanceRecords = parseBalance(balanceBook);
-    distributedConfig = parseDistributedConfig(configBook);
+    if (cachedData) {
+      D = cachedData.D;
+      balanceRecords = cachedData.balanceRecords;
+      distributedConfig = cachedData.distributedConfig;
+    } else {
+      /* Las tres hojas se descargan en paralelo. */
+      const [datosRedBook, balanceBook, configBook] = await Promise.all([
+        loadGoogleSheet(GOOGLE_DATABASE.sheets.datosRed, 1),
+        loadGoogleSheet(GOOGLE_DATABASE.sheets.balancePoblaciones, 1),
+        loadGoogleSheet(GOOGLE_DATABASE.sheets.distribuidoPoblaciones, 0),
+      ]);
+
+      D = parseDatosRed(datosRedBook);
+      balanceRecords = parseBalance(balanceBook);
+      distributedConfig = parseDistributedConfig(configBook);
+      writeSessionDataCache();
+    }
+
+    buildDataIndexes();
 
     const years = [...new Set(D.map((row) => Number(row.d.slice(0, 4))))]
       .filter(Number.isFinite)
@@ -843,8 +955,14 @@ async function initializeData() {
       )
       .join("");
 
-    month.addEventListener("change", update);
-    year.addEventListener("change", update);
+    let updateFrame = 0;
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(updateFrame);
+      updateFrame = requestAnimationFrame(update);
+    };
+
+    month.addEventListener("change", scheduleUpdate);
+    year.addEventListener("change", scheduleUpdate);
 
     update();
     loading.style.display = "none";
