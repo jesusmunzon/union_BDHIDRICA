@@ -699,7 +699,7 @@ function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
       }));
 
       children = [
-        { label: "Sevilla", source: "sevilla" },
+        { label: "SEVILLA", source: "sevilla" },
         ...populationChildren,
       ];
     }
