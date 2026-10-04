@@ -750,3 +750,110 @@ body.dark .kpi:hover {
     grid-column: 1 / -1;
   }
 }
+
+
+/* Tablas operativas dependientes del filtro de Estadísticos 1 */
+.operational-tables {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+.operational-card {
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+.operational-card > h2 {
+  margin: 0;
+  padding: 12px 18px;
+  text-align: center;
+  font-size: 18px;
+  color: #153a70;
+  background: linear-gradient(90deg, #b9dcf2, #a9d3ed);
+}
+.operational-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+.operational-table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #18324f;
+  font-size: 11px;
+}
+.operational-table th,
+.operational-table td {
+  padding: 9px 8px;
+  border-right: 1px solid #dbe7f0;
+  border-bottom: 1px solid #e6eef5;
+  vertical-align: middle;
+}
+.operational-table th:first-child {
+  width: 220px;
+  text-align: left;
+}
+.operational-table td {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.operational-table .group-head th {
+  text-align: center;
+  color: #fff;
+  background: #155a78;
+  font-size: 10px;
+  font-weight: 800;
+}
+.operational-table .period-head th {
+  text-align: center;
+  color: #fff;
+  background: #8fcf72;
+  font-size: 9px;
+  font-weight: 800;
+}
+.operational-table .summary-row {
+  background: #e7f2fb;
+}
+.operational-table .summary-row th,
+.operational-table .summary-row td {
+  font-weight: 800;
+}
+.operational-table .summary-row th {
+  border-left: 5px solid #58b4e8;
+  color: #174d7c;
+}
+.operational-table .detail-row:nth-child(even) {
+  background: #fbfdff;
+}
+.operational-table .detail-row th {
+  padding-left: 34px;
+  color: #365976;
+  font-style: italic;
+  font-weight: 500;
+}
+.variation {
+  display: inline-block;
+  min-width: 58px;
+  text-align: center;
+  font-weight: 800;
+}
+.variation.up { color: #278c69; }
+.variation.down { color: #e34e54; }
+.variation.neutral { color: #718096; }
+body.dark .operational-card > h2 {
+  color: #dbeafe;
+  background: #174b68;
+}
+body.dark .operational-table {
+  color: #dbeafe;
+}
+body.dark .operational-table .summary-row { background: #102b42; }
+body.dark .operational-table .detail-row:nth-child(even) { background: #0d1d2d; }
+body.dark .operational-table .detail-row th { color: #b7c9da; }
+@media (max-width: 760px) {
+  .operational-card > h2 { font-size: 16px; }
+  .operational-table { font-size: 10px; }
+}

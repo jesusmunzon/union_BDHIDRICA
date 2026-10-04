@@ -444,6 +444,224 @@ function distributedDaily(dataYear, selectedYear, selectedMonth) {
   };
 }
 
+
+const operationalTableDefinitions = [
+  {
+    id: "aduccion",
+    title: "ADUCCIÓN",
+    rows: [
+      {
+        label: "AGUA CAPTADA",
+        primary: true,
+        children: [
+          { label: "Minilla", source: "origin1", key: "Minilla" },
+          { label: "Gergal", source: "origin1", key: "Gergal" },
+          { label: "Melonares", source: "origin2", key: "Melonares" },
+          { label: "Cala El Ronquillo", source: "origin1", key: "Cala El Ronquillo" },
+          { label: "Emergencias (El Pintado)", source: "origin1", key: "Emergencias (El Pintado)" },
+          { label: "Emergencias (Río)", source: "origin1", key: "Emergencias (Río)" },
+          { label: "Pozos", source: "origin1", key: "Pozos" },
+        ],
+      },
+      { label: "AGUA ADUCIDA", primary: true, source: "subtype", key: "AGUA ADUCIDA" },
+      {
+        label: "AGUA ADUCIDA BRUTA EXPORTADA",
+        primary: true,
+        source: "subtype",
+        key: "AGUA ADUCIDA BRUTA EXPORTADA",
+        children: [
+          { label: "Toma Guillena", source: "origin1", key: "Toma Guillena" },
+          { label: "Toma Panajosas", source: "origin1", key: "Toma Panajosas" },
+          { label: "Toma Aljarafesa", source: "origin1", key: "Toma Aljarafesa" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "tratamiento",
+    title: "TRATAMIENTO",
+    rows: [
+      { label: "AGUA ENTRADA ETAP", primary: true, source: "subtype", key: "AGUA ENTRADA ETAP" },
+      { label: "AGUA PRODUCIDA ETAP", primary: true, source: "subtype", key: "AGUA PRODUCIDA ETAP" },
+    ],
+  },
+  {
+    id: "distribucion",
+    title: "DISTRIBUCIÓN",
+    rows: [
+      { label: "AGUA TRATADA IMPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA IMPORTADA" },
+      { label: "AGUA SUMINISTRADA", primary: true, source: "subtype", key: "AGUA SUMINISTRADA" },
+      { label: "AGUA TRATADA EXPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA EXPORTADA" },
+      {
+        label: "AGUA DISTRIBUIDA",
+        primary: true,
+        source: "distributed",
+        childrenSource: "populations",
+      },
+    ],
+  },
+];
+
+function previousMonthPeriod(selectedYear, selectedMonth) {
+  return selectedMonth > 1
+    ? { year: selectedYear, month: selectedMonth - 1 }
+    : { year: selectedYear - 1, month: 12 };
+}
+
+function cumulativeSourceValue(row, selectedYear, selectedMonth) {
+  if (row.source === "subtype") {
+    return subtypeAccumulated(row.key, selectedYear, selectedMonth);
+  }
+  if (row.source === "origin1") {
+    return redAccumulated(row.key, selectedYear, selectedMonth, 1);
+  }
+  if (row.source === "origin2") {
+    return redAccumulated(row.key, selectedYear, selectedMonth, 2);
+  }
+  if (row.source === "distributed") {
+    return distributedTotalAccumulated(selectedYear, selectedMonth);
+  }
+  if (row.source === "population") {
+    return populationAccumulatedTotals(selectedYear, selectedMonth).get(row.key) || 0;
+  }
+  if (row.children?.length) {
+    return row.children.reduce(
+      (total, child) => total + cumulativeSourceValue(child, selectedYear, selectedMonth),
+      0,
+    );
+  }
+  return 0;
+}
+
+function monthlySourceValue(row, selectedYear, selectedMonth) {
+  const accumulated = cumulativeSourceValue(row, selectedYear, selectedMonth);
+  if (selectedMonth === 1) return accumulated;
+  return accumulated - cumulativeSourceValue(row, selectedYear, selectedMonth - 1);
+}
+
+function tableRowMetrics(row, selectedYear, selectedMonth) {
+  const prior = previousMonthPeriod(selectedYear, selectedMonth);
+  const currentMonth = monthlySourceValue(row, selectedYear, selectedMonth);
+  const priorMonth = monthlySourceValue(row, prior.year, prior.month);
+  const priorYearMonth = monthlySourceValue(row, selectedYear - 1, selectedMonth);
+  const currentAccumulated = cumulativeSourceValue(row, selectedYear, selectedMonth);
+  const priorYearAccumulated = cumulativeSourceValue(row, selectedYear - 1, selectedMonth);
+
+  return {
+    priorMonth,
+    currentMonth,
+    priorYearMonth,
+    currentAccumulated,
+    priorYearAccumulated,
+    variationAccumulated: percentageChange(currentAccumulated, priorYearAccumulated),
+    variationAnnualMonth: percentageChange(currentMonth, priorYearMonth),
+    variationMonthly: percentageChange(currentMonth, priorMonth),
+  };
+}
+
+function percentageChange(currentValue, referenceValue) {
+  if (!Number.isFinite(currentValue) || !Number.isFinite(referenceValue) || referenceValue === 0) {
+    return null;
+  }
+  return ((currentValue / referenceValue) - 1) * 100;
+}
+
+function formatTableNumber(value) {
+  return Math.round(Number(value) || 0).toLocaleString("es-ES", {
+    maximumFractionDigits: 0,
+    useGrouping: true,
+  });
+}
+
+function formatVariation(value) {
+  if (value == null || !Number.isFinite(value)) {
+    return '<span class="variation neutral">–</span>';
+  }
+  const direction = value > 0 ? "up" : value < 0 ? "down" : "neutral";
+  const arrow = value > 0 ? "↑" : value < 0 ? "↓" : "→";
+  return `<span class="variation ${direction}">${arrow} ${Math.abs(value).toLocaleString("es-ES", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</span>`;
+}
+
+function operationalRowHtml(row, metrics, child = false) {
+  return `
+    <tr class="${row.primary ? "summary-row" : "detail-row"} ${child ? "is-child" : ""}">
+      <th scope="row">${row.label}</th>
+      <td>${formatTableNumber(metrics.priorMonth)}</td>
+      <td>${formatTableNumber(metrics.currentMonth)}</td>
+      <td>${formatTableNumber(metrics.priorYearMonth)}</td>
+      <td>${formatTableNumber(metrics.currentAccumulated)}</td>
+      <td>${formatTableNumber(metrics.priorYearAccumulated)}</td>
+      <td>${formatVariation(metrics.variationAccumulated)}</td>
+      <td>${formatVariation(metrics.variationAnnualMonth)}</td>
+      <td>${formatVariation(metrics.variationMonthly)}</td>
+    </tr>`;
+}
+
+function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
+  let html = "";
+  for (const row of definition.rows) {
+    html += operationalRowHtml(row, tableRowMetrics(row, selectedYear, selectedMonth));
+
+    let children = row.children || [];
+    if (row.childrenSource === "populations") {
+      children = [...new Set(distributedConfig.map((item) => item.block).filter(Boolean))]
+        .map((population) => ({
+          label: population,
+          key: population,
+          source: "population",
+        }));
+    }
+
+    for (const child of children) {
+      html += operationalRowHtml(
+        child,
+        tableRowMetrics(child, selectedYear, selectedMonth),
+        true,
+      );
+    }
+  }
+  return html;
+}
+
+function renderOperationalTables(selectedYear, selectedMonth) {
+  const host = document.getElementById("operationalTables");
+  if (!host) return;
+
+  const selectedMonthName = months[selectedMonth - 1];
+  const previous = previousMonthPeriod(selectedYear, selectedMonth);
+  const previousMonthName = months[previous.month - 1];
+  const monthShort = (name) => name.slice(0, 3).toLowerCase();
+
+  host.innerHTML = operationalTableDefinitions.map((definition) => `
+    <article class="operational-card" id="table-${definition.id}">
+      <h2>${definition.title}</h2>
+      <div class="operational-table-scroll">
+        <table class="operational-table">
+          <thead>
+            <tr class="group-head">
+              <th aria-label="Descripción"></th>
+              <th colspan="3">VOLÚMENES MENSUALES (m³)</th>
+              <th colspan="2">VOLÚMENES ACUMULADOS (m³)</th>
+              <th colspan="3">VARIACIÓN</th>
+            </tr>
+            <tr class="period-head">
+              <th aria-label="Descripción"></th>
+              <th>${monthShort(previousMonthName)}-${String(previous.year).slice(-2)}</th>
+              <th>${monthShort(selectedMonthName)}-${String(selectedYear).slice(-2)}</th>
+              <th>${monthShort(selectedMonthName)}-${String(selectedYear - 1).slice(-2)}</th>
+              <th>${monthShort(selectedMonthName)}-${String(selectedYear).slice(-2)}</th>
+              <th>${monthShort(selectedMonthName)}-${String(selectedYear - 1).slice(-2)}</th>
+              <th>% VARIAC.</th>
+              <th>${monthShort(selectedMonthName)}-${String(selectedYear).slice(-2)}/${monthShort(selectedMonthName)}-${String(selectedYear - 1).slice(-2)}</th>
+              <th>${monthShort(selectedMonthName)}-${String(selectedYear).slice(-2)}/${monthShort(previousMonthName)}-${String(previous.year).slice(-2)}</th>
+            </tr>
+          </thead>
+          <tbody>${tableRowsForDefinition(definition, selectedYear, selectedMonth)}</tbody>
+        </table>
+      </div>
+    </article>`).join("");
+}
+
 function chart(id, type, data, options = {}) {
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart(document.getElementById(id), {
@@ -797,6 +1015,9 @@ function update() {
       },
     },
   );
+
+  /* Las tablas reutilizan los índices y cachés ya calculados para los gráficos. */
+  renderOperationalTables(y, m);
 }
 
 const month = document.getElementById("month");
