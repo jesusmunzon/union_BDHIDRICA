@@ -822,6 +822,7 @@ body.dark .kpi:hover {
   font-weight: 800;
 }
 .operational-table .summary-row th {
+  margin-left: 0;
   border-left: 5px solid #58b4e8;
   color: #174d7c;
 }
