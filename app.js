@@ -733,8 +733,8 @@ function renderOperationalTables(selectedYear, selectedMonth) {
             <tr class="group-head">
               <th aria-label="Descripción"></th>
               <th colspan="3">VOLÚMENES MENSUALES (m³)</th>
-              <th colspan="2">VOLÚMENES ACUMULADOS (m³)</th>
-              <th colspan="3">VARIACIÓN</th>
+              <th colspan="3">VOLÚMENES ACUMULADOS (m³)</th>
+              <th colspan="2">VARIACIÓN</th>
             </tr>
             <tr class="period-head">
               <th aria-label="Descripción"></th>
