@@ -49,7 +49,7 @@ let populationTotalsCache = new Map();
 let monthlySeriesCache = new Map();
 
 /* Caché de sesión: evita volver a descargar las tres hojas al recargar. */
-const DATA_CACHE_KEY = "estadisticos1-data-v13";
+const DATA_CACHE_KEY = "estadisticos1-data-v14";
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 
 function parseDatosRed(workbook) {
@@ -427,8 +427,8 @@ function distributedPeriod(dataYear, selectedYear, selectedMonth) {
 function distributedTotalAccumulated(dataYear, endMonth) {
   const imported = sum(interPred("AGUA TRATADA IMPORTADA"), dataYear, endMonth);
   const produced = sum(interPred("AGUA PRODUCIDA ETAP"), dataYear, endMonth);
-  const reservoirBalance = sum(
-    (record) => norm(record.p1).includes("BALANCE DEPOSITOS"),
+  const reservoirBalance = subtypeAccumulated(
+    "BALANCE DEPÓSITOS",
     dataYear,
     endMonth,
   );
@@ -491,8 +491,7 @@ const operationalTableDefinitions = [
       {
         label: "AGUA ADUCIDA BRUTA EXPORTADA",
         primary: true,
-        source: "subtype",
-        key: "AGUA ADUCIDA BRUTA EXPORTADA",
+        source: "childrenSum",
         children: [
           { label: "Toma Guillena", source: "origin2", key: "Toma Guillena" },
           { label: "Toma Panajosas", source: "origin2", key: "Toma Panajosas" },
@@ -514,7 +513,11 @@ const operationalTableDefinitions = [
     title: "DISTRIBUCIÓN",
     rows: [
       { label: "AGUA TRATADA IMPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA IMPORTADA" },
-      { label: "AGUA SUMINISTRADA", primary: true, source: "subtype", key: "AGUA SUMINISTRADA" },
+      {
+        label: "AGUA SUMINISTRADA",
+        primary: true,
+        source: "suppliedWater",
+      },
       { label: "AGUA TRATADA EXPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA EXPORTADA" },
       {
         label: "AGUA DISTRIBUIDA",
@@ -533,6 +536,24 @@ function previousMonthPeriod(selectedYear, selectedMonth) {
 }
 
 function cumulativeSourceValue(row, selectedYear, selectedMonth) {
+  /*
+   * Las filas calculadas se resuelven con los mismos componentes visibles
+   * y con índices acumulados, sin recorrer de nuevo BD_Datos_Red.
+   */
+  if (row.source === "childrenSum") {
+    return (row.children || []).reduce(
+      (total, child) =>
+        total + cumulativeSourceValue(child, selectedYear, selectedMonth),
+      0,
+    );
+  }
+  if (row.source === "suppliedWater") {
+    return (
+      subtypeAccumulated("AGUA TRATADA IMPORTADA", selectedYear, selectedMonth) +
+      subtypeAccumulated("AGUA PRODUCIDA ETAP", selectedYear, selectedMonth) -
+      subtypeAccumulated("BALANCE DEPÓSITOS", selectedYear, selectedMonth)
+    );
+  }
   if (row.source === "type") {
     return typeAccumulated(row.key, selectedYear, selectedMonth);
   }
