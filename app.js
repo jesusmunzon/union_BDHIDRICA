@@ -40,6 +40,7 @@ let distributedConfig = [];
 let charts = {};
 
 /* Índices acumulados: evitan recorrer las hojas completas en cada cálculo. */
+let redTypeMonthlyIndex = new Map();
 let redMonthlyIndex = new Map();
 let redOriginMonthlyIndex = new Map();
 let redOrigin2MonthlyIndex = new Map();
@@ -48,7 +49,7 @@ let populationTotalsCache = new Map();
 let monthlySeriesCache = new Map();
 
 /* Caché de sesión: evita volver a descargar las tres hojas al recargar. */
-const DATA_CACHE_KEY = "estadisticos1-data-v10";
+const DATA_CACHE_KEY = "estadisticos1-data-v11";
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 
 function parseDatosRed(workbook) {
@@ -220,6 +221,7 @@ function buildCumulativeIndex(monthlyIndex) {
 }
 
 function buildDataIndexes() {
+  const typeMonthly = new Map();
   const subtypeMonthly = new Map();
   const origin1Monthly = new Map();
   const origin2Monthly = new Map();
@@ -230,6 +232,11 @@ function buildDataIndexes() {
     const monthValue = Number(record.d.slice(5, 7));
     if (!Number.isFinite(yearValue) || !Number.isFinite(monthValue)) continue;
 
+    addToIndex(
+      typeMonthly,
+      cumulativeKey(record.tipo, yearValue, monthValue),
+      record.v,
+    );
     addToIndex(
       subtypeMonthly,
       cumulativeKey(record.sub, yearValue, monthValue),
@@ -259,6 +266,7 @@ function buildDataIndexes() {
     );
   }
 
+  redTypeMonthlyIndex = buildCumulativeIndex(typeMonthly);
   redMonthlyIndex = buildCumulativeIndex(subtypeMonthly);
   redOriginMonthlyIndex = buildCumulativeIndex(origin1Monthly);
   redOrigin2MonthlyIndex = buildCumulativeIndex(origin2Monthly);
@@ -280,6 +288,10 @@ function redAccumulated(origin, selectedYear, selectedMonth, originColumn = 1) {
     ? redOrigin2MonthlyIndex
     : redOriginMonthlyIndex;
   return indexedValue(index, origin, selectedYear, selectedMonth);
+}
+
+function typeAccumulated(type, selectedYear, selectedMonth) {
+  return indexedValue(redTypeMonthlyIndex, type, selectedYear, selectedMonth);
 }
 
 function subtypeAccumulated(subtype, selectedYear, selectedMonth) {
@@ -378,6 +390,23 @@ function daysThroughMonth(yearValue, monthValue) {
   );
 }
 
+function capturedSourceAccumulated(source, dataYear, throughMonth) {
+  if (source === "Gergal") {
+    return (
+      redAccumulated("Salida Gergal", dataYear, throughMonth, 2) -
+      redAccumulated("Entrada Gergal", dataYear, throughMonth, 2)
+    );
+  }
+  if (source === "Melonares") {
+    return redAccumulated("Melonares", dataYear, throughMonth, 2);
+  }
+  return redAccumulated(source, dataYear, throughMonth, 1);
+}
+
+function capturedTotalAccumulated(dataYear, throughMonth) {
+  return typeAccumulated("AGUA CAPTADA", dataYear, throughMonth);
+}
+
 function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
   const isSelectedYear = dataYear === selectedYear;
   const throughMonth = isSelectedYear ? selectedMonth : 12;
@@ -387,7 +416,7 @@ function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
 
   if (!elapsedDays) return 0;
 
-  return sum(capPred(source), dataYear, throughMonth) / elapsedDays;
+  return capturedSourceAccumulated(source, dataYear, throughMonth) / elapsedDays;
 }
 const interPred = (subtype) => {
   const predicate = (record) => norm(record.sub) === norm(subtype);
@@ -453,26 +482,31 @@ const operationalTableDefinitions = [
       {
         label: "AGUA CAPTADA",
         primary: true,
+        source: "type",
+        key: "AGUA CAPTADA",
         children: [
           { label: "Minilla", source: "origin1", key: "Minilla" },
-          { label: "Gergal", source: "origin1", key: "Gergal" },
+          {
+            label: "Gergal",
+            source: "difference",
+            minuend: { source: "origin2", key: "Salida Gergal" },
+            subtrahend: { source: "origin2", key: "Entrada Gergal" },
+          },
           { label: "Melonares", source: "origin2", key: "Melonares" },
-          { label: "Cala El Ronquillo", source: "origin1", key: "Cala El Ronquillo" },
-          { label: "Emergencias (El Pintado)", source: "origin1", key: "Emergencias (El Pintado)" },
-          { label: "Emergencias (Río)", source: "origin1", key: "Emergencias (Río)" },
+          { label: "Cala El Ronquillo", source: "origin2", key: "Cala El Ronquillo" },
+          { label: "Emergencias (El Pintado)", source: "origin2", key: "Emergencias (El Pintado)" },
+          { label: "Emergencias (Río)", source: "origin2", key: "Emergencias (Río)" },
           { label: "Pozos", source: "origin1", key: "Pozos" },
         ],
       },
-      { label: "AGUA ADUCIDA", primary: true, source: "subtype", key: "AGUA ADUCIDA" },
       {
         label: "AGUA ADUCIDA BRUTA EXPORTADA",
         primary: true,
-        source: "subtype",
-        key: "AGUA ADUCIDA BRUTA EXPORTADA",
+        source: "sumChildren",
         children: [
-          { label: "Toma Guillena", source: "origin1", key: "Toma Guillena" },
-          { label: "Toma Panajosas", source: "origin1", key: "Toma Panajosas" },
-          { label: "Toma Aljarafesa", source: "origin1", key: "Toma Aljarafesa" },
+          { label: "Toma Guillena", source: "origin2", key: "Toma Guillena" },
+          { label: "Toma Panajosas", source: "origin2", key: "Toma Panajosas" },
+          { label: "Toma Aljarafesa", source: "origin2", key: "Toma Aljarafesa" },
         ],
       },
     ],
@@ -490,18 +524,30 @@ const operationalTableDefinitions = [
     title: "DISTRIBUCIÓN",
     rows: [
       { label: "AGUA TRATADA IMPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA IMPORTADA" },
-      { label: "AGUA SUMINISTRADA", primary: true, source: "subtype", key: "AGUA SUMINISTRADA" },
-      { label: "AGUA TRATADA EXPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA EXPORTADA" },
+      {
+        label: "AGUA SUMINISTRADA",
+        primary: true,
+        source: "supplied",
+      },
+      {
+        label: "AGUA TRATADA EXPORTADA",
+        primary: true,
+        source: "sumChildren",
+        children: [
+          { label: "Huesna", source: "origin2", key: "Huesna" },
+          { label: "Aljarafesa (Gelves)", source: "origin2", key: "Aljarafesa (Gelves)" },
+          { label: "Burguillos", source: "origin2", key: "Burguillos" },
+        ],
+      },
       {
         label: "AGUA DISTRIBUIDA",
         primary: true,
-        source: "distributed",
+        source: "distributedExcel",
         childrenSource: "populations",
       },
     ],
   },
 ];
-
 function previousMonthPeriod(selectedYear, selectedMonth) {
   return selectedMonth > 1
     ? { year: selectedYear, month: selectedMonth - 1 }
@@ -509,6 +555,9 @@ function previousMonthPeriod(selectedYear, selectedMonth) {
 }
 
 function cumulativeSourceValue(row, selectedYear, selectedMonth) {
+  if (row.source === "type") {
+    return typeAccumulated(row.key, selectedYear, selectedMonth);
+  }
   if (row.source === "subtype") {
     return subtypeAccumulated(row.key, selectedYear, selectedMonth);
   }
@@ -517,6 +566,45 @@ function cumulativeSourceValue(row, selectedYear, selectedMonth) {
   }
   if (row.source === "origin2") {
     return redAccumulated(row.key, selectedYear, selectedMonth, 2);
+  }
+  if (row.source === "difference") {
+    return (
+      cumulativeSourceValue(row.minuend, selectedYear, selectedMonth) -
+      cumulativeSourceValue(row.subtrahend, selectedYear, selectedMonth)
+    );
+  }
+  if (row.source === "sumChildren") {
+    return (row.children || []).reduce(
+      (total, child) => total + cumulativeSourceValue(child, selectedYear, selectedMonth),
+      0,
+    );
+  }
+  if (row.source === "supplied") {
+    return (
+      subtypeAccumulated("AGUA TRATADA IMPORTADA", selectedYear, selectedMonth) +
+      subtypeAccumulated("AGUA PRODUCIDA ETAP", selectedYear, selectedMonth) -
+      subtypeAccumulated("BALANCE DEPÓSITOS", selectedYear, selectedMonth)
+    );
+  }
+  if (row.source === "distributedExcel") {
+    const supplied = cumulativeSourceValue(
+      { source: "supplied" },
+      selectedYear,
+      selectedMonth,
+    );
+    const exported = cumulativeSourceValue(
+      {
+        source: "sumChildren",
+        children: [
+          { source: "origin2", key: "Huesna" },
+          { source: "origin2", key: "Aljarafesa (Gelves)" },
+          { source: "origin2", key: "Burguillos" },
+        ],
+      },
+      selectedYear,
+      selectedMonth,
+    );
+    return supplied - exported;
   }
   if (row.source === "distributed") {
     return distributedTotalAccumulated(selectedYear, selectedMonth);
@@ -532,7 +620,6 @@ function cumulativeSourceValue(row, selectedYear, selectedMonth) {
   }
   return 0;
 }
-
 function monthlySourceValue(row, selectedYear, selectedMonth) {
   const accumulated = cumulativeSourceValue(row, selectedYear, selectedMonth);
   if (selectedMonth === 1) return accumulated;
@@ -829,12 +916,16 @@ function update() {
     ),
   };
 
-  const captured = ys.map(
-    (_, index) =>
-      capturedBySource.Minilla[index] +
-      capturedBySource.Gergal[index] +
-      capturedBySource.Melonares[index],
-  );
+  const captured = ys.map((dataYear) => {
+    const selected = dataYear === y;
+    const throughMonth = selected ? m : 12;
+    const elapsedDays = selected
+      ? daysThroughMonth(dataYear, m)
+      : daysInYear(dataYear);
+    return elapsedDays
+      ? capturedTotalAccumulated(dataYear, throughMonth) / elapsedDays
+      : 0;
+  });
   const distributedValues = ys.map((dataYear) =>
     distributedDaily(dataYear, y, m),
   );
@@ -857,9 +948,15 @@ function update() {
     pct.toLocaleString("es-ES", { maximumFractionDigits: 1 }) +
     " %";
   k4.style.color = pct >= 0 ? C.green : "#d64545";
+  const capturedDisplayedTotals = ys.map(
+    (_, index) =>
+      capturedBySource.Minilla[index] +
+      capturedBySource.Gergal[index] +
+      capturedBySource.Melonares[index],
+  );
   const toPercentages = (sourceValues) =>
     sourceValues.map((value, index) => {
-      const total = captured[index];
+      const total = capturedDisplayedTotals[index];
       return total ? (value / total) * 100 : 0;
     });
 
