@@ -40,6 +40,7 @@ let distributedConfig = [];
 let charts = {};
 
 /* Índices acumulados: evitan recorrer las hojas completas en cada cálculo. */
+let redTypeMonthlyIndex = new Map();
 let redMonthlyIndex = new Map();
 let redOriginMonthlyIndex = new Map();
 let redOrigin2MonthlyIndex = new Map();
@@ -48,7 +49,7 @@ let populationTotalsCache = new Map();
 let monthlySeriesCache = new Map();
 
 /* Caché de sesión: evita volver a descargar las tres hojas al recargar. */
-const DATA_CACHE_KEY = "estadisticos1-data-v12";
+const DATA_CACHE_KEY = "estadisticos1-data-v13";
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 
 function parseDatosRed(workbook) {
@@ -220,6 +221,7 @@ function buildCumulativeIndex(monthlyIndex) {
 }
 
 function buildDataIndexes() {
+  const typeMonthly = new Map();
   const subtypeMonthly = new Map();
   const origin1Monthly = new Map();
   const origin2Monthly = new Map();
@@ -230,6 +232,11 @@ function buildDataIndexes() {
     const monthValue = Number(record.d.slice(5, 7));
     if (!Number.isFinite(yearValue) || !Number.isFinite(monthValue)) continue;
 
+    addToIndex(
+      typeMonthly,
+      cumulativeKey(record.tipo, yearValue, monthValue),
+      record.v,
+    );
     addToIndex(
       subtypeMonthly,
       cumulativeKey(record.sub, yearValue, monthValue),
@@ -259,6 +266,7 @@ function buildDataIndexes() {
     );
   }
 
+  redTypeMonthlyIndex = buildCumulativeIndex(typeMonthly);
   redMonthlyIndex = buildCumulativeIndex(subtypeMonthly);
   redOriginMonthlyIndex = buildCumulativeIndex(origin1Monthly);
   redOrigin2MonthlyIndex = buildCumulativeIndex(origin2Monthly);
@@ -280,6 +288,10 @@ function redAccumulated(origin, selectedYear, selectedMonth, originColumn = 1) {
     ? redOrigin2MonthlyIndex
     : redOriginMonthlyIndex;
   return indexedValue(index, origin, selectedYear, selectedMonth);
+}
+
+function typeAccumulated(type, selectedYear, selectedMonth) {
+  return indexedValue(redTypeMonthlyIndex, type, selectedYear, selectedMonth);
 }
 
 function subtypeAccumulated(subtype, selectedYear, selectedMonth) {
@@ -469,22 +481,22 @@ const operationalTableDefinitions = [
             subtrahend: { source: "origin2", key: "Entrada Gergal" },
           },
           { label: "Melonares", source: "origin2", key: "Melonares" },
-          { label: "Cala El Ronquillo", source: "origin1", key: "Cala El Ronquillo" },
-          { label: "Emergencias (El Pintado)", source: "origin1", key: "Emergencias (El Pintado)" },
-          { label: "Emergencias (Río)", source: "origin1", key: "Emergencias (Río)" },
+          { label: "Cala El Ronquillo", source: "origin2", key: "Cala El Ronquillo" },
+          { label: "Emergencias (El Pintado)", source: "origin2", key: "Emergencias (El Pintado)" },
+          { label: "Emergencias (Río)", source: "origin2", key: "Emergencias (Río)" },
           { label: "Pozos", source: "origin1", key: "Pozos" },
         ],
       },
-      { label: "AGUA ADUCIDA", primary: true, source: "subtype", key: "AGUA ADUCIDA" },
+      { label: "AGUA ADUCIDA", primary: true, source: "type", key: "AGUA ADUCIDA" },
       {
         label: "AGUA ADUCIDA BRUTA EXPORTADA",
         primary: true,
         source: "subtype",
         key: "AGUA ADUCIDA BRUTA EXPORTADA",
         children: [
-          { label: "Toma Guillena", source: "origin1", key: "Toma Guillena" },
-          { label: "Toma Panajosas", source: "origin1", key: "Toma Panajosas" },
-          { label: "Toma Aljarafesa", source: "origin1", key: "Toma Aljarafesa" },
+          { label: "Toma Guillena", source: "origin2", key: "Toma Guillena" },
+          { label: "Toma Panajosas", source: "origin2", key: "Toma Panajosas" },
+          { label: "Toma Aljarafesa", source: "origin2", key: "Toma Aljarafesa" },
         ],
       },
     ],
@@ -521,6 +533,9 @@ function previousMonthPeriod(selectedYear, selectedMonth) {
 }
 
 function cumulativeSourceValue(row, selectedYear, selectedMonth) {
+  if (row.source === "type") {
+    return typeAccumulated(row.key, selectedYear, selectedMonth);
+  }
   if (row.source === "subtype") {
     return subtypeAccumulated(row.key, selectedYear, selectedMonth);
   }
