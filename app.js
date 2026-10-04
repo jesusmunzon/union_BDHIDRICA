@@ -49,7 +49,7 @@ let populationTotalsCache = new Map();
 let monthlySeriesCache = new Map();
 
 /* Caché de sesión: evita volver a descargar las tres hojas al recargar. */
-const DATA_CACHE_KEY = "estadisticos1-data-v14";
+const DATA_CACHE_KEY = "estadisticos1-data-v15";
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 
 function parseDatosRed(workbook) {
@@ -424,6 +424,14 @@ function distributedPeriod(dataYear, selectedYear, selectedMonth) {
   };
 }
 
+function treatedExportAccumulated(selectedYear, selectedMonth) {
+  return (
+    redAccumulated("Huesna", selectedYear, selectedMonth, 2) +
+    redAccumulated("Aljarafesa (Gelves)", selectedYear, selectedMonth, 2) +
+    redAccumulated("Burguillos", selectedYear, selectedMonth, 2)
+  );
+}
+
 function distributedTotalAccumulated(dataYear, endMonth) {
   const imported = sum(interPred("AGUA TRATADA IMPORTADA"), dataYear, endMonth);
   const produced = sum(interPred("AGUA PRODUCIDA ETAP"), dataYear, endMonth);
@@ -432,7 +440,7 @@ function distributedTotalAccumulated(dataYear, endMonth) {
     dataYear,
     endMonth,
   );
-  const exported = sum(interPred("AGUA TRATADA EXPORTADA"), dataYear, endMonth);
+  const exported = treatedExportAccumulated(dataYear, endMonth);
 
   return imported + produced - reservoirBalance - exported;
 }
@@ -518,7 +526,20 @@ const operationalTableDefinitions = [
         primary: true,
         source: "suppliedWater",
       },
-      { label: "AGUA TRATADA EXPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA EXPORTADA" },
+      {
+        label: "AGUA TRATADA EXPORTADA",
+        primary: true,
+        source: "childrenSum",
+        children: [
+          { label: "Huesna", source: "origin2", key: "Huesna" },
+          {
+            label: "Aljarafesa (Gelves)",
+            source: "origin2",
+            key: "Aljarafesa (Gelves)",
+          },
+          { label: "Burguillos", source: "origin2", key: "Burguillos" },
+        ],
+      },
       {
         label: "AGUA DISTRIBUIDA",
         primary: true,
@@ -574,6 +595,17 @@ function cumulativeSourceValue(row, selectedYear, selectedMonth) {
   }
   if (row.source === "distributed") {
     return distributedTotalAccumulated(selectedYear, selectedMonth);
+  }
+  if (row.source === "sevilla") {
+    const distributed = distributedTotalAccumulated(selectedYear, selectedMonth);
+    const populations = [...populationAccumulatedTotals(
+      selectedYear,
+      selectedMonth,
+    ).values()].reduce(
+      (total, value) => total + Number(value || 0),
+      0,
+    );
+    return distributed - populations;
   }
   if (row.source === "population") {
     return populationAccumulatedTotals(selectedYear, selectedMonth).get(row.key) || 0;
@@ -658,12 +690,18 @@ function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
 
     let children = row.children || [];
     if (row.childrenSource === "populations") {
-      children = [...new Set(distributedConfig.map((item) => item.block).filter(Boolean))]
-        .map((population) => ({
-          label: population,
-          key: population,
-          source: "population",
-        }));
+      const populationChildren = [
+        ...new Set(distributedConfig.map((item) => item.block).filter(Boolean)),
+      ].map((population) => ({
+        label: population,
+        key: population,
+        source: "population",
+      }));
+
+      children = [
+        { label: "Sevilla", source: "sevilla" },
+        ...populationChildren,
+      ];
     }
 
     for (const child of children) {
@@ -853,9 +891,12 @@ function monthly(sub, y) {
    * ...
    * Diciembre = acumulado anual
    * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.*/
-  const values = months.map((_, i) =>
-    dam(subtypeAccumulated(sub, y, i + 1)),
-  );
+  const values = months.map((_, i) => {
+    const accumulated = norm(sub) === "AGUA TRATADA EXPORTADA"
+      ? treatedExportAccumulated(y, i + 1)
+      : subtypeAccumulated(sub, y, i + 1);
+    return dam(accumulated);
+  });
   monthlySeriesCache.set(cacheKey, values);
   return [...values];
 }
@@ -898,8 +939,8 @@ function update() {
   k2.textContent =
     Math.round(dist.at(-1) || 0).toLocaleString("es-ES") + " m³/día";
   const bal =
-    sum(interPred("AGUA TRATADA IMPORTADA"), y, m) -
-    sum(interPred("AGUA TRATADA EXPORTADA"), y, m);
+    subtypeAccumulated("AGUA TRATADA IMPORTADA", y, m) -
+    treatedExportAccumulated(y, m);
   k3.textContent = fmt(bal);
   const previousDistributedDaily = distributedDaily(prev, y, m).distributed;
   const currentDistributedDaily = distributedDaily(y, y, m).distributed;
