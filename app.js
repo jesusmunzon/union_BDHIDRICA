@@ -687,29 +687,36 @@ function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
   let html = "";
   for (const row of definition.rows) {
     html += operationalRowHtml(row, tableRowMetrics(row, selectedYear, selectedMonth));
-
     let children = row.children || [];
     if (row.childrenSource === "populations") {
       const populationChildren = [
-        ...new Set(distributedConfig.map((item) => item.block).filter(Boolean)),
+        ...new Set(
+          distributedConfig
+            .map((item) => item.block)
+            .filter(Boolean),
+        ),
       ].map((population) => ({
-        label: population,
+        /* Convierte el texto visible:
+        * "DOS HERMANAS" → "Dos Hermanas"
+        * La clave original se mantiene para
+        * no alterar los cálculos.*/
+        label: population
+          .toLocaleLowerCase("es-ES")
+          .replace(/(^|\s)([a-záéíóúüñ])/g, (match, space, letter) => space + letter.toLocaleUpperCase("es-ES",),
+          ),
         key: population,
         source: "population",
       }));
-
       children = [
-        { label: "Sevilla", source: "sevilla" },
+        {
+          label: "Sevilla",
+          source: "sevilla",
+        },
         ...populationChildren,
       ];
     }
-
     for (const child of children) {
-      html += operationalRowHtml(
-        child,
-        tableRowMetrics(child, selectedYear, selectedMonth),
-        true,
-      );
+      html += operationalRowHtml(child, tableRowMetrics(child, selectedYear, selectedMonth), true,);
     }
   }
   return html;
@@ -733,8 +740,8 @@ function renderOperationalTables(selectedYear, selectedMonth) {
             <tr class="group-head">
               <th aria-label="Descripción"></th>
               <th colspan="3">VOLÚMENES MENSUALES (m³)</th>
-              <th colspan="2">VOLÚMENES ACUMULADOS (m³)</th>
-              <th colspan="3">VARIACIÓN</th>
+              <th colspan="3">VOLÚMENES ACUMULADOS (m³)</th>
+              <th colspan="2">VARIACIÓN</th>
             </tr>
             <tr class="period-head">
               <th aria-label="Descripción"></th>
