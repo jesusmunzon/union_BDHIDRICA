@@ -1173,6 +1173,7 @@ function initializeHeaderActions() {
   const authUser = document.getElementById("authUser");
   const authPassword = document.getElementById("authPassword");
   const authMessage = document.getElementById("authMessage");
+  const guestModeButton = document.getElementById("guestModeButton");
 
   todayDate.textContent = formatTodayDate();
   setSessionIdentity();
@@ -1191,6 +1192,10 @@ function initializeHeaderActions() {
   document.getElementById("authClose").addEventListener("click", closeAuth);
   document.getElementById("authCancel").addEventListener("click", closeAuth);
   authModal.querySelector("[data-close-auth]").addEventListener("click", closeAuth);
+  guestModeButton.addEventListener("click", () => {
+    setSessionIdentity("Invitado", false);
+    closeAuth();
+  });
 
   authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1216,7 +1221,27 @@ function initializeHeaderActions() {
     }
   });
 
-  printButton.addEventListener("click", () => window.print());
+  const refreshChartsForPrint = () => {
+    Object.values(charts).forEach((chartInstance) => {
+      if (!chartInstance) return;
+      chartInstance.resize();
+      chartInstance.update("none");
+    });
+  };
+
+  window.addEventListener("beforeprint", refreshChartsForPrint);
+  window.addEventListener("afterprint", () => {
+    document.body.classList.remove("printing-a4");
+    requestAnimationFrame(refreshChartsForPrint);
+  });
+
+  printButton.addEventListener("click", () => {
+    document.body.classList.add("printing-a4");
+    requestAnimationFrame(() => {
+      refreshChartsForPrint();
+      requestAnimationFrame(() => window.print());
+    });
+  });
 }
 
 function initializeInterface() {

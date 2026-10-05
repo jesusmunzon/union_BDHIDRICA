@@ -933,3 +933,163 @@ body.dark .filters-card select {
   .operational-table th:first-child { width: 39mm !important; }
   .variation { min-width: 0 !important; }
 }
+
+
+/* Ajustes de identificación solicitados. */
+.user-action { min-width: 150px; }
+.auth-guest-row {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.auth-guest {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--soft);
+  color: var(--text);
+  font: 800 12px Inter, sans-serif;
+  cursor: pointer;
+}
+.auth-guest:hover { background: var(--bg); }
+.auth-guest svg { width: 17px; }
+
+/* Impresión definitiva: A4 horizontal, página 1 filtros + gráficos, página 2 tablas. */
+@page { size: A4 landscape; margin: 6mm; }
+@media print {
+  html, body {
+    width: 285mm !important;
+    min-width: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .sidebar, .topbar, .auth-modal, #loading { display: none !important; }
+  .app-shell { margin: 0 !important; min-height: 0 !important; }
+  main { width: 100% !important; padding: 0 !important; }
+  #panel-dashboard { display: block !important; }
+
+  /* La tarjeta de filtros sí forma parte de la primera página. */
+  .filters-card {
+    display: flex !important;
+    min-height: 13mm !important;
+    height: 13mm !important;
+    margin: 0 0 3mm !important;
+    padding: 2mm 4mm !important;
+    gap: 5mm !important;
+    border-radius: 2mm !important;
+    box-shadow: none !important;
+    break-inside: avoid !important;
+  }
+  .filters-label { min-width: auto !important; height: auto !important; font-size: 8pt !important; }
+  .filters-card label { display: flex !important; gap: 2mm !important; }
+  .filters-card label span { font-size: 7pt !important; }
+  .filters-card select {
+    appearance: none !important;
+    min-width: 30mm !important;
+    width: 30mm !important;
+    height: 8mm !important;
+    padding: 0 3mm !important;
+    font-size: 7pt !important;
+    background-image: none !important;
+  }
+  .today-date { margin-left: auto !important; min-height: 8mm !important; font-size: 7pt !important; }
+  .today-date svg { width: 12px !important; }
+
+  /* Página 1: todos los gráficos dentro del área útil A4. */
+  .dashboard-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 55mm 48mm 66mm !important;
+    gap: 3mm !important;
+    width: 100% !important;
+    height: 175mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+  .dashboard-grid > .wide { grid-column: 1 / -1 !important; }
+  .mini-chart-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 3mm !important;
+    min-height: 0 !important;
+  }
+  .dashboard-grid > .chart-card.two,
+  .dashboard-grid > .chart-card.one { grid-column: span 1 !important; }
+  .chart-card {
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 2.5mm !important;
+    border-radius: 2mm !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+  }
+  .chart-head { min-height: 8mm !important; gap: 2mm !important; }
+  .chart-card h2, .chart-card h3 { font-size: 8pt !important; line-height: 1.1 !important; }
+  .chart-card p { margin-top: 1mm !important; font-size: 5.5pt !important; }
+  .unit-pill { padding: 1mm 1.5mm !important; font-size: 5.5pt !important; }
+  .chart,
+  .chart-tall {
+    width: 100% !important;
+    height: calc(100% - 9mm) !important;
+    margin-top: 1mm !important;
+    overflow: hidden !important;
+  }
+  .chart canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+
+  /* Página 2: todas las tablas ajustadas al mismo A4 horizontal. */
+  .operational-tables {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2mm !important;
+    width: 100% !important;
+    height: 191mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+  .operational-card {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    border-radius: 2mm !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+  }
+  .operational-card > h2 { padding: 1.2mm !important; font-size: 8pt !important; line-height: 1 !important; }
+  .operational-table-scroll { left: 0 !important; width: 100% !important; margin: 0 !important; overflow: visible !important; }
+  .operational-table {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 4.8pt !important;
+    line-height: 1 !important;
+  }
+  .operational-table th,
+  .operational-table td { padding: 0.8mm 0.55mm !important; }
+  .operational-table th:first-child { width: 39mm !important; }
+  .operational-table .group-head th { font-size: 4.7pt !important; }
+  .operational-table .period-head th { font-size: 4.5pt !important; }
+  .operational-table .detail-row th { padding-left: 5mm !important; }
+  .variation { min-width: 0 !important; }
+}

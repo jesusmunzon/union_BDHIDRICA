@@ -12,7 +12,7 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="styles.css?v=20261005-04" rel="stylesheet" />
+    <link href="styles.css?v=20261005-05" rel="stylesheet" />
   </head>
   <body>
     <aside class="sidebar" id="sidebar">
@@ -102,9 +102,8 @@
             <span>Imprimir</span>
           </button>
           <button class="header-action user-action" id="identityButton" type="button" aria-haspopup="dialog">
-            <i data-lucide="user"></i>
+            <i data-lucide="circle-user-round"></i>
             <span id="headerUserName">Invitado</span>
-            <i class="identity-chevron" data-lucide="chevron-down"></i>
           </button>
         </div>
       </header>
@@ -228,6 +227,12 @@
                 <div><i data-lucide="lock-keyhole"></i><input id="authPassword" type="password" autocomplete="current-password" required /></div>
               </label>
               <p class="auth-message" id="authMessage" aria-live="polite"></p>
+              <div class="auth-guest-row">
+                <button class="auth-guest" id="guestModeButton" type="button">
+                  <i data-lucide="user-round"></i>
+                  Continuar como Invitado
+                </button>
+              </div>
               <div class="auth-actions">
                 <button class="auth-cancel" id="authCancel" type="button">Cancelar</button>
                 <button class="auth-submit" type="submit">Iniciar sesión</button>
@@ -241,6 +246,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="Chart.js?v=20261002-04"></script>
-    <script type="module" src="app.js?v=20261005-04"></script>
+    <script type="module" src="app.js?v=20261005-05"></script>
   </body>
 </html>
