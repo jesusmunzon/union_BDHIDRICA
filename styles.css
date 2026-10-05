@@ -857,42 +857,42 @@ body.dark .operational-table .detail-row th { color: #b7c9da; }
   .operational-card > h2 { font-size: 16px; }
   .operational-table { font-size: 10px; }
 }
-/* Elimina el espacio exterior sin afectar al borde azul de las filas resumen. */
+/* La tarjeta no añade separación interior alrededor de la tabla. */
 .operational-card {
   padding: 0;
 }
+
+/* El contenedor no debe tener fondo propio. */
 .operational-table-scroll {
   display: block;
   width: 100%;
   margin: 0;
   padding: 0;
   overflow-x: auto;
+  background: transparent;
 }
-.operational-table-scroll {
-  background:
-    linear-gradient(
-      to bottom,
-      #155a78 0,
-      #155a78 42px,
-      #8fcf72 42px,
-      #8fcf72 76px,
-      transparent 76px
-    );
-}
+
+/* La tabla ocupa todo el ancho disponible. */
 .operational-table {
   width: 100%;
   margin: 0;
   border-spacing: 0;
   border-collapse: collapse;
 }
-/* Solo se elimina el borde lateral en las dos filas de encabezado.
- * No afecta a AGUA CAPTADA, AGUA ADUCIDA ni al resto de filas principales.
+
+/*
+ * La primera celda de cada encabezado recibe directamente
+ * el mismo fondo que el resto de su fila.
  */
-.operational-table .group-head th:first-child,
-.operational-table .period-head th:first-child {
-  border-left: 0;
+.operational-table .group-head th:first-child {
+  background: #155a78;
 }
-/* Se conserva expresamente el indicador azul de las filas principales. */
+
+.operational-table .period-head th:first-child {
+  background: #8fcf72;
+}
+
+/* Conserva la línea azul de AGUA CAPTADA y demás filas principales. */
 .operational-table .summary-row th:first-child {
   border-left: 5px solid #58b4e8;
 }
