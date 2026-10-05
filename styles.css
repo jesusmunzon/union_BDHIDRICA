@@ -801,3 +801,135 @@ body.dark .filters-card select {
     linear-gradient(45deg, transparent 50%, #cbd5e1 50%),
     linear-gradient(135deg, #cbd5e1 50%, transparent 50%);
 }
+
+
+/* Acciones de cabecera, fecha actual e identificación. */
+.topbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-action {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: 700 12px Inter, sans-serif;
+  cursor: pointer;
+}
+.header-action:hover { background: var(--soft); }
+.header-action svg { width: 17px; height: 17px; }
+.user-action { min-width: 170px; justify-content: flex-start; }
+.user-action .identity-chevron { margin-left: auto; width: 15px; }
+
+.today-date {
+  margin-left: auto;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.today-date svg { width: 18px; color: var(--brand); }
+
+.auth-modal[hidden] { display: none; }
+.auth-modal { position: fixed; inset: 0; z-index: 120; }
+.auth-backdrop { position: absolute; inset: 0; background: #02061766; backdrop-filter: blur(3px); }
+.auth-dialog {
+  position: relative;
+  width: min(420px, calc(100vw - 32px));
+  margin: 100px auto 0;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 24px 70px #02061740;
+}
+.auth-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.auth-dialog-head h2 { margin: 0; font-size: 18px; }
+.auth-dialog-head p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.auth-close { border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.auth-close svg { width: 20px; }
+.auth-field { display: block; margin-top: 18px; }
+.auth-field > span { display: block; margin-bottom: 7px; font-size: 11px; font-weight: 800; }
+.auth-field > div {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg);
+}
+.auth-field svg { width: 17px; color: var(--muted); }
+.auth-field input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); font: 600 12px Inter; }
+.auth-message { min-height: 20px; margin: 12px 0 0; font-size: 11px; font-weight: 700; }
+.auth-message.error { color: #be123c; }
+.auth-message.success { color: #047857; }
+.auth-actions { margin-top: 12px; display: flex; justify-content: flex-end; gap: 10px; }
+.auth-actions button { min-height: 40px; border-radius: 10px; padding: 0 16px; font: 800 12px Inter; cursor: pointer; }
+.auth-cancel { border: 1px solid var(--border); background: var(--panel); color: var(--text); }
+.auth-submit { border: 0; background: var(--brand); color: white; }
+
+@media (max-width: 760px) {
+  .topbar { height: auto; min-height: 78px; flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  .topbar-actions { width: 100%; justify-content: flex-end; }
+  .header-action { min-height: 38px; }
+  .user-action { min-width: 145px; }
+  .today-date { width: 100%; margin-left: 0; justify-content: flex-end; }
+}
+
+/* Impresión: visor del sistema, A4 horizontal, exactamente dos páginas. */
+@page { size: A4 landscape; margin: 7mm; }
+@media print {
+  html, body { width: 100%; min-width: 0; background: #fff !important; color: #0f172a !important; }
+  .sidebar, .topbar, .filters-card, .auth-modal, #loading { display: none !important; }
+  .app-shell { margin-left: 0 !important; min-height: 0; }
+  main { padding: 0 !important; }
+  #panel-dashboard { display: block !important; }
+
+  .dashboard-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4mm !important;
+    margin: 0 !important;
+    height: 190mm;
+    overflow: hidden;
+    break-after: page;
+    page-break-after: always;
+  }
+  .dashboard-grid .wide { grid-column: 1 / -1 !important; }
+  .mini-chart-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 3mm !important; }
+  .chart-card { padding: 3mm !important; border-radius: 3mm !important; box-shadow: none !important; break-inside: avoid; }
+  .chart { height: 43mm !important; margin-top: 2mm !important; }
+  .chart-tall { height: 50mm !important; }
+  .chart-card h2, .chart-card h3 { font-size: 9pt !important; }
+  .chart-card p, .unit-pill { font-size: 6.5pt !important; }
+
+  .operational-tables {
+    display: block !important;
+    margin: 0 !important;
+    height: 190mm;
+    overflow: hidden;
+    break-before: page;
+    page-break-before: always;
+  }
+  .operational-card { margin: 0 0 2.5mm !important; border-radius: 2mm !important; box-shadow: none !important; break-inside: avoid; }
+  .operational-card > h2 { padding: 2mm !important; font-size: 9pt !important; }
+  .operational-table-scroll { left: 0 !important; width: 100% !important; overflow: visible !important; }
+  .operational-table { min-width: 0 !important; width: 100% !important; font-size: 5.5pt !important; }
+  .operational-table th, .operational-table td { padding: 1.1mm 0.8mm !important; }
+  .operational-table th:first-child { width: 39mm !important; }
+  .variation { min-width: 0 !important; }
+}

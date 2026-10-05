@@ -5,7 +5,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <meta content="light dark" name="color-scheme" />
     <title>Control de Red</title>
-    data:, <!--crea un favicon vacío embebido para impedir que el navegador solicite /favicon.ico.-->
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -13,7 +12,7 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="styles.css?v=20261004-02" rel="stylesheet" />
+    <link href="styles.css?v=20261005-04" rel="stylesheet" />
   </head>
   <body>
     <aside class="sidebar" id="sidebar">
@@ -44,7 +43,7 @@
           <span> Estadísticos 2 </span>
         </button>
         <button class="nav-item" data-tab="estadisticos3">
-          <i data-lucide="activity"> </i>
+          <i data-lucide="user"> </i>
           <span> Estadísticos 3 </span>
         </button>
         <button class="nav-item" data-tab="estadisticos4">
@@ -72,8 +71,8 @@
           <b> </b>
         </div>
         <div>
-          <strong> Sistema operativo </strong>
-          <span> Datos cargados </span>
+          <strong id="sidebarUserName"> Invitado </strong>
+          <span id="sidebarUserMode"> Modo Lectura </span>
         </div>
         <button class="theme-button" id="themeToggle" title="Cambiar tema">
           <i data-lucide="moon" id="themeIcon"> </i>
@@ -97,6 +96,17 @@
             distribución e intercambios de agua
           </p>
         </div>
+        <div class="topbar-actions">
+          <button class="header-action" id="printButton" type="button">
+            <i data-lucide="printer"></i>
+            <span>Imprimir</span>
+          </button>
+          <button class="header-action user-action" id="identityButton" type="button" aria-haspopup="dialog">
+            <i data-lucide="user"></i>
+            <span id="headerUserName">Invitado</span>
+            <i class="identity-chevron" data-lucide="chevron-down"></i>
+          </button>
+        </div>
       </header>
       <main>
         <section class="tab-panel active" id="panel-dashboard">
@@ -113,6 +123,10 @@
               <span> Año </span>
               <select id="year"></select>
             </label>
+            <div class="today-date" aria-label="Fecha actual">
+              <i data-lucide="calendar-days"></i>
+              <span id="todayDate"></span>
+            </div>
           </section>
           <section class="dashboard-grid">
             <article class="chart-card wide">
@@ -192,12 +206,41 @@
           </section>
           <section class="operational-tables" id="operationalTables" aria-live="polite"></section>
         </section>
+        <div class="auth-modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle" hidden>
+          <div class="auth-backdrop" data-close-auth></div>
+          <section class="auth-dialog">
+            <header class="auth-dialog-head">
+              <div>
+                <h2 id="authTitle">Identificación de usuario</h2>
+                <p>Acceso al modo administrador</p>
+              </div>
+              <button class="auth-close" id="authClose" type="button" aria-label="Cerrar">
+                <i data-lucide="x"></i>
+              </button>
+            </header>
+            <form id="authForm" novalidate>
+              <label class="auth-field">
+                <span>Nombre de usuario</span>
+                <div><i data-lucide="user"></i><input id="authUser" autocomplete="username" required /></div>
+              </label>
+              <label class="auth-field">
+                <span>Contraseña</span>
+                <div><i data-lucide="lock-keyhole"></i><input id="authPassword" type="password" autocomplete="current-password" required /></div>
+              </label>
+              <p class="auth-message" id="authMessage" aria-live="polite"></p>
+              <div class="auth-actions">
+                <button class="auth-cancel" id="authCancel" type="button">Cancelar</button>
+                <button class="auth-submit" type="submit">Iniciar sesión</button>
+              </div>
+            </form>
+          </section>
+        </div>
         <div id="loading">Preparando visualización...</div>
       </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="Chart.js?v=20261002-04"></script>
-    <script type="module" src="app.js?v=20261004-02"></script>
+    <script type="module" src="app.js?v=20261005-04"></script>
   </body>
 </html>

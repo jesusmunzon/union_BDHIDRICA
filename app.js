@@ -1111,8 +1111,117 @@ const distSub = document.getElementById("distSub");
 const popSub = document.getElementById("popSub");
 const loading = document.getElementById("loading");
 
+function formatTodayDate() {
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+}
+
+function parseUsers(workbook) {
+  const rows = sheetRows(workbook);
+  const headerRowIndex = findHeaderRow(rows, [
+    ["USUARIO", "NOMBRE DE USUARIO", "USERNAME"],
+    ["CONTRASEÑA", "CONTRASENA", "PASSWORD"],
+    ["NOMBRE"],
+  ]);
+
+  if (headerRowIndex < 0) return [];
+
+  const indexes = headerIndexMap(rows[headerRowIndex]);
+  const userIndex = findColumnIndex(indexes, "USUARIO", "NOMBRE DE USUARIO", "USERNAME");
+  const passwordIndex = findColumnIndex(indexes, "CONTRASEÑA", "CONTRASENA", "PASSWORD");
+  const nameIndex = findColumnIndex(indexes, "NOMBRE");
+
+  return rows.slice(headerRowIndex + 1).map((row) => ({
+    user: String(row[userIndex] ?? "").trim(),
+    password: String(row[passwordIndex] ?? "").trim(),
+    name: String(row[nameIndex] ?? row[userIndex] ?? "").trim(),
+  })).filter((record) => record.user);
+}
+
+function setSessionIdentity(name = "Invitado", administrator = false) {
+  const displayName = name || "Invitado";
+  document.getElementById("headerUserName").textContent = displayName;
+  document.getElementById("sidebarUserName").textContent = displayName;
+  document.getElementById("sidebarUserMode").textContent = administrator
+    ? "Modo Administrador"
+    : "Modo Lectura";
+}
+
+async function validateAdministrator(userValue, passwordValue) {
+  const sheetConfig =
+    GOOGLE_DATABASE.sheets.usuarios ||
+    GOOGLE_DATABASE.sheets.cfgUsuarios ||
+    GOOGLE_DATABASE.sheets.CFG_Usuarios ||
+    "CFG_Usuarios";
+  const workbook = await loadGoogleSheet(sheetConfig, 0);
+  const users = parseUsers(workbook);
+  return users.find((record) =>
+    norm(record.user) === norm(userValue) &&
+    record.password === passwordValue
+  ) || null;
+}
+
+function initializeHeaderActions() {
+  const todayDate = document.getElementById("todayDate");
+  const identityButton = document.getElementById("identityButton");
+  const printButton = document.getElementById("printButton");
+  const authModal = document.getElementById("authModal");
+  const authForm = document.getElementById("authForm");
+  const authUser = document.getElementById("authUser");
+  const authPassword = document.getElementById("authPassword");
+  const authMessage = document.getElementById("authMessage");
+
+  todayDate.textContent = formatTodayDate();
+  setSessionIdentity();
+
+  const closeAuth = () => {
+    authModal.hidden = true;
+    authMessage.textContent = "";
+    authMessage.className = "auth-message";
+    authForm.reset();
+  };
+
+  identityButton.addEventListener("click", () => {
+    authModal.hidden = false;
+    authUser.focus();
+  });
+  document.getElementById("authClose").addEventListener("click", closeAuth);
+  document.getElementById("authCancel").addEventListener("click", closeAuth);
+  authModal.querySelector("[data-close-auth]").addEventListener("click", closeAuth);
+
+  authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    authMessage.textContent = "Comprobando identificación...";
+    authMessage.className = "auth-message";
+
+    try {
+      const record = await validateAdministrator(authUser.value, authPassword.value);
+      if (!record) {
+        authMessage.textContent = "No existe registro de usuario.";
+        authMessage.className = "auth-message error";
+        return;
+      }
+
+      setSessionIdentity(record.name, true);
+      authMessage.textContent = "Usuario administrador iniciado correctamente.";
+      authMessage.className = "auth-message success";
+      window.setTimeout(closeAuth, 900);
+    } catch (error) {
+      console.error(error);
+      authMessage.textContent = "No se pudo consultar CFG_Usuarios.";
+      authMessage.className = "auth-message error";
+    }
+  });
+
+  printButton.addEventListener("click", () => window.print());
+}
+
 function initializeInterface() {
   lucide.createIcons();
+  initializeHeaderActions();
 
   const body = document.body;
   const sidebar = document.getElementById("sidebar");
