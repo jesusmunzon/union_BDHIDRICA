@@ -867,7 +867,7 @@ body.dark .operational-table .detail-row th { color: #b7c9da; }
 .operational-table-scroll {
   position: relative;
   left: -4px;
-  width: calc(100% + 6px);
+  width: calc(100% + 8px);
   max-width: none;
   margin: 0;
   padding: 0;
