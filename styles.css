@@ -888,5 +888,5 @@ body.dark .operational-table .detail-row th { color: #b7c9da; }
 }
 
 .operational-table .summary-row th:first-child {
-  border-left: 10px solid #58b4e8;
+  border-left: 8px solid #58b4e8;
 }
