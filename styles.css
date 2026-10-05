@@ -894,7 +894,7 @@ body.dark .filters-card select {
 @page { size: A4 landscape; margin: 7mm; }
 @media print {
   html, body { width: 100%; min-width: 0; background: #fff !important; color: #0f172a !important; }
-  .sidebar, .topbar, .auth-modal, #loading { display: none !important; }
+  .sidebar, .topbar, .filters-card, .auth-modal, #loading { display: none !important; }
   .app-shell { margin-left: 0 !important; min-height: 0; }
   main { padding: 0 !important; }
   #panel-dashboard { display: block !important; }
@@ -1092,4 +1092,202 @@ body.dark .filters-card select {
   .operational-table .period-head th { font-size: 4.5pt !important; }
   .operational-table .detail-row th { padding-left: 5mm !important; }
   .variation { min-width: 0 !important; }
+}
+
+/* Botones del formulario de identificacion: Cancelar a la izquierda. */
+.auth-actions {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.auth-cancel {
+  margin-right: auto;
+}
+
+.auth-submit {
+  margin-left: auto;
+}
+
+/*
+ * Correccion final de impresion.
+ * Este bloque debe permanecer al final del CSS para prevalecer sobre
+ * las reglas de impresion anteriores.
+ */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 7mm;
+  }
+
+  html,
+  body {
+    width: 283mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .sidebar,
+  .topbar,
+  .filters-card,
+  .auth-modal,
+  #loading {
+    display: none !important;
+  }
+
+  .app-shell,
+  main,
+  #panel-dashboard {
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Pagina 1: solo los graficos, sin la franja de filtros. */
+  .dashboard-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 59mm 50mm 72mm !important;
+    gap: 3mm !important;
+    width: 100% !important;
+    height: 187mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  .dashboard-grid > .wide {
+    grid-column: 1 / -1 !important;
+  }
+
+  .mini-chart-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 3mm !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-grid > .chart-card.two,
+  .dashboard-grid > .chart-card.one {
+    grid-column: span 1 !important;
+  }
+
+  .chart-card {
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 2.5mm !important;
+    border-radius: 2mm !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+  }
+
+  .chart-head {
+    min-height: 8mm !important;
+    gap: 2mm !important;
+  }
+
+  .chart-card h2,
+  .chart-card h3 {
+    font-size: 8pt !important;
+    line-height: 1.1 !important;
+  }
+
+  .chart-card p,
+  .unit-pill {
+    font-size: 5.5pt !important;
+  }
+
+  .chart,
+  .chart-tall {
+    width: 100% !important;
+    height: calc(100% - 9mm) !important;
+    margin-top: 1mm !important;
+    overflow: hidden !important;
+  }
+
+  .chart canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+
+  /* Pagina 2: todas las tablas operativas. */
+  .operational-tables {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2mm !important;
+    width: 100% !important;
+    height: 190mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  .operational-card {
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 2mm !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    break-inside: avoid !important;
+  }
+
+  .operational-card > h2 {
+    padding: 1.2mm !important;
+    font-size: 8pt !important;
+    line-height: 1 !important;
+  }
+
+  .operational-table-scroll {
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .operational-table {
+    min-width: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    font-size: 4.8pt !important;
+    line-height: 1 !important;
+  }
+
+  .operational-table th,
+  .operational-table td {
+    padding: 0.8mm 0.55mm !important;
+  }
+
+  .operational-table th:first-child {
+    width: 39mm !important;
+  }
+
+  .operational-table .group-head th {
+    font-size: 4.7pt !important;
+  }
+
+  .operational-table .period-head th {
+    font-size: 4.5pt !important;
+  }
+
+  .operational-table .detail-row th {
+    padding-left: 5mm !important;
+  }
+
+  .variation {
+    min-width: 0 !important;
+  }
 }
