@@ -687,7 +687,6 @@ function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
   let html = "";
   for (const row of definition.rows) {
     html += operationalRowHtml(row, tableRowMetrics(row, selectedYear, selectedMonth));
-
     let children = row.children || [];
     if (row.childrenSource === "populations") {
       const populationChildren = [
@@ -697,28 +696,17 @@ function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
             .filter(Boolean),
         ),
       ].map((population) => ({
-        /*
-        * Convierte el texto visible:
+        /* Convierte el texto visible:
         * "DOS HERMANAS" → "Dos Hermanas"
-        *
         * La clave original se mantiene para
-        * no alterar los cálculos.
-        */
+        * no alterar los cálculos.*/
         label: population
           .toLocaleLowerCase("es-ES")
-          .replace(
-            /(^|\s)([a-záéíóúüñ])/g,
-            (match, space, letter) =>
-              space +
-              letter.toLocaleUpperCase(
-                "es-ES",
-              ),
+          .replace(/(^|\s)([a-záéíóúüñ])/g, (match, space, letter) => space + letter.toLocaleUpperCase("es-ES",),
           ),
-
         key: population,
         source: "population",
       }));
-
       children = [
         {
           label: "Sevilla",
@@ -727,13 +715,8 @@ function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
         ...populationChildren,
       ];
     }
-
     for (const child of children) {
-      html += operationalRowHtml(
-        child,
-        tableRowMetrics(child, selectedYear, selectedMonth),
-        true,
-      );
+      html += operationalRowHtml(child, tableRowMetrics(child, selectedYear, selectedMonth), true,);
     }
   }
   return html;
