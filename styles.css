@@ -868,6 +868,17 @@ body.dark .operational-table .detail-row th { color: #b7c9da; }
   padding: 0;
   overflow-x: auto;
 }
+.operational-table-scroll {
+  background:
+    linear-gradient(
+      to bottom,
+      #155a78 0,
+      #155a78 42px,
+      #8fcf72 42px,
+      #8fcf72 76px,
+      transparent 76px
+    );
+}
 .operational-table {
   width: 100%;
   margin: 0;
