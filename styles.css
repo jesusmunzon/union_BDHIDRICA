@@ -857,36 +857,41 @@ body.dark .operational-table .detail-row th { color: #b7c9da; }
   .operational-card > h2 { font-size: 16px; }
   .operational-table { font-size: 10px; }
 }
-/*
- * Correccion del lateral izquierdo de las tablas operativas.
- * Elimina las marcas de fondo sin borrar el indicador azul
- * de AGUA CAPTADA y las demas filas principales.
- */
+/* Elimina las franjas laterales entre la tarjeta y la tabla. */
 .operational-card {
   padding: 0;
+  background: transparent;
 }
+
 .operational-table-scroll {
-  display: block;
-  width: 100%;
+  position: relative;
+  left: -1px;
+  width: calc(100% + 2px);
   margin: 0;
   padding: 0;
   overflow-x: auto;
   background: transparent;
 }
+
 .operational-table {
   width: 100%;
   margin: 0;
   border-spacing: 0;
   border-collapse: collapse;
 }
-/* El color se aplica a las propias celdas, no al contenedor. */
-.operational-table .group-head th {
+
+/* Los encabezados cubren todo el ancho, incluida la primera celda. */
+.operational-table .group-head th,
+.operational-table .group-head th:first-child {
   background: #155a78;
 }
-.operational-table .period-head th {
+
+.operational-table .period-head th,
+.operational-table .period-head th:first-child {
   background: #8fcf72;
 }
-/* Conserva expresamente el indicador azul de las filas resumen. */
+
+/* El indicador azul solo se conserva en las filas resumen. */
 .operational-table .summary-row th:first-child {
   border-left: 5px solid #58b4e8;
 }
