@@ -1033,10 +1033,10 @@ body.dark .filters-card select {
   .dashboard-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-template-rows: 54mm 47mm 66mm !important;
+    grid-template-rows: 56mm 50mm 64mm !important;
     gap: 3mm !important;
     width: 100% !important;
-    height: 173mm !important;
+    height: 176mm !important;
     margin: 0 !important;
     overflow: hidden !important;
     break-after: page !important;
@@ -1062,15 +1062,30 @@ body.dark .filters-card select {
     overflow: hidden !important;
     break-inside: avoid !important;
   }
-  .chart-head { min-height: 8mm !important; gap: 2mm !important; }
+  .chart-head {
+    min-height: 8mm !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 2mm !important;
+    overflow: visible !important;
+  }
   .chart-card h2,
   .chart-card h3 { font-size: 8pt !important; line-height: 1.1 !important; }
   .chart-card p { margin-top: 1mm !important; font-size: 5.5pt !important; }
-  .unit-pill { padding: 1mm 1.5mm !important; font-size: 5.5pt !important; }
+  .unit-pill {
+    flex: 0 0 auto !important;
+    align-self: flex-start !important;
+    margin: 0 0 0 auto !important;
+    padding: 1mm 1.5mm !important;
+    font-size: 5.5pt !important;
+    line-height: 1 !important;
+  }
   .chart,
   .chart-tall {
     width: 100% !important;
-    height: calc(100% - 9mm) !important;
+    height: calc(100% - 11mm) !important;
     margin-top: 1mm !important;
     overflow: hidden !important;
   }
@@ -1130,4 +1145,16 @@ body.dark .filters-card select {
   .operational-table .period-head th { font-size: 4.45pt !important; }
   .operational-table .detail-row th { padding-left: 5mm !important; }
   .variation { min-width: 0 !important; }
+
+  .chart-card,
+  .chart,
+  .chart-tall {
+    overflow: visible !important;
+  }
+  .chart canvas {
+    display: block !important;
+  }
+  .operational-table .summary-row th:first-child {
+    border-left-width: 2px !important;
+  }
 }
