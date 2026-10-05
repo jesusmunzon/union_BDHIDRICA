@@ -894,7 +894,7 @@ body.dark .filters-card select {
 @page { size: A4 landscape; margin: 7mm; }
 @media print {
   html, body { width: 100%; min-width: 0; background: #fff !important; color: #0f172a !important; }
-  .sidebar, .topbar, .filters-card, .auth-modal, #loading { display: none !important; }
+  .sidebar, .topbar, .auth-modal, #loading { display: none !important; }
   .app-shell { margin-left: 0 !important; min-height: 0; }
   main { padding: 0 !important; }
   #panel-dashboard { display: block !important; }
