@@ -934,24 +934,6 @@ function update() {
     distributedDaily(dataYear, y, m),
   );
   const dist = distributedValues.map((values) => values.distributed);
-  k1.textContent =
-    Math.round(captured.at(-1) || 0).toLocaleString("es-ES") + " m³/día";
-  k2.textContent =
-    Math.round(dist.at(-1) || 0).toLocaleString("es-ES") + " m³/día";
-  const bal =
-    subtypeAccumulated("AGUA TRATADA IMPORTADA", y, m) -
-    treatedExportAccumulated(y, m);
-  k3.textContent = fmt(bal);
-  const previousDistributedDaily = distributedDaily(prev, y, m).distributed;
-  const currentDistributedDaily = distributedDaily(y, y, m).distributed;
-  const pct = previousDistributedDaily
-    ? (currentDistributedDaily / previousDistributedDaily - 1) * 100
-    : 0;
-  k4.textContent =
-    (pct >= 0 ? "+" : "") +
-    pct.toLocaleString("es-ES", { maximumFractionDigits: 1 }) +
-    " %";
-  k4.style.color = pct >= 0 ? C.green : "#d64545";
   const toPercentages = (sourceValues) =>
     sourceValues.map((value, index) => {
       const total = captured[index];
@@ -1122,10 +1104,6 @@ const periodText = document.getElementById("periodText");
 const capSub = document.getElementById("capSub");
 const distSub = document.getElementById("distSub");
 const popSub = document.getElementById("popSub");
-const k1 = document.getElementById("k1");
-const k2 = document.getElementById("k2");
-const k3 = document.getElementById("k3");
-const k4 = document.getElementById("k4");
 const loading = document.getElementById("loading");
 
 function initializeInterface() {
