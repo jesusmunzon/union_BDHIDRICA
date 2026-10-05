@@ -691,15 +691,39 @@ function tableRowsForDefinition(definition, selectedYear, selectedMonth) {
     let children = row.children || [];
     if (row.childrenSource === "populations") {
       const populationChildren = [
-        ...new Set(distributedConfig.map((item) => item.block).filter(Boolean)),
+        ...new Set(
+          distributedConfig
+            .map((item) => item.block)
+            .filter(Boolean),
+        ),
       ].map((population) => ({
-        label: population,
+        /*
+        * Convierte el texto visible:
+        * "DOS HERMANAS" → "Dos Hermanas"
+        *
+        * La clave original se mantiene para
+        * no alterar los cálculos.
+        */
+        label: population
+          .toLocaleLowerCase("es-ES")
+          .replace(
+            /(^|\s)([a-záéíóúüñ])/g,
+            (match, space, letter) =>
+              space +
+              letter.toLocaleUpperCase(
+                "es-ES",
+              ),
+          ),
+
         key: population,
         source: "population",
       }));
 
       children = [
-        { label: "SEVILLA", source: "sevilla" },
+        {
+          label: "Sevilla",
+          source: "sevilla",
+        },
         ...populationChildren,
       ];
     }
