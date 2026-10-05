@@ -953,8 +953,7 @@ body.dark .filters-card select {
 }
 
 @media print {
-  html,
-  body {
+  html, body {
     width: 285mm !important;
     min-width: 0 !important;
     height: auto !important;
@@ -966,24 +965,15 @@ body.dark .filters-card select {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-
-  .sidebar,
-  .topbar,
-  .auth-modal,
-  #loading {
-    display: none !important;
-  }
-
-  .app-shell,
-  main,
-  #panel-dashboard {
+  .sidebar, .topbar, .auth-modal, #loading { display: none !important; }
+  .app-shell, main, #panel-dashboard {
     width: 100% !important;
     min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  /* Página 1: franja de filtros y todos los gráficos. */
+  /* Página 1: filtros y gráficos sin solapamientos. */
   .filters-card {
     display: flex !important;
     align-items: center !important;
@@ -999,19 +989,10 @@ body.dark .filters-card select {
     box-shadow: none !important;
     break-inside: avoid !important;
   }
-  .filters-label {
-    height: auto !important;
-    min-width: auto !important;
-    font-size: 8pt !important;
-  }
+  .filters-label { height: auto !important; min-width: auto !important; font-size: 8pt !important; }
   .filters-label strong { font-size: 8pt !important; }
   .filters-label svg { width: 12px !important; height: 12px !important; }
-  .filters-card label {
-    display: flex !important;
-    align-items: center !important;
-    grid-template-columns: none !important;
-    gap: 2mm !important;
-  }
+  .filters-card label { display: flex !important; align-items: center !important; grid-template-columns: none !important; gap: 2mm !important; }
   .filters-card label span { font-size: 7pt !important; }
   .filters-card select {
     appearance: none !important;
@@ -1022,21 +1003,17 @@ body.dark .filters-card select {
     font-size: 7pt !important;
     background-image: none !important;
   }
-  .today-date {
-    display: flex !important;
-    margin-left: auto !important;
-    min-height: 8mm !important;
-    font-size: 7pt !important;
-  }
+  .today-date { display: flex !important; margin-left: auto !important; min-height: 8mm !important; font-size: 7pt !important; }
   .today-date svg { width: 12px !important; }
 
   .dashboard-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-template-rows: 56mm 50mm 64mm !important;
-    gap: 3mm !important;
+    grid-template-rows: 52mm 48mm 60mm !important;
+    row-gap: 6mm !important;
+    column-gap: 3mm !important;
     width: 100% !important;
-    height: 176mm !important;
+    height: 172mm !important;
     margin: 0 !important;
     overflow: hidden !important;
     break-after: page !important;
@@ -1048,12 +1025,12 @@ body.dark .filters-card select {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 3mm !important;
     min-height: 0 !important;
+    overflow: hidden !important;
   }
   .dashboard-grid > .chart-card.two,
-  .dashboard-grid > .chart-card.one {
-    grid-column: span 1 !important;
-  }
+  .dashboard-grid > .chart-card.one { grid-column: span 1 !important; }
   .chart-card {
+    position: relative !important;
     min-width: 0 !important;
     height: 100% !important;
     padding: 2.5mm !important;
@@ -1063,18 +1040,18 @@ body.dark .filters-card select {
     break-inside: avoid !important;
   }
   .chart-head {
-    min-height: 8mm !important;
+    min-height: 9mm !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: flex-start !important;
     justify-content: space-between !important;
     gap: 2mm !important;
-    overflow: visible !important;
   }
-  .chart-card h2,
-  .chart-card h3 { font-size: 8pt !important; line-height: 1.1 !important; }
+  .chart-head > div { min-width: 0 !important; }
+  .chart-card h2, .chart-card h3 { font-size: 8pt !important; line-height: 1.1 !important; }
   .chart-card p { margin-top: 1mm !important; font-size: 5.5pt !important; }
   .unit-pill {
+    position: static !important;
     flex: 0 0 auto !important;
     align-self: flex-start !important;
     margin: 0 0 0 auto !important;
@@ -1082,21 +1059,21 @@ body.dark .filters-card select {
     font-size: 5.5pt !important;
     line-height: 1 !important;
   }
-  .chart,
-  .chart-tall {
+  .chart, .chart-tall {
     width: 100% !important;
-    height: calc(100% - 11mm) !important;
+    height: calc(100% - 14mm) !important;
     margin-top: 1mm !important;
     overflow: hidden !important;
   }
   .chart canvas {
+    display: block !important;
     width: 100% !important;
     height: 100% !important;
     max-width: 100% !important;
     max-height: 100% !important;
   }
 
-  /* Página 2: todas las tablas operativas. */
+  /* Página 2: tablas completas y franja lateral fina. */
   .operational-tables {
     display: flex !important;
     flex-direction: column !important;
@@ -1117,18 +1094,8 @@ body.dark .filters-card select {
     overflow: hidden !important;
     break-inside: avoid !important;
   }
-  .operational-card > h2 {
-    padding: 1.2mm !important;
-    font-size: 8pt !important;
-    line-height: 1 !important;
-  }
-  .operational-table-scroll {
-    left: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
+  .operational-card > h2 { padding: 1.2mm !important; font-size: 8pt !important; line-height: 1 !important; }
+  .operational-table-scroll { left: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
   .operational-table {
     min-width: 0 !important;
     width: 100% !important;
@@ -1138,23 +1105,11 @@ body.dark .filters-card select {
     font-size: 4.75pt !important;
     line-height: 1 !important;
   }
-  .operational-table th,
-  .operational-table td { padding: 0.75mm 0.5mm !important; }
+  .operational-table th, .operational-table td { padding: 0.75mm 0.5mm !important; }
   .operational-table th:first-child { width: 39mm !important; }
   .operational-table .group-head th { font-size: 4.7pt !important; }
   .operational-table .period-head th { font-size: 4.45pt !important; }
   .operational-table .detail-row th { padding-left: 5mm !important; }
+  .operational-table .summary-row th:first-child { border-left: 2px solid #58b4e8 !important; }
   .variation { min-width: 0 !important; }
-
-  .chart-card,
-  .chart,
-  .chart-tall {
-    overflow: visible !important;
-  }
-  .chart canvas {
-    display: block !important;
-  }
-  .operational-table .summary-row th:first-child {
-    border-left-width: 2px !important;
-  }
 }
