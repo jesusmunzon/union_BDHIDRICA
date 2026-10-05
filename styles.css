@@ -866,7 +866,7 @@ body.dark .operational-table .detail-row th { color: #b7c9da; }
 
 .operational-table-scroll {
   position: relative;
-  left: -3px;
+  left: -4px;
   width: calc(100% + 6px);
   max-width: none;
   margin: 0;
@@ -888,5 +888,5 @@ body.dark .operational-table .detail-row th { color: #b7c9da; }
 }
 
 .operational-table .summary-row th:first-child {
-  border-left: 6px solid #58b4e8;
+  border-left: 8px solid #58b4e8;
 }
