@@ -1009,11 +1009,11 @@ body.dark .filters-card select {
   .dashboard-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-template-rows: 52mm 48mm 60mm !important;
-    row-gap: 6mm !important;
+    grid-template-rows: 53mm 49mm 61mm !important;
+    row-gap: 5mm !important;
     column-gap: 3mm !important;
     width: 100% !important;
-    height: 172mm !important;
+    height: 173mm !important;
     margin: 0 !important;
     overflow: hidden !important;
     break-after: page !important;
@@ -1049,7 +1049,7 @@ body.dark .filters-card select {
   }
   .chart-head > div { min-width: 0 !important; }
   .chart-card h2, .chart-card h3 { font-size: 8pt !important; line-height: 1.1 !important; }
-  .chart-card p { margin-top: 1mm !important; font-size: 5.5pt !important; }
+  .chart-card p { margin-top: 0.5mm !important; font-size: 5.5pt !important; }
   .unit-pill {
     position: static !important;
     flex: 0 0 auto !important;
@@ -1061,7 +1061,7 @@ body.dark .filters-card select {
   }
   .chart, .chart-tall {
     width: 100% !important;
-    height: calc(100% - 14mm) !important;
+    height: calc(100% - 10mm) !important;
     margin-top: 1mm !important;
     overflow: hidden !important;
   }
@@ -1079,8 +1079,8 @@ body.dark .filters-card select {
     flex-direction: column !important;
     gap: 2mm !important;
     width: 100% !important;
-    height: 191mm !important;
-    margin: 0 !important;
+    height: 188mm !important;
+    margin: 3mm 0 0 !important;
     overflow: hidden !important;
     break-before: page !important;
     page-break-before: always !important;
@@ -1095,7 +1095,7 @@ body.dark .filters-card select {
     break-inside: avoid !important;
   }
   .operational-card > h2 { padding: 1.2mm !important; font-size: 8pt !important; line-height: 1 !important; }
-  .operational-table-scroll { left: 0 !important; width: 100% !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+  .operational-table-scroll { position: relative !important; left: -1px !important; width: calc(100% + 1px) !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
   .operational-table {
     min-width: 0 !important;
     width: 100% !important;
@@ -1110,6 +1110,9 @@ body.dark .filters-card select {
   .operational-table .group-head th { font-size: 4.7pt !important; }
   .operational-table .period-head th { font-size: 4.45pt !important; }
   .operational-table .detail-row th { padding-left: 5mm !important; }
+  .operational-card { border-left: 0 !important; }
+  .operational-table .group-head th:first-child,
+  .operational-table .period-head th:first-child { border-left: 0 !important; }
   .operational-table .summary-row th:first-child { border-left: 2px solid #58b4e8 !important; }
   .variation { min-width: 0 !important; }
 }
