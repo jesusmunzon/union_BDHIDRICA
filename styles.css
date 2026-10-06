@@ -1009,11 +1009,11 @@ body.dark .filters-card select {
   .dashboard-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-template-rows: 53mm 49mm 61mm !important;
-    row-gap: 5mm !important;
+    grid-template-rows: 58mm 54mm 66mm !important;
+    row-gap: 2mm !important;
     column-gap: 3mm !important;
     width: 100% !important;
-    height: 173mm !important;
+    height: 182mm !important;
     margin: 0 !important;
     overflow: hidden !important;
     break-after: page !important;
@@ -1049,7 +1049,7 @@ body.dark .filters-card select {
   }
   .chart-head > div { min-width: 0 !important; }
   .chart-card h2, .chart-card h3 { font-size: 8pt !important; line-height: 1.1 !important; }
-  .chart-card p { margin-top: 0.5mm !important; font-size: 5.5pt !important; }
+  .chart-card p { margin-top: 0 !important; font-size: 5.5pt !important; }
   .unit-pill {
     position: static !important;
     flex: 0 0 auto !important;
@@ -1061,7 +1061,7 @@ body.dark .filters-card select {
   }
   .chart, .chart-tall {
     width: 100% !important;
-    height: calc(100% - 10mm) !important;
+    height: calc(100% - 8mm) !important;
     margin-top: 1mm !important;
     overflow: hidden !important;
   }
