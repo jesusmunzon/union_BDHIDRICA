@@ -1,0 +1,94 @@
+<!doctype html>
+<html class="h-full" lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="light dark" name="color-scheme">
+  <title>Estadísticos 2 | Control de Red</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="styles.css?v=20261009-01" rel="stylesheet">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <header class="brand">
+      <div class="brand-icon"><i data-lucide="waves"></i></div>
+      <div><strong>Control de Red</strong><span>Analítica hidráulica</span></div>
+      <button aria-label="Cerrar menú" class="icon-button mobile-only" id="closeMenu"><i data-lucide="x"></i></button>
+    </header>
+    <nav class="nav">
+      <p class="nav-title">Menú principal</p>
+      <a class="nav-item" href="../index.html"><i data-lucide="layout-dashboard"></i><span>Estadísticos 1</span></a>
+      <a class="nav-item active" href="index.html"><i data-lucide="bar-chart-3"></i><span>Estadísticos 2</span></a>
+      <button class="nav-item" type="button"><i data-lucide="user"></i><span>Estadísticos 3</span></button>
+      <button class="nav-item" type="button"><i data-lucide="trending-up"></i><span>Estadísticos 4</span></button>
+      <a class="nav-item" href="../Informe_IA/index.html"><i class="ai-icon" data-lucide="sparkles"></i><span>Informe IA Ejecutivo</span><small>Copilot</small></a>
+      <p class="nav-title second">Ajustes y sistema</p>
+      <a class="nav-item" href="../base-datos/index.html"><i data-lucide="database"></i><span>Base de datos</span></a>
+      <a class="nav-item" href="../tablas_auxiliares/index.html"><i data-lucide="table-2"></i><span>Tablas auxiliares</span></a>
+    </nav>
+    <footer class="sidebar-footer">
+      <div class="status-icon"><i data-lucide="circle-user-round"></i><b></b></div>
+      <div><strong>Invitado</strong><span>Modo Lectura</span></div>
+      <button class="theme-button" id="theme" title="Cambiar tema"><i data-lucide="moon" id="themeIcon"></i></button>
+    </footer>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <button aria-label="Abrir menú" class="icon-button mobile-only" id="openMenu"><i data-lucide="menu"></i></button>
+      <div class="heading"><h1>Estadísticos 2</h1><p>Balance, eficiencia y pérdidas del sistema hidráulico</p></div>
+      <div class="topbar-actions">
+        <button class="header-action" id="print" type="button"><i data-lucide="printer"></i><span>Imprimir</span></button>
+        <button class="header-action user-action" type="button"><i data-lucide="user"></i><span>Invitado</span></button>
+      </div>
+    </header>
+
+    <main>
+      <section class="filters-card">
+        <div class="filters-label"><i data-lucide="filter"></i><strong>Filtros:</strong></div>
+        <label><span>Mes</span><select id="month"></select></label>
+        <label><span>Año</span><select id="year"></select></label>
+        <label class="reference-date-label"><span>Fecha referencia</span><input id="referenceDate" type="date" value="2023-11-01"></label>
+        <button class="filter-refresh" id="apply" type="button"><i data-lucide="refresh-cw"></i><span>Actualizar</span></button>
+      </section>
+
+      <section class="dashboard-grid estadisticos2-grid">
+        <article class="chart-card">
+          <div class="chart-head"><div><h2>Balance hidráulico y pérdidas de distribución</h2><p>Evolución anual y acumulado hasta el mes consultado</p></div><span class="unit-pill">dam³/día · %</span></div>
+          <div class="chart chart-tall"><canvas id="balanceChart"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <div class="chart-head"><div><h2>Dotación y consumo unitario doméstico</h2><p>Comparación anual por habitante</p></div><span class="unit-pill">l/hab/día</span></div>
+          <div class="chart chart-tall"><canvas id="unitChart"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <div class="chart-head"><div><h2>Eficiencia hídrica</h2><p>Rendimiento de los subsistemas</p></div><span class="unit-pill">%</span></div>
+          <div class="chart chart-tall"><canvas id="efficiencyChart"></canvas></div>
+        </article>
+        <article class="chart-card">
+          <div class="chart-head"><div><h2>Índice de pérdidas de distribución</h2><p>Relación frente a las pérdidas técnicas mínimas</p></div><span class="unit-pill">Índice</span></div>
+          <div class="chart chart-tall"><canvas id="lossIndexChart"></canvas></div>
+        </article>
+      </section>
+      <div id="loading">Preparando visualización...</div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script type="module" src="app.js?v=20261009-04"></script>
+  <script>
+    lucide.createIcons();
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const closeMenu = () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); };
+    document.getElementById('openMenu').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('open'); });
+    document.getElementById('closeMenu').addEventListener('click', closeMenu);
+    overlay.addEventListener('click', closeMenu);
+  </script>
+</body>
+</html>

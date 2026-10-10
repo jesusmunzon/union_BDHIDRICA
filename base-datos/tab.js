@@ -135,11 +135,12 @@ const DATASETS = {
       "AC_DIURNO OFICIAL": "AC diurno<br>oficial",
       "TOTAL AC+CP": "TOTAL<br>AC+CP",
     },
-    numeric: ["TOTAL AC+CP"],
-    notes: null,
-    dateCols: ["Fecha", "FECHA DATOS"],
-    totalCol: "TOTAL AC+CP",
-    sumCols: [
+    /*
+     * Todos los valores de ACUCON, incluido TOTAL AC+CP,
+     * se leen directamente desde Google Sheets.
+     * TOTAL AC+CP ya no se recalcula en esta aplicación.
+     */
+    numeric: [
       "CP_NOCTURNO DOMÉSTICO",
       "CP_NOCTURNO INDUSTRIAL",
       "CP_NOCTURNO OFICIAL",
@@ -152,7 +153,10 @@ const DATASETS = {
       "AC_DIURNO DOMÉSTICO",
       "AC_DIURNO INDUSTRIAL",
       "AC_DIURNO OFICIAL",
+      "TOTAL AC+CP",
     ],
+    notes: null,
+    dateCols: ["Fecha", "FECHA DATOS"],
   },
   carnf: {
     label: "Datos CARNF",
@@ -208,25 +212,13 @@ const DATASETS = {
     ],
     notes: null,
     dateCols: ["FECHA", "FECHA DATOS"],
-    calculatedTotals: [
-      {
-        col: "TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)",
-        sumCols: [
-          "CONSUMOS PROPIOS",
-          "PURGAS CON CONTADOR AQUA-WS",
-          "RIEGOS Y BALDEO MUNICIPAL",
-          "ZONAS DEPRIMIDAS Y EVENTOS",
-        ],
-      },
-      {
-        col: "TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)",
-        sumCols: [
-          "MANTENIMIENTO (INTERVENCIONES DE REDES)",
-          "PURGAS SIN CONTADOR",
-          "PUNTOS MEDIDA CLORO",
-        ],
-      },
-    ],
+    /*
+     * Las columnas I y M se leen directamente desde Google Sheets:
+     * - TOTAL AGUA REGISTRADA NO FACTURADA (ARNF)
+     * - TOTAL AGUA NO REGISTRADA NO FACTURADA (ANRNF)
+     *
+     * Ya no se recalculan en esta aplicación.
+     */
   },
   aforos: {
     label: "Datos Aforos y Pérdidas",

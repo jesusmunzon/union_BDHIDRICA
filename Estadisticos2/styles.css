@@ -1,0 +1,472 @@
+/* Reutiliza íntegramente los estilos de Estadísticos 1. */
+@import url("../styles.css?v=20261005-11");
+
+/* Solo reglas específicas necesarias para Estadísticos 2. */
+.estadisticos2-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+.estadisticos2-grid > .chart-card {
+  min-width: 0;
+  width: 100%;
+}
+.reference-date-label {
+  grid-template-columns: 112px minmax(165px, 190px) !important;
+}
+.reference-date-label input {
+  width: 100%;
+  min-width: 165px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--text);
+  font: 700 12px Inter, sans-serif;
+  outline: none;
+}
+.filters-card .filter-refresh {
+  margin-left: auto;
+}
+@media (max-width: 1100px) {
+  .estadisticos2-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .reference-date-label { grid-template-columns: 1fr !important; }
+  .reference-date-label input { min-width: 0; }
+}
+
+/* Balance hídrico integrado */
+.balance-section{margin-top:18px;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;align-items:start}.balance-main,.billing-panel,.balance-notes{background:var(--panel,#fff);border:1px solid var(--border,#dbe4ee);border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(15,23,42,.05)}.balance-title{padding:11px 14px;background:#a8d4ef;color:#073b72;font-size:15px;font-weight:800;text-transform:uppercase}.balance-scroll{overflow-x:auto}.balance-table{width:100%;min-width:1120px;border-collapse:collapse;color:#0f2e58;font-size:11px}.balance-table th,.balance-table td{padding:7px 8px;border-right:1px solid #d6e0ea;border-bottom:1px solid #d6e0ea;text-align:right;white-space:nowrap}.balance-table th:first-child,.balance-table td:first-child{text-align:left}.balance-table thead tr:first-child th{background:#0b6489;color:#fff;text-align:center;font-weight:800}.balance-table thead tr:nth-child(2) th,.balance-table thead tr:nth-child(3) th{background:#8ed06f;color:#fff;text-align:center;font-weight:800}.balance-table tbody td{color:#17385f;background:#fff}.balance-table tbody tr:nth-child(even) td{background:#fbfdff}.balance-table .concept{font-weight:650}.balance-table .major td{background:#e7f2fa!important;font-weight:800;color:#073b72}.balance-table .loss td{color:#17385f}.balance-table .system td{color:#187847;font-weight:800;background:#eefaf2!important}.balance-table .phg-empty{background:#f6f8fb!important}.distributed-wrap{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:12px;margin-top:12px}.distributed-notes{padding:12px 14px;background:#f6f9fc;border:1px solid #dbe4ee;border-radius:12px;color:#26496d;font-size:11px;line-height:1.55}.distributed-notes b{color:#118044}.billing-panel .balance-title{text-align:center;line-height:1.2}.billing-table{width:100%;border-collapse:collapse;font-size:12px}.billing-table th{background:#0b7780;color:#fff}.billing-table th,.billing-table td{padding:8px 10px;border-right:1px solid #dbe4ee;border-bottom:1px solid #dbe4ee}.billing-table td:last-child{text-align:center;font-weight:700}.balance-notes{grid-column:1/-1;padding-bottom:8px}.balance-notes h3{margin:0;padding:10px 14px;color:#073b72;font-size:14px}.balance-notes ol{margin:0;padding:0 22px 10px 40px;color:#17385f;font-size:11px;line-height:1.45}.balance-notes li{margin:4px 0}.balance-notes .note6{white-space:pre-line}@media(max-width:1200px){.balance-section{grid-template-columns:1fr}.billing-panel{grid-row:auto}.distributed-wrap{grid-template-columns:1fr}}@media print{.balance-section{grid-template-columns:minmax(0,1fr) 210px;gap:8px}.balance-main,.billing-panel,.balance-notes{box-shadow:none;border-radius:8px}.balance-table{font-size:8px;min-width:0}.balance-table th,.balance-table td{padding:4px 3px}.distributed-wrap{grid-template-columns:minmax(0,1fr) 300px}}
+
+/* Correcciones finales Balance Hídrico */
+.balance-title-main { text-align: center; }
+.balance-table th,
+.balance-table td,
+.balance-table th:first-child,
+.balance-table td:first-child {
+  text-align: center;
+}
+.balance-table .balance-concept {
+  text-align: center;
+}
+
+/* Ajustes finales de la tabla inferior */
+.balance-table tbody td:first-child,
+.balance-table .concept,
+.balance-table.compact tbody td:nth-child(2) { text-align: left; }
+.balance-table thead th { text-align: center; }
+.balance-table.compact { min-width: 0; table-layout: fixed; }
+.balance-table.compact th:first-child,
+.balance-table.compact td:first-child { width: 145px; }
+.balance-table.compact th:nth-child(2),
+.balance-table.compact td:nth-child(2) { width: 235px; }
+.balance-table.compact .balance-group {
+  vertical-align: middle;
+  text-align: left;
+  font-weight: 800;
+  color: #073b72 !important;
+  background: #e7f2fa !important;
+}
+.distributed-wrap {
+  width: calc(100% + 244px);
+  grid-template-columns: minmax(0, 1fr) 230px;
+  align-items: stretch;
+}
+.distributed-notes { width: 100%; text-align: left; }
+@media(max-width:1200px) {
+  .distributed-wrap { width: 100%; grid-template-columns: 1fr; }
+}
+
+/* Corrección: tabla inferior sin desbordamiento ni altura vacía */
+.balance-main {
+  overflow: visible;
+  align-self: start;
+  height: auto;
+}
+.distributed-wrap {
+  width: calc(100% + 244px);
+  max-width: calc(100% + 244px);
+  grid-template-columns: minmax(0, 1fr) 230px;
+  align-items: start;
+  overflow: visible;
+}
+.distributed-wrap > .balance-scroll {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+.balance-table.compact {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+.distributed-notes {
+  display: block;
+  min-width: 0;
+  height: auto;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+.balance-section,
+.balance-grid {
+  align-items: start;
+}
+@media(max-width:1200px) {
+  .balance-main { overflow: hidden; }
+  .distributed-wrap {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: 1fr;
+  }
+  .distributed-wrap > .balance-scroll { overflow-x: auto; }
+}
+
+/* Ajuste definitivo de proporciones de la tabla inferior */
+.balance-table.compact th:first-child,
+.balance-table.compact td:first-child {
+  width: 112px;
+}
+.balance-table.compact th:nth-child(2),
+.balance-table.compact td:nth-child(2) {
+  width: 205px;
+}
+.distributed-wrap {
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  grid-auto-rows: min-content;
+}
+.distributed-wrap > .balance-scroll {
+  align-self: start;
+  height: fit-content;
+  min-height: 0;
+  max-height: none;
+}
+.balance-table.compact {
+  height: auto;
+}
+.distributed-notes {
+  align-self: start;
+  height: auto;
+  min-height: 0;
+  padding: 12px 14px;
+}
+@media(max-width:1200px) {
+  .distributed-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Proporciones finales de la tabla inferior */
+.balance-table.compact th:first-child,
+.balance-table.compact td:first-child {
+  width: 86px;
+}
+.balance-table.compact th:nth-child(2),
+.balance-table.compact td:nth-child(2) {
+  width: 175px;
+}
+.distributed-wrap {
+  width: calc(100% + 244px);
+  max-width: calc(100% + 244px);
+  grid-template-columns: minmax(0, 1fr) 365px;
+  column-gap: 14px;
+}
+.distributed-notes {
+  width: 365px;
+  max-width: 365px;
+  justify-self: end;
+  box-sizing: border-box;
+}
+@media(max-width:1200px) {
+  .distributed-wrap {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: 1fr;
+  }
+  .distributed-notes {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Tarjeta exterior comun para los cuatro bloques */
+.balance-section {
+  position: relative;
+  box-sizing: border-box;
+  padding: 10px;
+  align-items: start;
+  background: var(--panel, #fff);
+  border: 1px solid var(--border, #dbe4ee);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+}
+
+.balance-section > .balance-main,
+.balance-section > .billing-panel {
+  align-self: start;
+  margin-top: 0 !important;
+  top: auto !important;
+  transform: none !important;
+}
+
+.distributed-wrap {
+  width: calc(100% + 266px);
+  max-width: calc(100% + 266px);
+}
+
+.distributed-notes {
+  position: static;
+  left: auto;
+  justify-self: end;
+}
+
+/* Elimina solo el borde de la tarjeta interior */
+.balance-main {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.balance-main > .balance-scroll,
+.balance-main > .distributed-wrap {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Recupera el borde izquierdo de las dos tablas */
+.balance-main > .balance-scroll > .balance-table,
+.distributed-wrap > .balance-scroll > .balance-table,
+.balance-table.compact {
+  border-left: 1px solid #d6e0ea !important;
+}
+
+/* Garantiza la continuidad del borde en todas las filas */
+.balance-table th:first-child,
+.balance-table td:first-child,
+.balance-table.compact th:first-child,
+.balance-table.compact td:first-child {
+  border-left: 1px solid #d6e0ea !important;
+}
+
+@media (max-width: 1200px) {
+  .balance-section { padding: 8px; }
+  .distributed-wrap {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media print {
+  .balance-section {
+    padding: 6px;
+    overflow: hidden;
+    box-shadow: none;
+  }
+  .distributed-wrap {
+    width: calc(100% + 218px);
+    max-width: calc(100% + 218px);
+  }
+}
+
+/* Bloques finales bajo Balance Hidrico */
+.supplementary-card {
+  grid-column: 1 / -1;
+  margin-top: 16px;
+  overflow: hidden;
+  background: var(--panel, #fff);
+  border: 1px solid var(--border, #dbe4ee);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .05);
+}
+.supplementary-title {
+  padding: 11px 14px;
+  background: #69a9d7;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.supplementary-scroll { overflow-x: auto; }
+.supplementary-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #0f2e58;
+  font-size: 11px;
+}
+.supplementary-table th,
+.supplementary-table td {
+  padding: 8px 10px;
+  border-right: 1px solid #d6e0ea;
+  border-bottom: 1px solid #d6e0ea;
+  text-align: center;
+}
+.supplementary-table th {
+  background: #0b6489;
+  color: #fff;
+  font-weight: 800;
+}
+.supplementary-table thead tr:nth-child(2) th { background: #8ed06f; }
+.supplementary-table tbody td:first-child,
+.distributed-detail-table tbody td:nth-child(2),
+.distributed-detail-table tbody td:nth-child(3) { text-align: left; }
+.efficiency-table { min-width: 1050px; }
+.efficiency-table th:first-child { width: 250px; }
+.efficiency-table .formula-cell {
+  width: 390px;
+  text-align: center;
+  font-family: Georgia, serif;
+  color: #111827;
+}
+.distributed-detail-table { min-width: 1180px; table-layout: fixed; }
+.distributed-detail-table thead th:first-child { width: 340px; }
+.distributed-detail-table thead th:nth-child(2) { width: 220px; }
+.distributed-detail-table .group-cell {
+  width: 125px;
+  text-align: center !important;
+  vertical-align: middle;
+  font-size: 14px;
+  font-weight: 800;
+  background: #e7f2fa;
+}
+.distributed-detail-table .subgroup-cell {
+  width: 210px;
+  text-align: center !important;
+  vertical-align: middle;
+  font-weight: 800;
+}
+.distributed-detail-table .origin-cell { width: 245px; text-align: center; }
+.distributed-detail-table .water-band-head { width: 48px; }
+.distributed-detail-table tbody td:nth-child(6) {
+  background: #edf5fb;
+  font-weight: 800;
+}
+.distributed-detail-table .avoidable-row td { background: #fbd3ae; }
+.supplementary-footnotes {
+  padding: 10px 14px 14px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #17385f;
+}
+@media (max-width: 1200px) {
+  .supplementary-card { border-radius: 10px; }
+}
+@media print {
+  .supplementary-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border-radius: 8px;
+  }
+  .supplementary-table { font-size: 8px; min-width: 0; }
+  .supplementary-table th,
+  .supplementary-table td { padding: 4px 3px; }
+}
+.distributed-detail-table .water-band {
+  width: 48px;
+  padding: 0;
+  background: #edf5fb;
+}
+.distributed-detail-table .avoidable-row .water-band { background: #f5dddd; }
+
+/* Ajustes precisos del desglose de volumen */
+.distributed-detail-table tbody td { text-align: left; }
+.distributed-detail-table td.numeric-value { text-align: center !important; }
+.distributed-detail-table .origin-cell { text-align: left; }
+.distributed-detail-table .water-band {
+  padding: 4px 2px;
+  text-align: center !important;
+  vertical-align: middle;
+  font-weight: 800;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.distributed-detail-table .registered-band { background: #edf5fb !important; }
+.distributed-detail-table .unregistered-band { background: #f5dddd !important; }
+.distributed-detail-table tbody td.numeric-value:not(.loss-highlight) { background: #fff !important; }
+.distributed-detail-table .loss-highlight { background: #fbd3ae !important; }
+.distributed-detail-table .subgroup-cell { background: #fff !important; }
+
+/* Ajuste final segun la tabla de referencia */
+.distributed-detail-table {
+  table-layout: fixed;
+}
+/* Conceptos del periodo anual en una sola linea */
+.distributed-detail-table thead th:nth-child(1) { width: 340px; }
+.distributed-detail-table thead th:nth-child(2) { width: 290px; }
+.distributed-detail-table thead th:nth-child(3),
+.distributed-detail-table thead th:nth-child(4) { width: 74px; }
+.distributed-detail-table .water-band-head,
+.distributed-detail-table .water-band { width: 48px; }
+.distributed-detail-table tbody td:nth-child(3) {
+  white-space: nowrap;
+}
+/* Sombreados exactos: solo Fraudes, valores combinados y origen combinado */
+.distributed-detail-table tbody td { background: #fff; }
+.distributed-detail-table .group-cell { background: #e7f2fa !important; }
+.distributed-detail-table .registered-band,
+.distributed-detail-table .unregistered-band { background: #f5dddd !important; }
+.distributed-detail-table .loss-highlight { background: #fbd3ae !important; }
+.distributed-detail-table .subgroup-cell { background: #fff !important; }
+/* Solo los valores numericos van centrados */
+.distributed-detail-table td.numeric-value { text-align: center !important; }
+.distributed-detail-table td:not(.numeric-value):not(.group-cell):not(.subgroup-cell):not(.water-band) {
+  text-align: left;
+}
+.distributed-detail-table .origin-cell { text-align: center !important; }
+
+/* Correccion de encaje, rellenos y pesos del desglose */
+.distributed-detail-table {
+  width: 100% !important;
+  min-width: 1280px;
+  table-layout: fixed !important;
+}
+.distributed-detail-table col.col-group { width: 12%; }
+.distributed-detail-table col.col-subgroup { width: 12%; }
+.distributed-detail-table col.col-concept { width: 20%; }
+.distributed-detail-table col.col-year { width: 7.5%; }
+.distributed-detail-table col.col-water { width: 3.5%; }
+.distributed-detail-table col.col-compare { width: 10%; }
+.distributed-detail-table col.col-origin { width: 15.5%; }
+/* Anula anchos anteriores basados en la posicion de los th con colspan */
+.distributed-detail-table thead th:nth-child(1),
+.distributed-detail-table thead th:nth-child(2),
+.distributed-detail-table thead th:nth-child(3),
+.distributed-detail-table thead th:nth-child(4),
+.distributed-detail-table .water-band-head,
+.distributed-detail-table .water-band {
+  width: auto;
+}
+.distributed-detail-table tbody td:nth-child(3) {
+  white-space: nowrap;
+}
+/* Los valores no llevan negrita; permanecen centrados */
+.distributed-detail-table td.numeric-value {
+  text-align: center !important;
+  font-weight: 400 !important;
+}
+/* Estas fuentes quedan expresamente sin relleno ni negrita */
+.distributed-detail-table .origin-cell.no-fill {
+  background: #fff !important;
+}
+.distributed-detail-table .normal-weight {
+  font-weight: 400 !important;
+}
+/* Mantiene el naranja solo en conceptos y valores de fraudes/perdidas evitables */
+.distributed-detail-table .loss-highlight.numeric-value,
+.distributed-detail-table td.loss-highlight:not(.origin-cell) {
+  background: #fbd3ae !important;
+}
+@media (min-width: 1280px) {
+  .distributed-detail-table { min-width: 100%; }
+}
+
+/* Correccion final de la fila Perdidas Reales */
+.distributed-detail-table td.no-fill {
+  background: #fff !important;
+}
+.distributed-detail-table td.no-fill.normal-weight {
+  font-weight: 400 !important;
+}

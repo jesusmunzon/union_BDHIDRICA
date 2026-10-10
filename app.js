@@ -1,4 +1,6 @@
 import { GOOGLE_DATABASE } from "./js/config.js";
+import { createCalculatorFromAppIndexes } from "./js/hydraulic-integration.js";
+import { daysInYear, daysThroughMonth } from "./js/hydraulic-periods.js";
 import { loadGoogleSheet } from "./js/google-sheets.js";
 import {
   excelDate,
@@ -49,103 +51,20 @@ let populationTotalsCache = new Map();
 let monthlySeriesCache = new Map();
 
 /* Caché de sesión: evita volver a descargar las tres hojas al recargar. */
-const DATA_CACHE_KEY = "estadisticos1-data-v15";
+const DATA_CACHE_KEY = "estadisticos1-data-v16";
 const DATA_CACHE_TTL_MS = 15 * 60 * 1000;
 
 function parseDatosRed(workbook) {
-  const rows = sheetRows(workbook);
-  const headerRowIndex = findHeaderRow(rows, [
-    ["FECHA", "FECHA DATOS"],
-    ["TIPO"],
-    ["SUBTIPO"],
-    ["PROCEDENCIA_1", "PROCEDENCIA 1", "PROCEDENCIA1"],
-    ["PROCEDENCIA_2", "PROCEDENCIA 2", "PROCEDENCIA2"],
-    ["AJUSTE"],
-  ]);
-
-  if (headerRowIndex < 0) {
-    throw new Error("BD_Datos_Red no contiene los encabezados necesarios.");
-  }
-
-  const indexes = headerIndexMap(rows[headerRowIndex]);
-  const dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
-  const typeIndex = findColumnIndex(indexes, "TIPO");
-  const subtypeIndex = findColumnIndex(indexes, "SUBTIPO");
-  const origin1Index = findColumnIndex(
-    indexes,
-    "PROCEDENCIA_1",
-    "PROCEDENCIA 1",
-    "PROCEDENCIA1",
-  );
-  const origin2Index = findColumnIndex(
-    indexes,
-    "PROCEDENCIA_2",
-    "PROCEDENCIA 2",
-    "PROCEDENCIA2",
-  );
-  const adjustmentIndex = findColumnIndex(indexes, "AJUSTE");
-
-  return rows
-    .slice(headerRowIndex + 1)
-    .map((row) => ({
-      d: excelDate(row[dateIndex]),
-      tipo: String(row[typeIndex] ?? "").trim(),
-      sub: String(row[subtypeIndex] ?? "").trim(),
-      p1: String(row[origin1Index] ?? "").trim(),
-      p2: String(row[origin2Index] ?? "").trim(),
-      v: parseSpanishNumber(row[adjustmentIndex], 0),
-    }))
-    .filter((record) => record.d);
+  return sheetRows(workbook).slice(1).map((row) => ({
+    d: excelDate(row[0]), tipo: String(row[2] ?? '').trim(), sub: String(row[3] ?? '').trim(),
+    p1: String(row[4] ?? '').trim(), p2: String(row[5] ?? '').trim(), v: parseSpanishNumber(row[7], 0),
+  })).filter((record) => record.d);
 }
-
 function parseBalance(workbook) {
-  const rows = sheetRows(workbook);
-  let headerRowIndex = findHeaderRow(rows, [
-    ["FECHA", "FECHA DATOS"],
-    ["COD_DISP", "COD DISP", "CODIGO DISP.", "CÓDIGO DISP."],
-    ["CMES"],
-  ]);
-
-  let dateIndex;
-  let codeIndex;
-  let valueIndex;
-  let dataStart;
-
-  if (headerRowIndex >= 0) {
-    const indexes = headerIndexMap(rows[headerRowIndex]);
-    dateIndex = findColumnIndex(indexes, "FECHA", "FECHA DATOS");
-    codeIndex = findColumnIndex(
-      indexes,
-      "COD_DISP",
-      "COD DISP",
-      "CODIGO DISP.",
-      "CÓDIGO DISP.",
-    );
-    valueIndex = findColumnIndex(indexes, "CMES");
-    dataStart = headerRowIndex + 1;
-  } else {
-    const firstDataRow = rows.findIndex(
-      (row) => excelDate(row[0]) && String(row[1] ?? "").trim(),
-    );
-    if (firstDataRow < 0 || rows[firstDataRow].length < 7) {
-      throw new Error("No se localizaron FECHA, COD_DISP y CMES en BD_Balance_Pobla.");
-    }
-    dateIndex = 0;
-    codeIndex = 1;
-    valueIndex = 6;
-    dataStart = firstDataRow;
-  }
-
-  return rows
-    .slice(dataStart)
-    .map((row) => ({
-      date: excelDate(row[dateIndex]),
-      code: String(row[codeIndex] ?? "").trim(),
-      value: parseSpanishNumber(row[valueIndex], 0),
-    }))
-    .filter((record) => record.date && record.code);
+  return sheetRows(workbook).slice(1).map((row) => ({
+    date: excelDate(row[0]), code: String(row[1] ?? '').trim(), value: parseSpanishNumber(row[6], 0),
+  })).filter((record) => record.date && record.code);
 }
-
 function parseDistributedConfig(workbook) {
   const rows = sheetRows(workbook);
   const result = [];
@@ -298,6 +217,15 @@ function subtypeAccumulated(subtype, selectedYear, selectedMonth) {
   return indexedValue(redMonthlyIndex, subtype, selectedYear, selectedMonth);
 }
 
+const hydraulicCalculator = createCalculatorFromAppIndexes({
+  typeAccumulated,
+  subtypeAccumulated,
+  redAccumulated,
+});
+function hydraulicAccumulated(concept, selectedYear, selectedMonth) {
+  return hydraulicCalculator.accumulated(concept, selectedYear, selectedMonth);
+}
+
 function populationAccumulatedTotals(selectedYear, selectedMonth) {
   const cacheKey = `${selectedYear}|${selectedMonth}`;
   if (populationTotalsCache.has(cacheKey)) {
@@ -372,41 +300,20 @@ const capPred = (name) => {
   return predicate;
 };
 
-function isLeapYear(yearValue) {
-  return (
-    yearValue % 400 === 0 ||
-    (yearValue % 4 === 0 && yearValue % 100 !== 0)
-  );
-}
-
-function daysInYear(yearValue) {
-  return isLeapYear(yearValue) ? 366 : 365;
-}
-
-function daysThroughMonth(yearValue, monthValue) {
-  return Math.round(
-    (Date.UTC(yearValue, monthValue, 1) - Date.UTC(yearValue, 0, 1)) /
-      86400000,
-  );
-}
-
 function capturedDaily(source, dataYear, selectedYear, selectedMonth) {
   const isSelectedYear = dataYear === selectedYear;
   const throughMonth = isSelectedYear ? selectedMonth : 12;
   const elapsedDays = isSelectedYear
     ? daysThroughMonth(dataYear, selectedMonth)
     : daysInYear(dataYear);
-
   if (!elapsedDays) return 0;
-
-  if (source === "Gergal") {
-    return (
-      redAccumulated("Salida Gergal", dataYear, throughMonth, 2) -
-      redAccumulated("Entrada Gergal", dataYear, throughMonth, 2)
-    ) / elapsedDays;
-  }
-
-  return sum(capPred(source), dataYear, throughMonth) / elapsedDays;
+  const components = hydraulicCalculator.capturedComponents(dataYear, throughMonth);
+  const componentBySource = {
+    Minilla: components.minilla,
+    Gergal: components.gergal,
+    Melonares: components.melonares,
+  };
+  return Number(componentBySource[source] || 0) / elapsedDays;
 }
 const interPred = (subtype) => {
   const predicate = (record) => norm(record.sub) === norm(subtype);
@@ -425,26 +332,11 @@ function distributedPeriod(dataYear, selectedYear, selectedMonth) {
 }
 
 function treatedExportAccumulated(selectedYear, selectedMonth) {
-  return (
-    redAccumulated("Huesna", selectedYear, selectedMonth, 2) +
-    redAccumulated("Aljarafesa (Gelves)", selectedYear, selectedMonth, 2) +
-    redAccumulated("Burguillos", selectedYear, selectedMonth, 2)
-  );
+  return hydraulicAccumulated("treatedExported", selectedYear, selectedMonth);
 }
-
 function distributedTotalAccumulated(dataYear, endMonth) {
-  const imported = sum(interPred("AGUA TRATADA IMPORTADA"), dataYear, endMonth);
-  const produced = sum(interPred("AGUA PRODUCIDA ETAP"), dataYear, endMonth);
-  const reservoirBalance = subtypeAccumulated(
-    "BALANCE DEPÓSITOS",
-    dataYear,
-    endMonth,
-  );
-  const exported = treatedExportAccumulated(dataYear, endMonth);
-
-  return imported + produced - reservoirBalance - exported;
+  return hydraulicAccumulated("distributed", dataYear, endMonth);
 }
-
 function populationsAccumulated(dataYear, endMonth) {
   return [...populationAccumulatedTotals(dataYear, endMonth).values()].reduce(
     (total, value) => total + Number(value || 0),
@@ -480,6 +372,8 @@ const operationalTableDefinitions = [
       {
         label: "AGUA CAPTADA",
         primary: true,
+        source: "hydraulic",
+        hydraulicKey: "captured",
         children: [
           { label: "Minilla", source: "origin1", key: "Minilla" },
           {
@@ -495,11 +389,12 @@ const operationalTableDefinitions = [
           { label: "Pozos", source: "origin1", key: "Pozos" },
         ],
       },
-      { label: "AGUA ADUCIDA", primary: true, source: "type", key: "AGUA ADUCIDA" },
+      { label: "AGUA ADUCIDA", primary: true, source: "hydraulic", hydraulicKey: "conveyed" },
       {
         label: "AGUA ADUCIDA BRUTA EXPORTADA",
         primary: true,
-        source: "childrenSum",
+        source: "hydraulic",
+        hydraulicKey: "rawExported",
         children: [
           { label: "Toma Guillena", source: "origin2", key: "Toma Guillena" },
           { label: "Toma Panajosas", source: "origin2", key: "Toma Panajosas" },
@@ -512,24 +407,26 @@ const operationalTableDefinitions = [
     id: "tratamiento",
     title: "TRATAMIENTO",
     rows: [
-      { label: "AGUA ENTRADA ETAP", primary: true, source: "subtype", key: "AGUA ENTRADA ETAP" },
-      { label: "AGUA PRODUCIDA ETAP", primary: true, source: "subtype", key: "AGUA PRODUCIDA ETAP" },
+      { label: "AGUA ENTRADA ETAP", primary: true, source: "hydraulic", hydraulicKey: "etapInput" },
+      { label: "AGUA PRODUCIDA ETAP", primary: true, source: "hydraulic", hydraulicKey: "etapProduced" },
     ],
   },
   {
     id: "distribucion",
     title: "DISTRIBUCIÓN",
     rows: [
-      { label: "AGUA TRATADA IMPORTADA", primary: true, source: "subtype", key: "AGUA TRATADA IMPORTADA" },
+      { label: "AGUA TRATADA IMPORTADA", primary: true, source: "hydraulic", hydraulicKey: "treatedImported" },
       {
         label: "AGUA SUMINISTRADA",
         primary: true,
-        source: "suppliedWater",
+        source: "hydraulic",
+        hydraulicKey: "supplied",
       },
       {
         label: "AGUA TRATADA EXPORTADA",
         primary: true,
-        source: "childrenSum",
+        source: "hydraulic",
+        hydraulicKey: "treatedExported",
         children: [
           { label: "Huesna", source: "origin2", key: "Huesna" },
           {
@@ -543,7 +440,8 @@ const operationalTableDefinitions = [
       {
         label: "AGUA DISTRIBUIDA",
         primary: true,
-        source: "distributed",
+        source: "hydraulic",
+        hydraulicKey: "distributed",
         childrenSource: "populations",
       },
     ],
@@ -557,6 +455,9 @@ function previousMonthPeriod(selectedYear, selectedMonth) {
 }
 
 function cumulativeSourceValue(row, selectedYear, selectedMonth) {
+  if (row.source === "hydraulic") {
+    return hydraulicAccumulated(row.hydraulicKey, selectedYear, selectedMonth);
+  }
   /*
    * Las filas calculadas se resuelven con los mismos componentes visibles
    * y con índices acumulados, sin recorrer de nuevo BD_Datos_Red.
@@ -776,7 +677,21 @@ function chart(id, type, data, options = {}) {
           labels: { boxWidth: 9, usePointStyle: true, font: { size: 10 } },
         },
         tooltip: {
+          mode: "index",
+          axis: "y",
+          intersect: false,
+          displayColors: true,
+          usePointStyle: true,
+          padding: 12,
+          titleSpacing: 8,
+          bodySpacing: 7,
           callbacks: {
+            title: (items) => {
+              if (items[0]?.chart.canvas.id === "poblaciones") {
+                return `Población: ${items[0].label}`;
+              }
+              return items[0]?.label ?? "";
+            },
             label: (c) => {
               /* Distribución por poblaciones: datos ya expresados en m³. */
               if (c.chart.canvas.id === "poblaciones") {
@@ -899,9 +814,14 @@ function monthly(sub, y) {
    * Diciembre = acumulado anual
    * sum() ya agrega BD_Datos_Red por SUBTIPO, año y hasta el mes indicado.*/
   const values = months.map((_, i) => {
-    const accumulated = norm(sub) === "AGUA TRATADA EXPORTADA"
-      ? treatedExportAccumulated(y, i + 1)
-      : subtypeAccumulated(sub, y, i + 1);
+    let accumulated;
+    if (norm(sub) === "AGUA TRATADA EXPORTADA") {
+      accumulated = hydraulicAccumulated("treatedExported", y, i + 1);
+    } else if (norm(sub) === "AGUA ADUCIDA BRUTA EXPORTADA") {
+      accumulated = hydraulicAccumulated("rawExported", y, i + 1);
+    } else {
+      accumulated = subtypeAccumulated(sub, y, i + 1);
+    }
     return dam(accumulated);
   });
   monthlySeriesCache.set(cacheKey, values);
@@ -1040,6 +960,22 @@ function update() {
     ...new Set(distributedConfig.map((row) => row.block).filter(Boolean)),
   ];
 
+  const previousPopulationSeries = popNames.map((name) =>
+    previousPopulationTotals.get(name) || 0,
+  );
+  const currentPopulationSeries = popNames.map((name) =>
+    currentPopulationTotals.get(name) || 0,
+  );
+  const maximumPopulationValue = Math.max(
+    ...previousPopulationSeries,
+    ...currentPopulationSeries,
+    0,
+  );
+  const dynamicPopulationMaximum =
+    maximumPopulationValue > 0
+      ? Math.ceil((maximumPopulationValue * 1.10) / 100000) * 100000
+      : 100000;
+
   chart(
     "poblaciones",
     "bar",
@@ -1048,17 +984,13 @@ function update() {
       datasets: [
         {
           label: `${months[m - 1]}-${prev}`,
-          data: popNames.map((name) =>
-            previousPopulationTotals.get(name) || 0,
-          ),
+          data: previousPopulationSeries,
           backgroundColor: C.gray,
           borderRadius: 3,
         },
         {
           label: `${months[m - 1]}-${y}`,
-          data: popNames.map((name) =>
-            currentPopulationTotals.get(name) || 0,
-          ),
+          data: currentPopulationSeries,
           backgroundColor: C.blue,
           borderRadius: 3,
         },
@@ -1066,21 +998,22 @@ function update() {
     },
     {
       indexAxis: "y",
+      interaction: {
+        mode: "index",
+        axis: "y",
+        intersect: false,
+      },
       layout: {
         padding: {
-          left: 18,
+          left: 0,
+          right: 4,
         },
       },
       scales: {
         x: {
           display: false,
           beginAtZero: true,
-          afterDataLimits(scale) {
-          /*
-          * Reserva un 12 % respecto al valor máximo.
-          */
-          scale.max *= 1.12;
-          },
+          max: dynamicPopulationMaximum,
           grid: { display: false },
           border: { display: false },
         },
@@ -1120,27 +1053,11 @@ function formatTodayDate() {
 }
 
 function parseUsers(workbook) {
-  const rows = sheetRows(workbook);
-  const headerRowIndex = findHeaderRow(rows, [
-    ["USUARIO", "NOMBRE DE USUARIO", "USERNAME"],
-    ["CONTRASEÑA", "CONTRASENA", "PASSWORD"],
-    ["NOMBRE"],
-  ]);
-
-  if (headerRowIndex < 0) return [];
-
-  const indexes = headerIndexMap(rows[headerRowIndex]);
-  const userIndex = findColumnIndex(indexes, "USUARIO", "NOMBRE DE USUARIO", "USERNAME");
-  const passwordIndex = findColumnIndex(indexes, "CONTRASEÑA", "CONTRASENA", "PASSWORD");
-  const nameIndex = findColumnIndex(indexes, "NOMBRE");
-
-  return rows.slice(headerRowIndex + 1).map((row) => ({
-    user: String(row[userIndex] ?? "").trim(),
-    password: String(row[passwordIndex] ?? "").trim(),
-    name: String(row[nameIndex] ?? row[userIndex] ?? "").trim(),
+  return sheetRows(workbook).slice(1).map((row) => ({
+    user: String(row[0] ?? '').trim(), password: String(row[1] ?? '').trim(),
+    name: String(row[2] ?? row[0] ?? '').trim(),
   })).filter((record) => record.user);
 }
-
 function setSessionIdentity(name = "Invitado", administrator = false) {
   const displayName = name || "Invitado";
   document.getElementById("headerUserName").textContent = displayName;
@@ -1150,18 +1067,18 @@ function setSessionIdentity(name = "Invitado", administrator = false) {
     : "Modo Lectura";
 }
 
-async function validateAdministrator(userValue, passwordValue) {
-  const sheetConfig =
-    GOOGLE_DATABASE.sheets.usuarios ||
-    GOOGLE_DATABASE.sheets.cfgUsuarios ||
-    GOOGLE_DATABASE.sheets.CFG_Usuarios ||
-    "CFG_Usuarios";
-  const workbook = await loadGoogleSheet(sheetConfig, 0);
+async function validateAdministrator(userValue, passwordValue,) 
+{
+  const sheetConfig = GOOGLE_DATABASE.sheets.cfgUsuarios;
+  if (!sheetConfig) {
+    throw new Error(
+      "La hoja CFG_Usuarios no está configurada.",
+    );
+  }
+  const workbook = await loadGoogleSheet(sheetConfig, 0,);
   const users = parseUsers(workbook);
-  return users.find((record) =>
-    norm(record.user) === norm(userValue) &&
-    record.password === passwordValue
-  ) || null;
+  const normalizedUser = norm(userValue);
+  return (users.find((record) => norm(record.user) === normalizedUser && record.password === passwordValue,) || null);
 }
 
 function initializeHeaderActions() {

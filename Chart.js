@@ -25,15 +25,13 @@ const populationValueLabels = {
         });
 
         const textWidth = ctx.measureText(label).width;
-        let x = bar.x + 6;
+        const preferredX = bar.x + 6;
+        const x = Math.min(
+          preferredX,
+          chartArea.right - textWidth - 2,
+        );
 
-        if (x + textWidth > chartArea.right - 2) {
-          x = bar.x - textWidth - 6;
-          ctx.fillStyle = "#ffffff";
-        } else {
-          ctx.fillStyle = "#475569";
-        }
-
+        ctx.fillStyle = "#475569";
         ctx.fillText(label, x, bar.y);
       });
     });

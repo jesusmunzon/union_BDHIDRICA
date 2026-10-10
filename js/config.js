@@ -10,5 +10,6 @@ export const GOOGLE_DATABASE = {
     datosCarnf: "BD_Datos_CARNF",
     datosAforosPerdidas: "BD_Datos_Aforos_y_Perdidas",
     distribuidoPoblaciones: "CFG_Distribuido_Poblaciones",
+    cfgUsuarios: "CFG_Usuarios",
   },
 };
